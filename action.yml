@@ -1,5 +1,6 @@
 name: "Docker Image Update Checker"
 description: "Check if the base Docker image needs to be updated"
+author: Luca Comellini <lucacome>
 
 inputs:
   base-image:
@@ -20,3 +21,7 @@ runs:
         result=$(base=${{ inputs.base-image }} image=${{ inputs.image }} ${{ github.action_path }}/docker.sh)
         echo "::set-output name=result::${result}"
       shell: bash
+
+branding:
+  icon: anchor
+  color: blue
