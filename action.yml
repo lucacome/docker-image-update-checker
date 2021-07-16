@@ -1,26 +1,26 @@
-name: 'Docker Image Update Checker'
-description: 'Check if the base Docker image needs to be updated'
+name: "Docker Image Update Checker"
+description: "Check if the base Docker image needs to be updated"
 
 inputs:
   base-image:
-    description: 'Docker base image'
+    description: "Docker base image"
     required: true
   base-image-tag:
-    description: 'Docker base image tag'
+    description: "Docker base image tag"
     required: true
   image:
-    description: 'Docker image'
+    description: "Docker image"
     required: true
   image-tag:
-    description: 'Docker image tag'
+    description: "Docker image tag"
     required: true
 outputs:
   needs-updating:
     description: "True or false"
-    value: ${{ steps.run-script.outputs }}
+    value: ${{ steps.run-script.outputs.result }}
 runs:
   using: "composite"
   steps:
     - id: run-script
-      run: ${{ github.action_path }}/docker.sh base=${{ inputs.base-image }} base_tag=${{ inputs.base-image-tag }} image=${{ inputs.image }} image_tag=${{ inputs.image-tag }}
+      run: base=${{ inputs.base-image }} base_tag=${{ inputs.base-image-tag }} image=${{ inputs.image }} image_tag=${{ inputs.image-tag }} ${{ github.action_path }}/docker.sh
       shell: bash

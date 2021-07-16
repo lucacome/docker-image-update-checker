@@ -37,4 +37,6 @@ layers_base=$(get_layers $base $digest_base)
 digest_image=$(get_digest $image $image_tag)
 layers_image=$(get_layers $image $digest_image)
 
-jq '.base-.image | .!=[]' <<<"{\"base\": $layers_base, \"image\": $layers_image }"
+result=$(jq '.base-.image | .!=[]' <<<"{\"base\": $layers_base, \"image\": $layers_image }")
+
+echo "::set-output name=result::${result}"

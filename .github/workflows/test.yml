@@ -1,0 +1,25 @@
+name: Test
+
+on: [push]
+
+jobs:
+  test:
+    name: Test-Action
+    runs-on: ubuntu-20.04
+    continue-on-error: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: library/nginx
+          base-image-tag: 1.21.0
+          image: nginx/nginx-ingress
+          image-tag: 1.12.0
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: echo "Needs updating"
+        if: steps.test.outputs.needs-updating == 'true'
