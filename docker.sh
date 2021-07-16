@@ -31,12 +31,13 @@ get_token() {
     echo $(curl 'https://auth.docker.io/token?service=registry.docker.io&scope=repository:'${repo}':pull' 2>/dev/null | jq -r '.token')
 }
 
+IFS=: read base base_tag <<<$base
+IFS=: read image image_tag <<<$image
+
 digest_base=$(get_digest $base $base_tag)
 layers_base=$(get_layers $base $digest_base)
 
 digest_image=$(get_digest $image $image_tag)
 layers_image=$(get_layers $image $digest_image)
 
-result=$(jq '.base-.image | .!=[]' <<<"{\"base\": $layers_base, \"image\": $layers_image }")
-
-echo "::set-output name=result::${result}"
+jq '.base-.image | .!=[]' <<<"{\"base\": $layers_base, \"image\": $layers_image }"

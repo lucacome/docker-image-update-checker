@@ -14,10 +14,8 @@ jobs:
         id: test
         uses: ./
         with:
-          base-image: library/nginx
-          base-image-tag: 1.21.0
-          image: nginx/nginx-ingress
-          image-tag: 1.12.0
+          base-image: library/nginx:1.21.0
+          image: nginx/nginx-ingress:1.12.0
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
       - name: Check value
