@@ -34,10 +34,10 @@ get_token() {
 IFS=: read base base_tag <<<$base
 IFS=: read image image_tag <<<$image
 
-digest_base=$(get_digest $base $base_tag)
+digest_base=$(get_digest $base ${base_tag:-latest})
 layers_base=$(get_layers $base $digest_base)
 
-digest_image=$(get_digest $image $image_tag)
+digest_image=$(get_digest $image ${image_tag:-latest})
 layers_image=$(get_layers $image $digest_image)
 
 jq '.base-.image | .!=[]' <<<"{\"base\": $layers_base, \"image\": $layers_image }"
