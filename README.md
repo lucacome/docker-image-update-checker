@@ -1,6 +1,6 @@
 # Docker Image Update Checker Action
 
-Action to check if the base image was updated and your image (published on DockerHub) needs to be rebuilt
+Action to check if the base image was updated and your image (published on DockerHub) needs to be rebuilt. This action will use Docker's API to compare the base layers of your image with the `base-image`, without the need to pull the images.
 
 
 ## Inputs
