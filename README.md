@@ -1,5 +1,10 @@
 # Docker Image Update Checker Action
 
+[![Test](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml/badge.svg)](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml)
+[![GitHub release badge](https://badgen.net/github/release/lucacome/docker-image-update-checker/stable)](https://github.com/lucacome/docker-image-update-checker/releases/latest)
+[![GitHub license badge](https://badgen.net/github/license/lucacome/docker-image-update-checker)](https://github.com/lucacome/docker-image-update-checker/blob/main/LICENSE)
+[![GitHub Workflows badge](https://badgen.net/runkit/lucacome/lucacome-workflow)](https://github.com/search?q=docker-image-update-checker+path%3A.github%2Fworkflows%2F+language%3AYAML&type=Code)
+
 Action to check if the base image was updated and your image (published on DockerHub) needs to be rebuilt. This action will use Docker's API to compare the base layers of your image with the `base-image`, without the need to pull the images.
 
 
