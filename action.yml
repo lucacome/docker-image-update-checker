@@ -1,5 +1,5 @@
 name: "Docker Image Update Checker"
-description: "Check if the base Docker image needs to be updated"
+description: "GitHub Action to check if the base Docker image that your image is based on was updated and your image needs to be updated"
 author: Luca Comellini <lucacome>
 
 inputs:
