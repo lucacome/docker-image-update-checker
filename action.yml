@@ -19,7 +19,7 @@ runs:
     - id: run-script
       run: |
         result=$(base=${{ inputs.base-image }} image=${{ inputs.image }} ${{ github.action_path }}/docker.sh)
-        echo "::set-output name=result::${result}"
+        echo "result=${result}" >>$GITHUB_OUTPUT
       shell: bash
 
 branding:
