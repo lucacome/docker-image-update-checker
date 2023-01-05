@@ -1,6 +1,11 @@
 name: Test
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - v1
+  pull_request:
 
 jobs:
   test1:
@@ -9,7 +14,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test Action
         id: test
         uses: ./
