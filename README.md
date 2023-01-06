@@ -15,8 +15,6 @@ Action to check if the base image was updated and your image (published on Docke
 | `base-image`        | String   | Base Docker Image                  |
 | `image`             | String   | Your image based on `base-image`   |
 
-Note: the `base-image` needs to have the full path. For example for official images like `nginx`, the full path is `library/nginx`.
-
 ## Output
 
 | Name            | Type    | Description                                               |
@@ -45,7 +43,7 @@ jobs:
         id: check
         uses: lucacome/docker-image-update-checker@v1
         with:
-          base-image: library/nginx:1.21.0
+          base-image: nginx:1.21.0
           image: user/app:latest
       -
         name: Build and push
