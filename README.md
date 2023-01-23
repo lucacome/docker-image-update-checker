@@ -41,7 +41,7 @@ jobs:
       -
         name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v1
+        uses: lucacome/docker-image-update-checker@v1.1.1
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
