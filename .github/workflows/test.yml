@@ -9,7 +9,7 @@ on:
 
 jobs:
   test1:
-    name: Test-Action
+    name: Test Update Needed
     runs-on: ubuntu-22.04
     continue-on-error: true
     steps:
@@ -20,14 +20,17 @@ jobs:
         uses: ./
         with:
           base-image: library/nginx:1.21.0
-          image: nginx/nginx-ingress:1.12.0
+          image: nginx/nginx-ingress:2.1.0
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
       - name: Check value
-        run: echo "Needs updating"
-        if: steps.test.outputs.needs-updating == 'true'
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
   test2:
-    name: Test-Action
+    name: Test Update Not Needed
     runs-on: ubuntu-22.04
     continue-on-error: true
     steps:
@@ -42,5 +45,73 @@ jobs:
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
       - name: Check value
-        run: echo "Does not need updating"
-        if: steps.test.outputs.needs-updating == 'false'
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  test3:
+    name: Test Update Needed on ARM64
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: nginx/nginx-ingress:2.1.0
+          platforms: linux/arm64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+  test4:
+    name: Test Update Needed on multiple platforms
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: nginx/nginx-ingress:2.1.0
+          platforms: linux/arm64,linux/amd64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+  test5:
+    name: Test Update Not Needed on multiple platforms
+    runs-on: ubuntu-22.04
+    continue-on-error: true
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: library/nginx:1.21.0
+          platforms: linux/arm64,linux/amd64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi

@@ -9,6 +9,10 @@ inputs:
   image:
     description: "Docker image"
     required: true
+  platforms:
+    description: "Platforms to check"
+    required: false
+    default: "linux/amd64"
 outputs:
   needs-updating:
     description: "True or false"
@@ -18,7 +22,7 @@ runs:
   steps:
     - id: run-script
       run: |
-        result=$(base=${{ inputs.base-image }} image=${{ inputs.image }} ${{ github.action_path }}/docker.sh)
+        result=$(base=${{ inputs.base-image }} image=${{ inputs.image }} platforms=${{ inputs.platforms }} ${{ github.action_path }}/docker.sh)
         echo "result=${result}" >>$GITHUB_OUTPUT
       shell: bash
 
