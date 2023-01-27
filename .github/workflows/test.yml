@@ -7,6 +7,9 @@ on:
       - v1
   pull_request:
 
+env:
+  DEBUG: ${{ secrets.ACTIONS_STEP_DEBUG }}
+
 jobs:
   test1:
     name: Test Update Needed
@@ -35,7 +38,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test Action
         id: test
         uses: ./
@@ -100,7 +103,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test Action
         id: test
         uses: ./
