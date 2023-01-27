@@ -22,7 +22,7 @@ runs:
   steps:
     - id: run-script
       run: |
-        result=$(base=${{ inputs.base-image }} image=${{ inputs.image }} platforms=${{ inputs.platforms }} ${{ github.action_path }}/docker.sh)
+        result=$(TRACE=${{ env.DEBUG == 'true' && '1' || '0' }} base=${{ inputs.base-image }} image=${{ inputs.image }} platforms=${{ inputs.platforms }} ${{ github.action_path }}/docker.sh)
         echo "result=${result}" >>$GITHUB_OUTPUT
       shell: bash
 
