@@ -90,12 +90,12 @@ check_if_library() {
 IFS=: read base base_tag <<<$base
 IFS=: read image image_tag <<<$image
 
-check_if_library "$base"
+check_if_library $base
 base_repo=${result[0]}
 base_token=${result[1]}
 manifests_base=$(get_manifests $base_repo ${base_tag:-latest} $base_token)
 
-check_if_library "$image"
+check_if_library $image
 image_repo=${result[0]}
 image_token=${result[1]}
 manifests_image=$(get_manifests $image_repo ${image_tag:-latest} $image_token)
