@@ -147,3 +147,54 @@ build:
 > **Note**
 >
 > If any of the platforms is not present in either the base-image or the image, the action will exit with an error.
+
+## Debugging
+
+To debug the action, you can set the `DEBUG` environment variable to `true` in the workflow file. The variable can be set at any level.
+
+```yaml
+name: Check docker image
+
+on:
+  schedule:
+    - cron:  '0 4 * * *'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if update available
+        id: check
+        uses: lucacome/docker-image-update-checker@v1
+        with:
+          base-image: nginx:1.21.0
+          image: user/app:latest
+        env:
+          DEBUG: true
+```
+
+To make it more convenient, you can use `${{ secrets.ACTIONS_STEP_DEBUG }}` to enable debugging only when needed.
+
+```yaml
+name: Check docker image
+
+on:
+  schedule:
+    - cron:  '0 4 * * *'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if update available
+        id: check
+        uses: lucacome/docker-image-update-checker@v1
+        with:
+          base-image: nginx:1.21.0
+          image: user/app:latest
+        env:
+          DEBUG: ${{ secrets.ACTIONS_STEP_DEBUG }}
+```
+
+This works even when re-running the action with the `Re-run job` button and the `Enable debug logging` checkbox checked.
+To read more about debugging actions, see [Debugging actions](https://docs.github.com/en/actions/managing-workflow-runs/enabling-debug-logging#enabling-step-debug-logging).
