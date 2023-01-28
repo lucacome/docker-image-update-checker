@@ -14,7 +14,6 @@ jobs:
   test1:
     name: Test Update Needed
     runs-on: ubuntu-22.04
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -35,7 +34,6 @@ jobs:
   test2:
     name: Test Update Not Needed
     runs-on: ubuntu-22.04
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -56,7 +54,6 @@ jobs:
   test3:
     name: Test Update Needed on ARM64
     runs-on: ubuntu-22.04
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -78,7 +75,6 @@ jobs:
   test4:
     name: Test Update Needed on multiple platforms
     runs-on: ubuntu-22.04
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -100,7 +96,6 @@ jobs:
   test5:
     name: Test Update Not Needed on multiple platforms
     runs-on: ubuntu-22.04
-    continue-on-error: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -111,6 +106,26 @@ jobs:
           base-image: nginx:1.21.0
           image: library/nginx:1.21.0
           platforms: linux/arm64,linux/amd64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  test6:
+    name: Test single platform
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: alpine:latest
+          image: lucacome/alpine-amd64
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
       - name: Check value
