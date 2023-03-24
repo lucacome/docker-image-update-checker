@@ -34,8 +34,8 @@ get_manifests() {
         return
     fi
 
-    manifests_with_variant=$(jq -r '[.manifests[] | select(.platform.architecture | contains ("unknown") | not) | select(.platform.variant != null) | {digest: .digest, platform: [(.platform.os +"/"+ .platform.architecture +"/"+ .platform.variant), (.platform.os +"/"+ .platform.architecture)] }]' <<<"$manifest_list")
-    manifests_without_variant=$(jq -r '[.manifests[] | select(.platform.architecture | contains ("unknown") | not) | select(.platform.variant == null) | {digest: .digest, platform: [(.platform.os +"/"+ .platform.architecture)]}]' <<<"$manifest_list")
+    manifests_with_variant=$(jq -r '[.manifests[] | select(.platform.architecture | contains ("unknown") | not) | select(.platform.variant != null) | {digest: .digest, platforms: [(.platform.os +"/"+ .platform.architecture +"/"+ .platform.variant), (.platform.os +"/"+ .platform.architecture)] }]' <<<"$manifest_list")
+    manifests_without_variant=$(jq -r '[.manifests[] | select(.platform.architecture | contains ("unknown") | not) | select(.platform.variant == null) | {digest: .digest, platforms: [(.platform.os +"/"+ .platform.architecture)]}]' <<<"$manifest_list")
     # Concat both lists
     echo "${manifests_with_variant}${manifests_without_variant}" | jq -s 'flatten(1)'
 }
@@ -113,7 +113,7 @@ diff=false
 # loop through plafforms split by comma
 for platform in $(echo $platforms | tr -s ',' ' '); do
     # get the digest for the platform
-    digest_base=$(jq -r ".[] | select(.platform[] == \"$platform\") | .digest" <<<"$manifests_base")
+    digest_base=$(jq -r ".[] | select(.platforms[] == \"$platform\") | .digest" <<<"$manifests_base")
 
     # if the digest is empty, then the platform is not present in the base image
     if [ -z "$digest_base" ]; then
@@ -121,7 +121,7 @@ for platform in $(echo $platforms | tr -s ',' ' '); do
     fi
 
     # get the digest for the platform
-    digest_image=$(jq -r ".[] | select(.platform[] == \"$platform\") | .digest" <<<"$manifests_image")
+    digest_image=$(jq -r ".[] | select(.platforms[] == \"$platform\") | .digest" <<<"$manifests_image")
 
     # if the digest is empty, then the platform is not present in the image
     if [ -z "$digest_image" ]; then
