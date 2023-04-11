@@ -1,0 +1,19 @@
+name: Create Draft Release Notes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  draft-release:
+    name: Create Draft Release
+    runs-on: ubuntu-22.04
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v3
+        - name: Draft Release Notes
+          uses: lucacome/draft-release@v0.1.1
+          with:
+            minor-label: 'enhancement'
+            major-label: 'change'
