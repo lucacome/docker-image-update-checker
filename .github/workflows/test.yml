@@ -124,7 +124,7 @@ jobs:
         id: test
         uses: ./
         with:
-          base-image: alpine:latest
+          base-image: alpine:3.17.1
           image: lucacome/alpine-amd64
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
