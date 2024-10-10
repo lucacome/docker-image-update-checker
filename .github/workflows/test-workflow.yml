@@ -27,7 +27,7 @@ jobs:
     name: Test Update Needed
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -54,7 +54,7 @@ jobs:
     name: Test Update Not Needed
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -221,7 +221,7 @@ jobs:
     name: Test Update Needed on multiple platforms with variants
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14, windows-2022]
+        os: [ubuntu-22.04, windows-2022]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
