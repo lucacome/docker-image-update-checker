@@ -16,7 +16,7 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
   core.info(`auths: ${JSON.stringify(auths)}`)
   const registryAuth = auths[registry]
 
-  core.info(`${registryAuth}`)
+  core.info(`${JSON.stringify(registryAuth)}`)
 
   if (!registryAuth || !registryAuth.username || !registryAuth.password) {
     core.warning(`No credentials found for ${registry}`)
