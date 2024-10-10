@@ -12,19 +12,16 @@ inputs:
   platforms:
     description: "Platforms to check"
     required: false
-    default: "linux/amd64"
+    default: "all"
 outputs:
   needs-updating:
-    description: "True or false"
-    value: ${{ steps.run-script.outputs.result }}
+    description: "Whether the image needs updating"
+  diff-images:
+    description: "The diff of the images"
+
 runs:
-  using: "composite"
-  steps:
-    - id: run-script
-      run: |
-        result=$(TRACE=${{ env.DEBUG == 'true' && '1' || '0' }} base=${{ inputs.base-image }} image=${{ inputs.image }} platforms=${{ inputs.platforms }} ${{ github.action_path }}/docker.sh)
-        echo "result=${result}" >>$GITHUB_OUTPUT
-      shell: bash
+  using: node20
+  main: "dist/index.js"
 
 branding:
   icon: anchor
