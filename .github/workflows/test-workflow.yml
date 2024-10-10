@@ -218,7 +218,7 @@ jobs:
   # Test with platform variants
 
   test9:
-    name: Test Update Needed on multiple platforms with variants
+    name: Test Update Needed (Docker login) on multiple platforms with variants
     strategy:
       matrix:
         os: [ubuntu-22.04, windows-2022]
