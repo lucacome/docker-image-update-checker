@@ -10,10 +10,9 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
   const config = Docker.configFile()
   if (!config) {
     core.warning('No Docker config found')
-    return undefined
   }
 
-  const auths = config.auths || {}
+  const auths = config?.auths || {}
   const registryAuth = auths[registry]
 
   if (!registryAuth || !registryAuth.auth) {
