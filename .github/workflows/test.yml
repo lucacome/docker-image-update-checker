@@ -11,6 +11,9 @@ env:
   DEBUG: ${{ secrets.ACTIONS_STEP_DEBUG }}
 
 jobs:
+  #####################################
+  # Singe platform tests
+
   test1:
     name: Test Update Needed
     runs-on: ubuntu-22.04
@@ -52,6 +55,26 @@ jobs:
           fi
 
   test3:
+    name: Test single platform
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: alpine:3.17.1
+          image: lucacome/alpine-amd64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  test4:
     name: Test Update Needed on ARM64
     runs-on: ubuntu-22.04
     steps:
@@ -72,7 +95,10 @@ jobs:
             exit 1
           fi
 
-  test4:
+  #####################################
+  # Test with multiple platforms
+
+  test5:
     name: Test Update Needed on multiple platforms
     runs-on: ubuntu-22.04
     steps:
@@ -93,7 +119,7 @@ jobs:
             exit 1
           fi
 
-  test5:
+  test6:
     name: Test Update Not Needed on multiple platforms
     runs-on: ubuntu-22.04
     steps:
@@ -113,9 +139,11 @@ jobs:
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
             exit 1
           fi
+  #####################################
+  # Test with platform variants
 
-  test6:
-    name: Test single platform
+  test7:
+    name: Test Update Needed on multiple platforms with variants
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Repository
@@ -124,8 +152,30 @@ jobs:
         id: test
         uses: ./
         with:
-          base-image: alpine:3.17.1
-          image: lucacome/alpine-amd64
+          base-image: alpine:latest
+          image: golang:1.14.15-alpine3.13
+          platforms: linux/arm64/v8,linux/arm/v7,linux/amd64
+      - name: Get Test Output
+        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+  test8:
+    name: Test Update Not Needed on multiple platforms with variants
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: alpine:3.17.2
+          image: alpine:3.17.2
+          platforms: linux/arm64/v8,linux/arm/v7,linux/amd64
       - name: Get Test Output
         run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
       - name: Check value
