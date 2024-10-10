@@ -2,7 +2,6 @@ import * as core from '@actions/core'
 import {ContainerRegistry} from './registry'
 import {DockerHub} from './docker-hub'
 import {GitHubContainerRegistry} from './github'
-// import {GoogleContainerRegistry} from './gcr'
 import {getDiffs, parseImageInput} from './image-utils'
 import {Util} from '@docker/actions-toolkit/lib/util'
 
@@ -12,8 +11,6 @@ function getRegistryInstance(registry: string): ContainerRegistry {
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()
-    // case 'gcr':
-    //   return new GoogleContainerRegistry(process.env.GOOGLE_TOKEN || '')
     default:
       throw new Error(`Invalid registry specified: ${registry}`)
   }

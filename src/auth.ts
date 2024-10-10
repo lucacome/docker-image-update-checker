@@ -29,7 +29,7 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
   const auths = config.auths || {}
   const registryAuth = auths[registry]
 
-  if (!registryAuth) {
+  if (!registryAuth || !registryAuth.auth) {
     core.warning(`No authentication found for registry: ${registry}`)
     return undefined
   }

@@ -36,5 +36,10 @@ repos:
     hooks:
       - id: yamllint
 
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.3
+    hooks:
+      - id: actionlint
+
 ci:
   autoupdate_schedule: quarterly # We use renovate for more frequent updates and there's no way to disable autoupdate

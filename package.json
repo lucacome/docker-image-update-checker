@@ -38,7 +38,7 @@
     "url": "git+https://github.com/lucacome/docker-image-update-checker.git"
   },
   "scripts": {
-    "all": "yarn run format && yarn run test && yarn run build",
+    "all": "yarn run format && yarn run build && yarn run test",
     "build": "ncc build --source-map --minify --license licenses.txt",
     "eslint": "eslint --max-warnings=0 .",
     "eslint:fix": "eslint --fix .",
