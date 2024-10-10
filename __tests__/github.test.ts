@@ -1,12 +1,11 @@
 import {GitHubContainerRegistry} from '../src/github'
-import {describe, expect, test, it} from '@jest/globals'
 
 describe('DockerHub', () => {
   const gitHubRegistry = new GitHubContainerRegistry()
 
   test('getDigest', async () => {
     // Use an existing public repository and tag for testing
-    const repository = 'ghcr.io/nginxinc/kubernetes-ingress'
+    const repository = 'ghcr.io/nginxinc/nginx-gateway-fabric'
     const tag = 'edge'
 
     const digest = await gitHubRegistry.getImageInfo({repository, tag})

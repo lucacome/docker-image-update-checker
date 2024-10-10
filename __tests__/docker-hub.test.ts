@@ -1,5 +1,4 @@
 import {DockerHub} from '../src/docker-hub'
-import {describe, expect, test, it} from '@jest/globals'
 import {findDiffImages} from '../src/image-utils'
 
 describe('DockerHub', () => {

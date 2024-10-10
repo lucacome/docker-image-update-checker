@@ -10,18 +10,18 @@ inputs:
     description: "Docker image"
     required: true
   platforms:
-    description: 'Platforms to check'
+    description: "Platforms to check"
     required: false
-    default: 'all'
+    default: "all"
 outputs:
   needs-updating:
-    description: 'Whether the image needs updating'
+    description: "Whether the image needs updating"
   diff-images:
-    description: 'The diff of the images'
+    description: "The diff of the images"
 
 runs:
   using: node20
-  main: 'dist/index.js'
+  main: "dist/index.js"
 
 branding:
   icon: anchor

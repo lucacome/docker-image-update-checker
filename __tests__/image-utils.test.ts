@@ -216,7 +216,7 @@ describe('getDiffs', () => {
       },
     ]
 
-    const result = getDiffs('all', image1, image2)
+    const result = getDiffs(['all'], image1, image2)
     expect(result).toEqual(expectedResult)
   })
 
@@ -230,7 +230,7 @@ describe('getDiffs', () => {
       },
     ]
 
-    const result = getDiffs('linux/amd64', image1, image2)
+    const result = getDiffs(['linux/amd64'], image1, image2)
     expect(result).toEqual(expectedResult)
   })
 
@@ -251,14 +251,14 @@ describe('getDiffs', () => {
       },
     ]
 
-    const result = getDiffs('linux/amd64,linux/arm64', image1, image2)
+    const result = getDiffs(['linux/amd64', 'linux/arm64'], image1, image2)
     expect(result).toEqual(expectedResult)
   })
 
   test('should return empty array when there are no diff images for specified platform', () => {
     const expectedResult: ImageInfo[] = []
 
-    const result = getDiffs('windows/amd64', image1, image2)
+    const result = getDiffs(['windows/amd64'], image1, image2)
     expect(result).toEqual(expectedResult)
   })
 })

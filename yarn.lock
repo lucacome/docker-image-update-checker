@@ -3450,13 +3450,13 @@ __metadata:
   linkType: hard
 
 "form-data@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "form-data@npm:4.0.0"
+  version: 4.0.1
+  resolution: "form-data@npm:4.0.1"
   dependencies:
     asynckit: "npm:^0.4.0"
     combined-stream: "npm:^1.0.8"
     mime-types: "npm:^2.1.12"
-  checksum: 10c0/cb6f3ac49180be03ff07ba3ff125f9eba2ff0b277fb33c7fc47569fc5e616882c5b1c69b9904c4c4187e97dd0419dd03b134174756f296dec62041e6527e2c6e
+  checksum: 10c0/bb102d570be8592c23f4ea72d7df9daa50c7792eb0cf1c5d7e506c1706e7426a4e4ae48a35b109e91c85f1c0ec63774a21ae252b66f4eb981cb8efef7d0463c8
   languageName: node
   linkType: hard
 
@@ -4928,6 +4928,7 @@ __metadata:
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@docker/actions-toolkit": "npm:^0.39.0"
+    "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^20.11.28"
     "@typescript-eslint/eslint-plugin": "npm:^8.8.0"
