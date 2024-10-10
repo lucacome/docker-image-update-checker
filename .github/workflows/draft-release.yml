@@ -1,0 +1,24 @@
+name: Create Draft Release Notes
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  draft-release:
+    name: Create Draft Release
+    runs-on: ubuntu-22.04
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Draft Release Notes
+        uses: lucacome/draft-release@v1.1.1
+        with:
+          minor-label: "enhancement"
+          major-label: "change"
+          publish: ${{ github.ref_type == 'tag' }}

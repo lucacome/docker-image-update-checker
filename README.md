@@ -7,7 +7,6 @@
 
 Action to check if the base image was updated and your image (published on DockerHub) needs to be rebuilt. This action will use Docker's API to compare the base layers of your image with the `base-image`, without the need to pull the images.
 
-
 ## Inputs
 
 | Name                | Type     | Description                        |
@@ -22,8 +21,8 @@ Action to check if the base image was updated and your image (published on Docke
 |-----------------|---------|-----------------------------------------------------------|
 | `needs-updating`| String  | 'true' or 'false' if the image needs to be updated or not |
 
-
 ## Examples
+
 - [Minimal](#minimal)
 - [Single platform](#single-platform)
 - [Multiple platforms](#multiple-platforms)
@@ -54,7 +53,6 @@ jobs:
         run: echo "Needs updating: ${{ steps.check.outputs.needs-updating }}"
 
 ```
-
 
 ### Single platform
 
@@ -89,10 +87,10 @@ jobs:
           tags: user/app:latest
         if: steps.check.outputs.needs-updating == 'true'
 ```
+
 > **Note**
 >
 > The `platforms` input is optional and defaults to `linux/amd64`.
-
 
 ### Multiple platforms
 
