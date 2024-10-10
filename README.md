@@ -119,7 +119,7 @@ jobs:
           image: user/app:latest
           platforms: linux/amd64,linux/arm64
 
-build:
+  build:
     needs: check
     runs-on: ubuntu-latest
     if: needs.check.outputs.needs-updating == 'true'
