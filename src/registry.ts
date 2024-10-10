@@ -1,6 +1,6 @@
 import axios, {AxiosError} from 'axios'
-import {AuthConfig} from '@docker/actions-toolkit/lib/types/docker/docker'
 import * as core from '@actions/core'
+import {DockerAuth} from './auth'
 
 export interface Image {
   repository: string
@@ -66,7 +66,7 @@ export abstract class ContainerRegistry {
 
   protected abstract getToken(repository: string): Promise<string>
 
-  protected abstract getCredentials(): AuthConfig | undefined
+  protected abstract getCredentials(): DockerAuth | undefined
 
   protected async getLayers(digest: string, repo: string, token: string): Promise<string[]> {
     const url = `https://${this.baseUrl}${repo}/manifests/${digest}`
