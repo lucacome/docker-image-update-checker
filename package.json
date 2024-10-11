@@ -9,7 +9,7 @@
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.13",
-    "@types/node": "^20.11.28",
+    "@types/node": "^20.16.11",
     "@typescript-eslint/eslint-plugin": "^8.8.1",
     "@typescript-eslint/parser": "^8.8.1",
     "@vercel/ncc": "^0.38.2",
