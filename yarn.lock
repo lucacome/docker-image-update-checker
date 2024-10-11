@@ -1633,7 +1633,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^8.8.0":
+"@typescript-eslint/eslint-plugin@npm:^8.8.1":
   version: 8.8.1
   resolution: "@typescript-eslint/eslint-plugin@npm:8.8.1"
   dependencies:
@@ -1656,7 +1656,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^8.8.0":
+"@typescript-eslint/parser@npm:^8.8.1":
   version: 8.8.1
   resolution: "@typescript-eslint/parser@npm:8.8.1"
   dependencies:
@@ -4931,8 +4931,8 @@ __metadata:
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.13"
     "@types/node": "npm:^20.11.28"
-    "@typescript-eslint/eslint-plugin": "npm:^8.8.0"
-    "@typescript-eslint/parser": "npm:^8.8.0"
+    "@typescript-eslint/eslint-plugin": "npm:^8.8.1"
+    "@typescript-eslint/parser": "npm:^8.8.1"
     "@vercel/ncc": "npm:^0.38.2"
     axios: "npm:^1.7.7"
     eslint: "npm:^8.57.1"
