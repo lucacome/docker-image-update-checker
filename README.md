@@ -24,6 +24,16 @@ This action checks if a Docker image needs to be updated based on the base image
 | `diff-images`    | String | List of images (platforms) that need to be updated                                    |
 | `diff-json`      | String | JSON output of the images (platforms) that need to be updated with the list of layers |
 
+## Runners
+
+The action works on `ubuntu` and `windows` runners with or without a `docker/login-action` step. Without a login step, it will perform an anonymous pull of the manifests, except for Docker Hub because the Runners already have a token provided by GitHub (I can't find any documentation on this, but the token is there and it works).
+
+It also works on `macos` runners, but because `docker` is not installed on the runners, you can't use the `docker/login-action`, so you can only use it with public images and anonymous pulls.
+
+## Authentication
+
+To authenticate with a Docker registry, you can use the [`docker/login-action`](https://github.com/docker/login-action) in a step before this action.
+
 ## Examples
 
 - [Minimal](#minimal)
@@ -121,7 +131,7 @@ jobs:
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64 # Use 'all' to check all platforms
 
   build:
     needs: check
