@@ -1,25 +1,28 @@
 # Docker Image Update Checker Action
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/lucacome/docker-image-update-checker/badge)](https://scorecard.dev/viewer/?uri=github.com/lucacome/docker-image-update-checker)
 [![Test](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml/badge.svg)](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml)
 [![GitHub release badge](https://badgen.net/github/release/lucacome/docker-image-update-checker/stable)](https://github.com/lucacome/docker-image-update-checker/releases/latest)
 [![GitHub license badge](https://badgen.net/github/license/lucacome/docker-image-update-checker)](https://github.com/lucacome/docker-image-update-checker/blob/main/LICENSE)
 [![GitHub Workflows badge](https://badgen.net/runkit/lucacome/lucacome-workflow)](https://github.com/search?q=docker-image-update-checker+path%3A.github%2Fworkflows%2F+language%3AYAML&type=Code)
 
-Action to check if the base image was updated and your image (published on DockerHub) needs to be rebuilt. This action will use Docker's API to compare the base layers of your image with the `base-image`, without the need to pull the images.
+This action checks if a Docker image needs to be updated based on the base image it uses (e.g. `FROM nginx:1.21.0`). By default it checks for all platforms, but you can specify the platforms to check.
 
 ## Inputs
 
-| Name                | Type     | Description                        |
-|---------------------|----------|------------------------------------|
-| `base-image`        | String   | Base Docker Image                  |
-| `image`             | String   | Your image based on `base-image`   |
-| `platforms`         | String   | Platforms to check                 |
+| Name         | Type   | Description                                                                |
+|--------------|--------|----------------------------------------------------------------------------|
+| `base-image` | String | Base Docker Image. This is the image you have as `FROM` in your Dockerfile |
+| `image`      | String | Your image based on `base-image`                                           |
+| `platforms`  | String | Platforms to check (default `all`), e.g. `linux/amd64,linux/arm64`         |
 
 ## Output
 
-| Name            | Type    | Description                                               |
-|-----------------|---------|-----------------------------------------------------------|
-| `needs-updating`| String  | 'true' or 'false' if the image needs to be updated or not |
+| Name             | Type   | Description                                                                           |
+|------------------|--------|---------------------------------------------------------------------------------------|
+| `needs-updating` | String | 'true' or 'false' if the image needs to be updated or not                             |
+| `diff-images`    | String | List of images (platforms) that need to be updated                                    |
+| `diff-json`      | String | JSON output of the images (platforms) that need to be updated with the list of layers |
 
 ## Examples
 
@@ -29,7 +32,7 @@ Action to check if the base image was updated and your image (published on Docke
 
 ### Minimal
 
-Check if the image `user/app:latest`, that has `nginx` has a base image, needs to be updated:
+Check if the image `user/app:latest`, that has `nginx` as a base image, needs to be updated:
 
 ```yaml
 name: Check docker image
@@ -44,7 +47,7 @@ jobs:
     steps:
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v1
+        uses: lucacome/docker-image-update-checker@v2.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
@@ -56,7 +59,7 @@ jobs:
 
 ### Single platform
 
-Check if the image `user/app:latest`, that has `nginx` has a base image, needs to be updated:
+Check if the image `user/app:latest`, that has `nginx` has a base image, needs to be updated and build and push the image if needed:
 
 ```yaml
 name: Check docker image
@@ -70,27 +73,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.2.1
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v1
+        uses: lucacome/docker-image-update-checker@v2.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
+          platforms: linux/amd64
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6.9.0
         with:
           context: .
           push: true
           tags: user/app:latest
         if: steps.check.outputs.needs-updating == 'true'
 ```
-
-> **Note**
->
-> The `platforms` input is optional and defaults to `linux/amd64`.
 
 ### Multiple platforms
 
@@ -109,9 +109,15 @@ jobs:
     outputs:
       needs-updating: ${{ steps.check.outputs.needs-updating }}
     steps:
+      - name: Login to Docker Registry
+        uses: docker/login-action@v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v1
+        uses: lucacome/docker-image-update-checker@v2.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
@@ -123,18 +129,18 @@ jobs:
     if: needs.check.outputs.needs-updating == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.2.1
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3.2.0
         with:
           platforms: arm64
 
       - name: Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3.7.1
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6.9.0
         with:
           context: .
           push: true
@@ -144,55 +150,10 @@ jobs:
 
 > **Note**
 >
-> If any of the platforms is not present in either the base-image or the image, the action will exit with an error.
+> The `platforms` input is optional and defaults to `all`.
 
 ## Debugging
 
-To debug the action, you can set the `DEBUG` environment variable to `true` in the workflow file. The variable can be set at any level.
-
-```yaml
-name: Check docker image
-
-on:
-  schedule:
-    - cron:  '0 4 * * *'
-
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if update available
-        id: check
-        uses: lucacome/docker-image-update-checker@v1
-        with:
-          base-image: nginx:1.21.0
-          image: user/app:latest
-        env:
-          DEBUG: true
-```
-
-To make it more convenient, you can use `${{ secrets.ACTIONS_STEP_DEBUG }}` to enable debugging only when needed.
-
-```yaml
-name: Check docker image
-
-on:
-  schedule:
-    - cron:  '0 4 * * *'
-
-jobs:
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if update available
-        id: check
-        uses: lucacome/docker-image-update-checker@v1
-        with:
-          base-image: nginx:1.21.0
-          image: user/app:latest
-        env:
-          DEBUG: ${{ secrets.ACTIONS_STEP_DEBUG }}
-```
-
-This works even when re-running the action with the `Re-run job` button and the `Enable debug logging` checkbox checked.
-To read more about debugging actions, see [Debugging actions](https://docs.github.com/en/actions/managing-workflow-runs/enabling-debug-logging#enabling-step-debug-logging).
+If something is not working as expected, you can enable debug logging to get more information (a lot more information).
+You can re-run the action with the `Enable debug logging` checkbox checked for a single run or set the `ACTIONS_STEP_DEBUG` secret to `true` in the repository's secrets.
+For more information on debugging actions, see [Enabling debug logging](https://docs.github.com/en/actions/managing-workflow-runs/enabling-debug-logging).
