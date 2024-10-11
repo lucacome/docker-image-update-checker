@@ -29,6 +29,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -36,9 +37,9 @@ jobs:
           base-image: library/nginx:1.21.0
           image: nginx/nginx-ingress:2.1.0
           platforms: linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
 
       - name: Check value
@@ -53,6 +54,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -60,10 +62,11 @@ jobs:
           base-image: nginx:1.21.0
           image: library/nginx:1.21.0
           platforms: linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -76,14 +79,18 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
         with:
           base-image: alpine:3.17.1
           image: lucacome/alpine-amd64
-      - name: Get Test Output
-        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -96,6 +103,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -103,10 +111,11 @@ jobs:
           base-image: nginx:1.21.0
           image: nginx/nginx-ingress:2.1.0
           platforms: linux/arm64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
@@ -122,6 +131,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -129,10 +139,11 @@ jobs:
           base-image: nginx:1.21.0
           image: nginx/nginx-ingress:2.1.0
           platforms: linux/arm64, linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
@@ -145,6 +156,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -152,10 +164,11 @@ jobs:
           base-image: nginx:1.21.0
           image: library/nginx:1.21.0
           platforms: linux/arm64,linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -168,6 +181,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -175,10 +189,11 @@ jobs:
           base-image: nginx:1.25.2-alpine
           image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
           platforms: linux/arm64,linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -212,10 +227,11 @@ jobs:
           base-image: nginx:1.25.2-alpine
           image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
           platforms: linux/arm64,linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -228,6 +244,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -235,10 +252,11 @@ jobs:
           base-image: nginx:1.21.0
           image: library/nginx:1.21.0
           platforms: all
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
@@ -268,8 +286,11 @@ jobs:
           base-image: alpine:latest
           image: golang:1.14.15-alpine3.13
           platforms: linux/arm64/v8,linux/arm/v7,linux/amd64
-      - name: Get Test Output
-        run: echo "Workflow Docker Image ${{ steps.test.outputs.needs-updating }}"
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
@@ -282,6 +303,7 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+
       - name: Test Action
         id: test
         uses: ./
@@ -292,10 +314,11 @@ jobs:
             linux/arm64/v8
             linux/arm/v7
             linux/amd64
-      - name: Get Test Output
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
-          echo "Needs updating: ${{ steps.test.outputs.needs-updating }}"
           echo "Images: ${{ steps.test.outputs.diff-images }}"
+
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
