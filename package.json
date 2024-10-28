@@ -8,7 +8,7 @@
   "description": "GitHub Action to check if a Docker image needs to be updated",
   "devDependencies": {
     "@jest/globals": "^29.7.0",
-    "@types/jest": "^29.5.13",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.16.13",
     "@typescript-eslint/eslint-plugin": "^8.11.0",
     "@typescript-eslint/parser": "^8.11.0",
