@@ -674,9 +674,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.53.0":
-  version: 0.53.0
-  resolution: "@docker/actions-toolkit@npm:0.53.0"
+"@docker/actions-toolkit@npm:^0.54.0":
+  version: 0.54.0
+  resolution: "@docker/actions-toolkit@npm:0.54.0"
   dependencies:
     "@actions/artifact": "npm:^2.2.1"
     "@actions/cache": "npm:^4.0.0"
@@ -696,10 +696,10 @@ __metadata:
     he: "npm:^1.2.0"
     js-yaml: "npm:^4.1.0"
     jwt-decode: "npm:^4.0.0"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.1"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/a6e8a2cd2e6bf65e534267f3073adfd4c384697dbe989b70ca53f2108eed49ec489223092bdc27a89f6f3c1740f21454a059c6ece3089d1a08931979a55d3d53
+  checksum: 10c0/098de64af1619bfe972be74cc2e9edf372fa5482c6f517bd4e8241228f7eb9e0c0db73b2a217feb89844d85d1c280c405e473ab6325925586a9ccdb8b99f4f40
   languageName: node
   linkType: hard
 
@@ -4941,7 +4941,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^1.11.1"
-    "@docker/actions-toolkit": "npm:^0.53.0"
+    "@docker/actions-toolkit": "npm:^0.54.0"
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.12.0"
@@ -5993,12 +5993,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3":
-  version: 7.6.3
-  resolution: "semver@npm:7.6.3"
+"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3, semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
   bin:
     semver: bin/semver.js
-  checksum: 10c0/88f33e148b210c153873cb08cfe1e281d518aaa9a666d4d148add6560db5cd3c582f3a08ccb91f38d5f379ead256da9931234ed122057f40bb5766e65e58adaf
+  checksum: 10c0/fd603a6fb9c399c6054015433051bdbe7b99a940a8fb44b85c2b524c4004b023d7928d47cb22154f8d054ea7ee8597f586605e05b52047f048278e4ac56ae958
   languageName: node
   linkType: hard
 
