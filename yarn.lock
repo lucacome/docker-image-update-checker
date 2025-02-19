@@ -26,9 +26,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "@actions/cache@npm:4.0.0"
+"@actions/cache@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "@actions/cache@npm:4.0.1"
   dependencies:
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.0.1"
@@ -40,8 +40,7 @@ __metadata:
     "@azure/storage-blob": "npm:^12.13.0"
     "@protobuf-ts/plugin": "npm:^2.9.4"
     semver: "npm:^6.3.1"
-    twirp-ts: "npm:^2.5.0"
-  checksum: 10c0/b8b5ff2af74972bdeef5a77feb01a3eabfcf5c313debfa0ad7a413f3bc8ea00ab130e13eb48ca5f06ca295d1e3366d360ea9297e906995cc54886f5ffe012521
+  checksum: 10c0/ea847ec763568335d328375009bd346cad24b35eab5e1ac28d2ad728aabdebd6ece9e0f07864fa1c96ca64eb5f46f884c05a311828fa42880ce5d7ee2639b21e
   languageName: node
   linkType: hard
 
@@ -674,12 +673,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.53.0":
-  version: 0.53.0
-  resolution: "@docker/actions-toolkit@npm:0.53.0"
+"@docker/actions-toolkit@npm:^0.55.0":
+  version: 0.55.0
+  resolution: "@docker/actions-toolkit@npm:0.55.0"
   dependencies:
     "@actions/artifact": "npm:^2.2.1"
-    "@actions/cache": "npm:^4.0.0"
+    "@actions/cache": "npm:^4.0.1"
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.1.1"
     "@actions/github": "npm:^6.0.0"
@@ -696,10 +695,10 @@ __metadata:
     he: "npm:^1.2.0"
     js-yaml: "npm:^4.1.0"
     jwt-decode: "npm:^4.0.0"
-    semver: "npm:^7.6.3"
+    semver: "npm:^7.7.1"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/a6e8a2cd2e6bf65e534267f3073adfd4c384697dbe989b70ca53f2108eed49ec489223092bdc27a89f6f3c1740f21454a059c6ece3089d1a08931979a55d3d53
+  checksum: 10c0/a8f0a32d9f33aab416890b4e62ce35e88ddb06e5c3c32b73c9c7a2527df84e111193cae894517753ee3b447faf3dbc2c98e2101dafda5c6e823d0be19c74c49a
   languageName: node
   linkType: hard
 
@@ -4941,7 +4940,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^1.11.1"
-    "@docker/actions-toolkit": "npm:^0.53.0"
+    "@docker/actions-toolkit": "npm:^0.55.0"
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.13.4"
@@ -5993,12 +5992,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3":
-  version: 7.6.3
-  resolution: "semver@npm:7.6.3"
+"semver@npm:^7.3.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.0, semver@npm:^7.6.3, semver@npm:^7.7.1":
+  version: 7.7.1
+  resolution: "semver@npm:7.7.1"
   bin:
     semver: bin/semver.js
-  checksum: 10c0/88f33e148b210c153873cb08cfe1e281d518aaa9a666d4d148add6560db5cd3c582f3a08ccb91f38d5f379ead256da9931234ed122057f40bb5766e65e58adaf
+  checksum: 10c0/fd603a6fb9c399c6054015433051bdbe7b99a940a8fb44b85c2b524c4004b023d7928d47cb22154f8d054ea7ee8597f586605e05b52047f048278e4ac56ae958
   languageName: node
   linkType: hard
 
