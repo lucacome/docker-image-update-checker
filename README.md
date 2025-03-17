@@ -120,7 +120,7 @@ jobs:
       needs-updating: ${{ steps.check.outputs.needs-updating }}
     steps:
       - name: Login to Docker Registry
-        uses: docker/login-action@v3.3.0
+        uses: docker/login-action@v3.4.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
