@@ -2010,7 +2010,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.7.9":
+"axios@npm:^1.8.3":
   version: 1.8.3
   resolution: "axios@npm:1.8.3"
   dependencies:
@@ -4910,7 +4910,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": "npm:^8.26.1"
     "@typescript-eslint/parser": "npm:^8.26.1"
     "@vercel/ncc": "npm:^0.38.3"
-    axios: "npm:^1.7.9"
+    axios: "npm:^1.8.3"
     eslint: "npm:^8.57.1"
     eslint-config-prettier: "npm:^10.0.2"
     eslint-plugin-import: "npm:^2.31.0"
