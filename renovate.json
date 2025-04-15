@@ -4,5 +4,17 @@
     "github>nginxinc/k8s-common",
     "schedule:weekly"
   ],
-  "rangeStrategy": "bump"
+  "rangeStrategy": "bump",
+  "packageRules": [
+    {
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false,
+      "matchPackageNames": [
+        "/^node$/",
+        "/@types/node/"
+      ]
+    }
+  ]
 }
