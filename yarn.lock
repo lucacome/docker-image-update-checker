@@ -672,9 +672,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.59.0":
-  version: 0.59.0
-  resolution: "@docker/actions-toolkit@npm:0.59.0"
+"@docker/actions-toolkit@npm:^0.61.0":
+  version: 0.61.0
+  resolution: "@docker/actions-toolkit@npm:0.61.0"
   dependencies:
     "@actions/artifact": "npm:^2.3.2"
     "@actions/cache": "npm:^4.0.3"
@@ -697,7 +697,7 @@ __metadata:
     semver: "npm:^7.7.1"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.3"
-  checksum: 10c0/0ed443f6456b61c152549508c2a8d71246f6d1dec05e951b220b556c77897f5a1caada54f1ec4ea54c626afa2e5f01e20b57747b9149f273798fc39131a9a647
+  checksum: 10c0/cd70ee5cec89e23af7dd53da8faf3c146278f4fb251c6509c4090f4aec7b665a449944b4b8346256efbc1e55cd0a5a41c43d2aeb0e37d06e9c9b92eee0306255
   languageName: node
   linkType: hard
 
@@ -4925,7 +4925,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^1.11.1"
-    "@docker/actions-toolkit": "npm:^0.59.0"
+    "@docker/actions-toolkit": "npm:^0.61.0"
     "@jest/globals": "npm:^29.7.0"
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^20.17.32"
