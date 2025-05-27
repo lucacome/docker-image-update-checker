@@ -94,7 +94,7 @@ jobs:
           platforms: linux/amd64
 
       - name: Build and push
-        uses: docker/build-push-action@v6.16.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: .
           push: true
@@ -150,7 +150,7 @@ jobs:
         uses: docker/setup-buildx-action@v3.10.0
 
       - name: Build and push
-        uses: docker/build-push-action@v6.16.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: .
           push: true
