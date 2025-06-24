@@ -147,7 +147,7 @@ jobs:
           platforms: arm64
 
       - name: Docker Buildx
-        uses: docker/setup-buildx-action@v3.10.0
+        uses: docker/setup-buildx-action@v3.11.1
 
       - name: Build and push
         uses: docker/build-push-action@v6.18.0
