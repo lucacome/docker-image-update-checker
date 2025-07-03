@@ -1673,12 +1673,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.19.1":
-  version: 20.19.1
-  resolution: "@types/node@npm:20.19.1"
+"@types/node@npm:^20.19.4":
+  version: 20.19.4
+  resolution: "@types/node@npm:20.19.4"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/4f1c3c8ec24c79af6802b376fa307904abf19accb9ac291de0bfc02220494c8b027d3ef733dbf64cc09b37594f22f679a15eabb30f3785bcfcc13bd9bbd8c0e2
+  checksum: 10c0/53f40c963d1804d2e87ad942636fee4be0e1ca88f2173b2a52b198797747bfb55d9ba6613cd918a0c5083a03b87d58688497c7ea58a8f3108fc86a5d627528e1
   languageName: node
   linkType: hard
 
@@ -5161,7 +5161,7 @@ __metadata:
     "@docker/actions-toolkit": "npm:^0.62.1"
     "@jest/globals": "npm:^30.0.4"
     "@types/jest": "npm:^30.0.0"
-    "@types/node": "npm:^20.19.1"
+    "@types/node": "npm:^20.19.4"
     "@typescript-eslint/eslint-plugin": "npm:^8.35.0"
     "@typescript-eslint/parser": "npm:^8.35.0"
     "@vercel/ncc": "npm:^0.38.3"
