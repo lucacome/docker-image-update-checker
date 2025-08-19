@@ -3,7 +3,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@docker/actions-toolkit": "^0.63.0",
-    "axios": "^1.10.0"
+    "axios": "^1.11.0"
   },
   "description": "GitHub Action to check if a Docker image needs to be updated",
   "devDependencies": {
