@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
 
       - name: Check if update available
         id: check
@@ -139,7 +139,7 @@ jobs:
     if: needs.check.outputs.needs-updating == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4.3.0
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3.6.0
