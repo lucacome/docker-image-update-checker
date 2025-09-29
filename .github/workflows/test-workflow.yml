@@ -50,7 +50,7 @@ jobs:
 
   test2:
     name: Test Update Not Needed
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
