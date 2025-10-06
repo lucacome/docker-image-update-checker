@@ -1,5 +1,5 @@
-import {DockerHub} from '../src/docker-hub'
-import {getDiffs} from '../src/image-utils'
+import {DockerHub} from '../src/docker-hub.js'
+import {getDiffs} from '../src/image-utils.js'
 
 describe('DockerHub', () => {
   const dockerHub = new DockerHub()

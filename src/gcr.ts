@@ -1,6 +1,6 @@
-import {ContainerRegistry} from './registry'
+import {ContainerRegistry} from './registry.js'
 import axios from 'axios'
-import {DockerAuth, getRegistryAuth} from './auth'
+import {DockerAuth, getRegistryAuth} from './auth.js'
 
 export class GoogleContainerRegistry extends ContainerRegistry {
   constructor() {

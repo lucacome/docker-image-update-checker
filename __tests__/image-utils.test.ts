@@ -1,5 +1,5 @@
-import {findDiffImages, parseImageInput, ImageInput, getDiffs} from '../src/image-utils'
-import {ImageInfo, ImageMap} from '../src/registry'
+import {findDiffImages, parseImageInput, ImageInput, getDiffs} from '../src/image-utils.js'
+import {ImageInfo, ImageMap} from '../src/registry.js'
 
 describe('findDiffImages', () => {
   test('should return diff images when layers do not match', () => {

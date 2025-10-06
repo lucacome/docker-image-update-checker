@@ -1,6 +1,6 @@
 import axios from 'axios'
-import {ContainerRegistry} from './registry'
-import {DockerAuth, getRegistryAuth} from './auth'
+import {ContainerRegistry} from './registry.js'
+import {DockerAuth, getRegistryAuth} from './auth.js'
 import * as core from '@actions/core'
 
 export class DockerHub extends ContainerRegistry {

@@ -1,5 +1,5 @@
-import {GitHubContainerRegistry} from '../src/github'
-import {getDiffs} from '../src/image-utils'
+import {GitHubContainerRegistry} from '../src/github.js'
+import {getDiffs} from '../src/image-utils.js'
 
 describe('GitHub', () => {
   const gitHubRegistry = new GitHubContainerRegistry()

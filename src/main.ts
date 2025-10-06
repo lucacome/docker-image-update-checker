@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
-import {ContainerRegistry} from './registry'
-import {DockerHub} from './docker-hub'
-import {GitHubContainerRegistry} from './github'
-import {getDiffs, parseImageInput} from './image-utils'
-import {Util} from '@docker/actions-toolkit/lib/util'
+import {ContainerRegistry} from './registry.js'
+import {DockerHub} from './docker-hub.js'
+import {GitHubContainerRegistry} from './github.js'
+import {getDiffs, parseImageInput} from './image-utils.js'
+import {Util} from '@docker/actions-toolkit/lib/util.js'
 
 function getRegistryInstance(registry: string): ContainerRegistry {
   switch (registry.toLowerCase()) {
@@ -16,7 +16,7 @@ function getRegistryInstance(registry: string): ContainerRegistry {
   }
 }
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
   try {
     const baseInput = core.getInput('base-image')
     const imageInput = core.getInput('image')
@@ -62,5 +62,3 @@ async function run(): Promise<void> {
     core.setFailed(`Action failed with error: ${error}`)
   }
 }
-
-run()
