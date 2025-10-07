@@ -1,4 +1,4 @@
-import {ImageInfo, ImageMap} from './registry'
+import {ImageInfo, ImageMap} from './registry.js'
 import * as core from '@actions/core'
 
 export type ImageInput = {

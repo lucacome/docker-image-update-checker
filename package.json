@@ -7,31 +7,47 @@
   },
   "description": "GitHub Action to check if a Docker image needs to be updated",
   "devDependencies": {
+    "@eslint/compat": "^1.4.0",
+    "@eslint/js": "^9.37.0",
     "@jest/globals": "^30.2.0",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.2",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/jest": "^30.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.7.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
-    "@vercel/ncc": "^0.38.4",
-    "eslint": "^8.57.1",
+    "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jest": "^29.0.1",
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
     "js-yaml": "^4.1.0",
     "prettier": "^3.6.2",
+    "rollup": "^4.52.4",
     "ts-jest": "^29.4.4",
+    "ts-jest-resolver": "^2.0.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
-  "engines": {
-    "node": ">=24.9.0"
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
   },
   "keywords": [
     "actions",
     "docker",
     "update"
   ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=24.9.0"
+  },
   "license": "MIT",
   "main": "src/main.ts",
   "name": "lucacome-docker-image-update-checker",
@@ -41,14 +57,15 @@
     "url": "git+https://github.com/lucacome/docker-image-update-checker.git"
   },
   "scripts": {
-    "all": "yarn run format && yarn run build && yarn run test",
-    "build": "ncc build --source-map --minify --license licenses.txt",
-    "eslint": "eslint --max-warnings=0 .",
-    "eslint:fix": "eslint --fix .",
+    "all": "yarn format && yarn test && yarn build",
+    "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "eslint": "npx eslint --max-warnings=0 .",
+    "eslint:fix": "npx eslint --fix .",
     "format": "yarn run prettier:fix && yarn run eslint:fix",
     "lint": "yarn run prettier && yarn run eslint",
-    "prettier": "prettier --check \"./**/*.ts\"",
-    "prettier:fix": "prettier --write \"./**/*.ts\"",
-    "test": "jest"
-  }
+    "prettier": "npx prettier --check \"./**/*.ts\"",
+    "prettier:fix": "npx prettier --write \"./**/*.ts\"",
+    "test": "npx jest"
+  },
+  "type": "module"
 }

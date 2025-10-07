@@ -1,6 +1,6 @@
 import axios, {AxiosError} from 'axios'
 import * as core from '@actions/core'
-import {DockerAuth} from './auth'
+import {DockerAuth} from './auth.js'
 
 export interface Image {
   repository: string

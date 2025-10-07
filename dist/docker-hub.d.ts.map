@@ -1,0 +1,1 @@
+{"version":3,"file":"docker-hub.d.ts","sourceRoot":"","sources":["../src/docker-hub.ts"],"names":[],"mappings":"AACA,OAAO,EAAC,iBAAiB,EAAC,MAAM,eAAe,CAAA;AAC/C,OAAO,EAAC,UAAU,EAAkB,MAAM,WAAW,CAAA;AAGrD,qBAAa,SAAU,SAAQ,iBAAiB;;IAIxC,QAAQ,CAAC,UAAU,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC;IAenD,cAAc,IAAI,UAAU,GAAG,SAAS;CAGzC"}

@@ -1,22 +1,20 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
-    "newLine": "lf",
-    "noImplicitAny": false,
-    "outDir": "./lib",
-    "resolveJsonModule": true,
-    "rootDir": "./src",
-    "strict": true,
-    "target": "es6",
-    "useUnknownInCatchVariables": false
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "./dist"
   },
   "exclude": [
-    "./__mocks__/**/*",
-    "./__tests__/**/*",
-    "./lib/**/*",
-    "node_modules",
-    "jest.config.ts"
+    "__fixtures__",
+    "__tests__",
+    "__mocks__",
+    "coverage",
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "src"
   ]
 }

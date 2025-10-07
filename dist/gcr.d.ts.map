@@ -1,0 +1,1 @@
+{"version":3,"file":"gcr.d.ts","sourceRoot":"","sources":["../src/gcr.ts"],"names":[],"mappings":"AAAA,OAAO,EAAC,iBAAiB,EAAC,MAAM,eAAe,CAAA;AAE/C,OAAO,EAAC,UAAU,EAAkB,MAAM,WAAW,CAAA;AAErD,qBAAa,uBAAwB,SAAQ,iBAAiB;;IAKtD,QAAQ,CAAC,UAAU,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC;IAWnD,cAAc,IAAI,UAAU,GAAG,SAAS;CAGzC"}
