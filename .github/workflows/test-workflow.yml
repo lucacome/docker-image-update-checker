@@ -122,6 +122,31 @@ jobs:
             exit 1
           fi
 
+  test386:
+    name: Test Update Needed on 386
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: debian:stable-slim
+          image: lucacome/debian-386:13.0-slim
+          platforms: linux/386
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
   #####################################
   # Test with multiple platforms
 
