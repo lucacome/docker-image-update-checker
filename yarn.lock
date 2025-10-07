@@ -1686,6 +1686,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/plugin-json@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "@rollup/plugin-json@npm:6.1.0"
+  dependencies:
+    "@rollup/pluginutils": "npm:^5.1.0"
+  peerDependencies:
+    rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+  peerDependenciesMeta:
+    rollup:
+      optional: true
+  checksum: 10c0/9400c431b5e0cf3088ba2eb2d038809a2b0fb2a84ed004997da85582f48cd64958ed3168893c4f2c8109e38652400ed68282d0c92bf8ec07a3b2ef2e1ceab0b7
+  languageName: node
+  linkType: hard
+
 "@rollup/plugin-node-resolve@npm:^16.0.2":
   version: 16.0.2
   resolution: "@rollup/plugin-node-resolve@npm:16.0.2"
@@ -5770,6 +5784,7 @@ __metadata:
     "@eslint/js": "npm:^9.37.0"
     "@jest/globals": "npm:^30.2.0"
     "@rollup/plugin-commonjs": "npm:^28.0.6"
+    "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-node-resolve": "npm:^16.0.2"
     "@rollup/plugin-typescript": "npm:^12.1.4"
     "@rollup/rollup-linux-x64-gnu": "npm:*"
