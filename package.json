@@ -9,7 +9,7 @@
   "devDependencies": {
     "@jest/globals": "^30.2.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.19.19",
+    "@types/node": "^24.7.0",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
     "@vercel/ncc": "^0.38.4",
@@ -23,6 +23,9 @@
     "prettier": "^3.6.2",
     "ts-jest": "^29.4.4",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=24.9.0"
   },
   "keywords": [
     "actions",
