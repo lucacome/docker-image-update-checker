@@ -4,7 +4,7 @@
 [![Test](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml/badge.svg)](https://github.com/lucacome/docker-image-update-checker/actions/workflows/test.yml)
 [![GitHub release badge](https://badgen.net/github/release/lucacome/docker-image-update-checker/stable)](https://github.com/lucacome/docker-image-update-checker/releases/latest)
 [![GitHub license badge](https://badgen.net/github/license/lucacome/docker-image-update-checker)](https://github.com/lucacome/docker-image-update-checker/blob/main/LICENSE)
-[![GitHub Workflows badge](https://badgen.net/runkit/lucacome/lucacome-workflow)](https://github.com/search?q=docker-image-update-checker+path%3A.github%2Fworkflows%2F+language%3AYAML&type=Code)
+[![GitHub Workflows badge](https://img.shields.io/endpoint?url=https%3A%2F%2Flucacome-curiousgreenangelfish.web.val.run)](https://github.com/search?q=docker-image-update-checker+path%3A.github%2Fworkflows%2F+language%3AYAML&type=Code)
 
 This action checks if a Docker image needs to be updated based on the base image it uses (e.g. `FROM nginx:1.21.0`). By default it checks for all platforms, but you can specify the platforms to check.
 
@@ -158,7 +158,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
 ```
 
-> **Note**
+> [!NOTE]
 >
 > The `platforms` input is optional and defaults to `all`.
 
