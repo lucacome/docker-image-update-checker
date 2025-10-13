@@ -57,7 +57,7 @@ jobs:
     steps:
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v2.0.0
+        uses: lucacome/docker-image-update-checker@v3.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
@@ -87,7 +87,7 @@ jobs:
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v2.0.0
+        uses: lucacome/docker-image-update-checker@v3.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
@@ -127,7 +127,7 @@ jobs:
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v2.0.0
+        uses: lucacome/docker-image-update-checker@v3.0.0
         with:
           base-image: nginx:1.21.0
           image: user/app:latest
