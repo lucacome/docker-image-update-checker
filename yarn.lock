@@ -25,7 +25,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^4.0.3":
+"@actions/cache@npm:^4.1.0":
   version: 4.1.0
   resolution: "@actions/cache@npm:4.1.0"
   dependencies:
@@ -718,12 +718,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.63.0":
-  version: 0.63.0
-  resolution: "@docker/actions-toolkit@npm:0.63.0"
+"@docker/actions-toolkit@npm:^0.64.0":
+  version: 0.64.0
+  resolution: "@docker/actions-toolkit@npm:0.64.0"
   dependencies:
     "@actions/artifact": "npm:^2.3.2"
-    "@actions/cache": "npm:^4.0.3"
+    "@actions/cache": "npm:^4.1.0"
     "@actions/core": "npm:^1.11.1"
     "@actions/exec": "npm:^1.1.1"
     "@actions/github": "npm:^6.0.1"
@@ -734,16 +734,16 @@ __metadata:
     "@octokit/core": "npm:^5.2.2"
     "@octokit/plugin-rest-endpoint-methods": "npm:^10.4.1"
     async-retry: "npm:^1.3.3"
-    csv-parse: "npm:^5.6.0"
+    csv-parse: "npm:^6.1.0"
     gunzip-maybe: "npm:^1.4.2"
     handlebars: "npm:^4.7.8"
     he: "npm:^1.2.0"
     js-yaml: "npm:^4.1.0"
     jwt-decode: "npm:^4.0.0"
-    semver: "npm:^7.7.2"
+    semver: "npm:^7.7.3"
     tar-stream: "npm:^3.1.7"
-    tmp: "npm:^0.2.4"
-  checksum: 10c0/c8a313e4df2a5f72097929e5290ab18e39806c58159dd01b197680ed9004b2262396e7f09b0422ab57a3ec0a9400316038e12fabd618059e275d89a869f64616
+    tmp: "npm:^0.2.5"
+  checksum: 10c0/63876cfde37d8b8bc4911bd95883f83388cfd7a0665b433f07ff67ef0ff838e9ce10a4eadc27484ff8074596830937242c6eeedbd8888ce668839c8f88bb8172
   languageName: node
   linkType: hard
 
@@ -3249,10 +3249,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csv-parse@npm:^5.6.0":
-  version: 5.6.0
-  resolution: "csv-parse@npm:5.6.0"
-  checksum: 10c0/52f5e6c45359902e0c8e57fc2eeed41366dc6b6d283b495b538dd50c8e8510413d6f924096ea056319cbbb8ed26e111c3a3485d7985c021bcf5abaa9e92425c7
+"csv-parse@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "csv-parse@npm:6.1.0"
+  checksum: 10c0/098c69e5b3b50d4bf65401dc3b2f1bd66f272fe985be99d7cb9f14ad33a7218f0f5695a03a82720cf47141d242bf44b4836ff32900751bef087057bc6e6715a2
   languageName: node
   linkType: hard
 
@@ -5778,7 +5778,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^1.11.1"
-    "@docker/actions-toolkit": "npm:^0.63.0"
+    "@docker/actions-toolkit": "npm:^0.64.0"
     "@eslint/compat": "npm:^1.4.0"
     "@eslint/js": "npm:^9.38.0"
     "@jest/globals": "npm:^30.2.0"
@@ -7365,7 +7365,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tmp@npm:^0.2.4":
+"tmp@npm:^0.2.5":
   version: 0.2.5
   resolution: "tmp@npm:0.2.5"
   checksum: 10c0/cee5bb7d674bb4ba3ab3f3841c2ca7e46daeb2109eec395c1ec7329a91d52fcb21032b79ac25161a37b2565c4858fefab927af9735926a113ef7bac9091a6e0e
