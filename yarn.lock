@@ -2096,7 +2096,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^24.9.0":
+"@types/node@npm:*, @types/node@npm:^24.9.1":
   version: 24.9.1
   resolution: "@types/node@npm:24.9.1"
   dependencies:
@@ -5789,7 +5789,7 @@ __metadata:
     "@rollup/rollup-linux-x64-gnu": "npm:*"
     "@types/jest": "npm:^30.0.0"
     "@types/js-yaml": "npm:^4.0.9"
-    "@types/node": "npm:^24.9.0"
+    "@types/node": "npm:^24.9.1"
     "@typescript-eslint/eslint-plugin": "npm:^8.46.2"
     "@typescript-eslint/parser": "npm:^8.46.2"
     axios: "npm:^1.12.2"
