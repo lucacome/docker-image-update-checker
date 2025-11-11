@@ -142,7 +142,7 @@ jobs:
         uses: actions/checkout@v5.0.0
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3.6.0
+        uses: docker/setup-qemu-action@v3.7.0
         with:
           platforms: arm64
 
