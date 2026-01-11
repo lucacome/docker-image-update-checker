@@ -29,7 +29,7 @@
     "js-yaml": "^4.1.1",
     "prettier": "^3.7.3",
     "rollup": "^4.55.1",
-    "ts-jest": "^29.4.5",
+    "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
