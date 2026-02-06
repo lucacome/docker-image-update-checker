@@ -5749,7 +5749,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
-    "@actions/core": "npm:^2.0.2"
+    "@actions/core": "npm:^2.0.3"
     "@docker/actions-toolkit": "npm:^0.76.0"
     "@eslint/compat": "npm:^2.0.2"
     "@eslint/js": "npm:^9.39.2"
