@@ -5,13 +5,13 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@actions/artifact@npm:^5.0.1":
-  version: 5.0.2
-  resolution: "@actions/artifact@npm:5.0.2"
+"@actions/artifact@npm:^5.0.2":
+  version: 5.0.3
+  resolution: "@actions/artifact@npm:5.0.3"
   dependencies:
     "@actions/core": "npm:^2.0.0"
     "@actions/github": "npm:^6.0.1"
-    "@actions/http-client": "npm:^3.0.1"
+    "@actions/http-client": "npm:^3.0.2"
     "@azure/storage-blob": "npm:^12.29.1"
     "@octokit/core": "npm:^5.2.1"
     "@octokit/plugin-request-log": "npm:^1.0.4"
@@ -22,54 +22,35 @@ __metadata:
     archiver: "npm:^7.0.1"
     jwt-decode: "npm:^3.1.2"
     unzip-stream: "npm:^0.3.1"
-  checksum: 10c0/3a7fd77a8580ff13bdd7af9ba80ab8210e516181af4523f3b7d12067739d46b4dc5aa681a802be27f28a52262477c411ee47a5645759ed142832330118ab6221
+  checksum: 10c0/d7c1865e0c015b36f619176f8046906aaea9f750c35b080f9fa934d7140787060c67ed330b7826f75e63187d369a5155c3313376c6e4b683e1563384ef182e35
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^5.0.1":
-  version: 5.0.2
-  resolution: "@actions/cache@npm:5.0.2"
+"@actions/cache@npm:^5.0.3":
+  version: 5.0.5
+  resolution: "@actions/cache@npm:5.0.5"
   dependencies:
     "@actions/core": "npm:^2.0.0"
     "@actions/exec": "npm:^2.0.0"
-    "@actions/glob": "npm:^0.5.0"
-    "@actions/http-client": "npm:^3.0.1"
+    "@actions/glob": "npm:^0.5.1"
+    "@actions/http-client": "npm:^3.0.2"
     "@actions/io": "npm:^2.0.0"
     "@azure/abort-controller": "npm:^1.1.0"
     "@azure/core-rest-pipeline": "npm:^1.22.0"
     "@azure/storage-blob": "npm:^12.29.1"
     "@protobuf-ts/runtime-rpc": "npm:^2.11.1"
     semver: "npm:^6.3.1"
-  checksum: 10c0/5860c3bc9a541aecc2b73c18c96861230be13e16e9af1cd336ef5df2299b4aed80be4598e8b3bc53f782f01b0947bc4f375b5402ee5efe7cce1196c98fa6de6a
+  checksum: 10c0/0144eb99d770ae22a84206ad004f939dd2cc5162c7865a6bbe3d80322614ec7543c35a8588c73cf682d4b6db5407846184e95b09ae62d61f858a84880f2925a0
   languageName: node
   linkType: hard
 
-"@actions/core@npm:^1.11.1, @actions/core@npm:^1.9.1":
-  version: 1.11.1
-  resolution: "@actions/core@npm:1.11.1"
-  dependencies:
-    "@actions/exec": "npm:^1.1.1"
-    "@actions/http-client": "npm:^2.0.1"
-  checksum: 10c0/9aa30b397d8d0dbc74e69fe46b23fb105cab989beb420c57eacbfc51c6804abe8da0f46973ca9f639d532ea4c096d0f4d37da0223fbe94f304fa3c5f53537c30
-  languageName: node
-  linkType: hard
-
-"@actions/core@npm:^2.0.0, @actions/core@npm:^2.0.1, @actions/core@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@actions/core@npm:2.0.2"
+"@actions/core@npm:^2.0.0, @actions/core@npm:^2.0.1, @actions/core@npm:^2.0.2, @actions/core@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@actions/core@npm:2.0.3"
   dependencies:
     "@actions/exec": "npm:^2.0.0"
-    "@actions/http-client": "npm:^3.0.1"
-  checksum: 10c0/933b03d4aacafc9337b493e7e689376ed1d9e824b37f6c8e008668c75dda3add6ff28c61f4e498831e37229f140d20a37f457de9f5089eca7455f603ad59a945
-  languageName: node
-  linkType: hard
-
-"@actions/exec@npm:^1.0.0, @actions/exec@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "@actions/exec@npm:1.1.1"
-  dependencies:
-    "@actions/io": "npm:^1.0.1"
-  checksum: 10c0/4a09f6bdbe50ce68b5cf8a7254d176230d6a74bccf6ecc3857feee209a8c950ba9adec87cc5ecceb04110182d1c17117234e45557d72fde6229b7fd3a395322a
+    "@actions/http-client": "npm:^3.0.2"
+  checksum: 10c0/aaee1cf8a43ef07549ef7959d66cce85ffc254e3ceb893735b463c73c042596825d5ada067fe513e276da7dc75e78cc4de971748249ace17df7e232fa8081f07
   languageName: node
   linkType: hard
 
@@ -97,17 +78,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/glob@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@actions/glob@npm:0.5.0"
+"@actions/github@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@actions/github@npm:7.0.0"
   dependencies:
-    "@actions/core": "npm:^1.9.1"
-    minimatch: "npm:^3.0.4"
-  checksum: 10c0/ba4a8f6cfb0ecacf40ef5943d9a618a5a7c95d88189f6c86982aba8eed464a686c1b4860972618c75c00732571d43f5cff6c515cc4ef339f9bf1ab57df484337
+    "@actions/http-client": "npm:^3.0.1"
+    "@octokit/core": "npm:^5.0.1"
+    "@octokit/plugin-paginate-rest": "npm:^9.2.2"
+    "@octokit/plugin-rest-endpoint-methods": "npm:^10.4.0"
+    "@octokit/request": "npm:^8.4.1"
+    "@octokit/request-error": "npm:^5.1.1"
+    undici: "npm:^5.28.5"
+  checksum: 10c0/830039821d00efec8d0899c0b6ccd7e7ae27ea5dee50ff6d6277f4e19e582fa00576539df64a0b970211973f80792cff85727f3a3a4b53366ff5194209fe5c60
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^2.0.1, @actions/http-client@npm:^2.2.0":
+"@actions/glob@npm:^0.5.1":
+  version: 0.5.1
+  resolution: "@actions/glob@npm:0.5.1"
+  dependencies:
+    "@actions/core": "npm:^2.0.3"
+    minimatch: "npm:^3.0.4"
+  checksum: 10c0/636c144ecbf99006ec3f235dcef4387de53dc377435699ec66f55a9bde4f42e250d86f81ffc25fb45460e9e06aba3e5c561ffb800e7c7f8375b4a9cfe6468752
+  languageName: node
+  linkType: hard
+
+"@actions/http-client@npm:^2.2.0":
   version: 2.2.3
   resolution: "@actions/http-client@npm:2.2.3"
   dependencies:
@@ -117,20 +113,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/http-client@npm:^3.0.0, @actions/http-client@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "@actions/http-client@npm:3.0.1"
+"@actions/http-client@npm:^3.0.1, @actions/http-client@npm:^3.0.2":
+  version: 3.0.2
+  resolution: "@actions/http-client@npm:3.0.2"
   dependencies:
     tunnel: "npm:^0.0.6"
-    undici: "npm:^5.28.5"
-  checksum: 10c0/01c48d6c47225168575630b693ec60bc75fb6e96b7ff244b365fa40915f0e33f656fd7bc5c5d0d96a92727715fb905cb1d4287e6f38fd1f70271fe174de5b0ce
-  languageName: node
-  linkType: hard
-
-"@actions/io@npm:^1.0.1, @actions/io@npm:^1.1.1":
-  version: 1.1.3
-  resolution: "@actions/io@npm:1.1.3"
-  checksum: 10c0/5b8751918e5bf0bebd923ba917fb1c0e294401e7ff0037f32c92a4efa4215550df1f6633c63fd4efb2bdaae8711e69b9e36925857db1f38935ff62a5c92ec29e
+    undici: "npm:^6.23.0"
+  checksum: 10c0/b58eedef5a76d4341edf66cba5df3acb338e420ea1ab5223c3f5d0bf7f5cfaa56d5a5578f8a0b7a9ce50ccc06a0d2bb74aad4abf8bd7b5606b032bbe0b623c92
   languageName: node
   linkType: hard
 
@@ -141,16 +130,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/tool-cache@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "@actions/tool-cache@npm:2.0.2"
+"@actions/tool-cache@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "@actions/tool-cache@npm:3.0.1"
   dependencies:
-    "@actions/core": "npm:^1.11.1"
-    "@actions/exec": "npm:^1.0.0"
-    "@actions/http-client": "npm:^2.0.1"
-    "@actions/io": "npm:^1.1.1"
+    "@actions/core": "npm:^2.0.1"
+    "@actions/exec": "npm:^2.0.0"
+    "@actions/http-client": "npm:^3.0.2"
+    "@actions/io": "npm:^2.0.0"
     semver: "npm:^6.1.0"
-  checksum: 10c0/bc04870b59b969717bdc4966fa1fca8263d5e968bfb73e5dfac02018e6180ae5752d6d209a2a1e483219325389aaf62e9f8ebb80f04d77686e386a630481adfd
+  checksum: 10c0/8e733bef89cfe736683f0bb60e841f2ecb92ce109cfdb6422475da2abd36502a792e80512b27a441f43223a9989fed527b8093dcfed5928246c357d595344ca6
   languageName: node
   linkType: hard
 
@@ -727,18 +716,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.72.0":
-  version: 0.72.0
-  resolution: "@docker/actions-toolkit@npm:0.72.0"
+"@docker/actions-toolkit@npm:^0.76.0":
+  version: 0.76.0
+  resolution: "@docker/actions-toolkit@npm:0.76.0"
   dependencies:
-    "@actions/artifact": "npm:^5.0.1"
-    "@actions/cache": "npm:^5.0.1"
-    "@actions/core": "npm:^2.0.1"
+    "@actions/artifact": "npm:^5.0.2"
+    "@actions/cache": "npm:^5.0.3"
+    "@actions/core": "npm:^2.0.2"
     "@actions/exec": "npm:^2.0.0"
-    "@actions/github": "npm:^6.0.1"
-    "@actions/http-client": "npm:^3.0.0"
+    "@actions/github": "npm:^7.0.0"
+    "@actions/http-client": "npm:^3.0.1"
     "@actions/io": "npm:^2.0.0"
-    "@actions/tool-cache": "npm:^2.0.2"
+    "@actions/tool-cache": "npm:^3.0.0"
     "@azure/storage-blob": "npm:^12.29.1"
     "@octokit/core": "npm:^5.2.2"
     "@octokit/plugin-rest-endpoint-methods": "npm:^10.4.1"
@@ -756,7 +745,7 @@ __metadata:
     semver: "npm:^7.7.3"
     tar-stream: "npm:^3.1.7"
     tmp: "npm:^0.2.5"
-  checksum: 10c0/387c0c5d118f39ce4ddcd088ef07a82907cc5cdaecb8e3e6ab0bb65a6e138f1ae7ef12181f119e47d75e96272bea92bca698f4e71dbac44a7a3475130ba4c172
+  checksum: 10c0/ac246432e35101051b152fca3606d124bb18580bc7d5544e179581c7c118f6a8e945146995dcbcc7442687841d94d178a86d38dd29b259f46910b09bbc1c05c5
   languageName: node
   linkType: hard
 
@@ -5761,7 +5750,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^2.0.2"
-    "@docker/actions-toolkit": "npm:^0.72.0"
+    "@docker/actions-toolkit": "npm:^0.76.0"
     "@eslint/compat": "npm:^2.0.2"
     "@eslint/js": "npm:^9.39.2"
     "@jest/globals": "npm:^30.2.0"
@@ -7665,6 +7654,13 @@ __metadata:
   dependencies:
     "@fastify/busboy": "npm:^2.0.0"
   checksum: 10c0/e4e4d631ca54ee0ad82d2e90e7798fa00a106e27e6c880687e445cc2f13b4bc87c5eba2a88c266c3eecffb18f26e227b778412da74a23acc374fca7caccec49b
+  languageName: node
+  linkType: hard
+
+"undici@npm:^6.23.0":
+  version: 6.23.0
+  resolution: "undici@npm:6.23.0"
+  checksum: 10c0/d846b3fdfd05aa6081ba1eab5db6bbc21b283042c7a43722b86d1ee2bf749d7c990ceac0c809f9a07ffd88b1b0f4c0f548a8362c035088cb1997d63abdda499c
   languageName: node
   linkType: hard
 
