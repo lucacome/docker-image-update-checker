@@ -1,7 +1,7 @@
 {
   "author": "Luca Comellini",
   "dependencies": {
-    "@actions/core": "^2.0.2",
+    "@actions/core": "^3.0.0",
     "@docker/actions-toolkit": "^0.76.0",
     "axios": "^1.13.5"
   },
