@@ -28,7 +28,7 @@
     "jest": "^30.2.0",
     "js-yaml": "^4.1.1",
     "prettier": "^3.8.1",
-    "rollup": "^4.57.1",
+    "rollup": "^4.59.0",
     "ts-jest": "^29.4.6",
     "ts-jest-resolver": "^2.0.1",
     "ts-node": "^10.9.2",
