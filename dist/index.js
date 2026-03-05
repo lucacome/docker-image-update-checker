@@ -29897,16 +29897,17 @@ class ContainerRegistry {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
         }
         const data = (await response.json());
+        const headersObj = Object.fromEntries(response.headers.entries());
         if (isDebug()) {
             startGroup('Fetch response');
             info(`Fetching ${url}`);
             info(`Response status: ${response.status}`);
-            info(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`);
+            info(`Response headers: ${JSON.stringify(headersObj, null, 2)}`);
             info(`Response data: ${JSON.stringify(data, null, 2)}`);
             endGroup();
         }
         return {
-            headers: Object.fromEntries(response.headers.entries()),
+            headers: headersObj,
             data,
         };
     }
@@ -83027,7 +83028,21 @@ class DockerHub extends ContainerRegistry {
             headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`;
         }
         const response = await fetch(`https://auth.docker.io/token?${params}`, { headers });
+        if (!response.ok) {
+            let body = '';
+            try {
+                body = await response.text();
+            }
+            catch {
+                // ignore body read errors
+            }
+            const details = body ? ` - ${body}` : '';
+            throw new Error(`Failed to fetch Docker Hub token: ${response.status} ${response.statusText}${details}`);
+        }
         const data = (await response.json());
+        if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+            throw new Error('Docker Hub token response did not contain a valid token');
+        }
         return data.token;
     }
     getCredentials() {
@@ -83051,9 +83066,20 @@ class GitHubContainerRegistry extends ContainerRegistry {
         }
         const response = await fetch(`https://ghcr.io/token?${params}`, { headers });
         if (!response.ok) {
-            throw new Error(`Failed to get token from GitHub Container Registry: ${response.status}`);
+            let body = '';
+            try {
+                body = await response.text();
+            }
+            catch {
+                // ignore body read errors
+            }
+            const details = body ? ` - ${body}` : '';
+            throw new Error(`Failed to get token from GitHub Container Registry: ${response.status} ${response.statusText}${details}`);
         }
         const data = (await response.json());
+        if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+            throw new Error('GitHub Container Registry token response did not contain a valid token');
+        }
         return data.token;
     }
     getCredentials() {

@@ -77,16 +77,17 @@ export abstract class ContainerRegistry {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
     }
     const data = (await response.json()) as Manifest
+    const headersObj = Object.fromEntries(response.headers.entries())
     if (core.isDebug()) {
       core.startGroup('Fetch response')
       core.info(`Fetching ${url}`)
       core.info(`Response status: ${response.status}`)
-      core.info(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`)
+      core.info(`Response headers: ${JSON.stringify(headersObj, null, 2)}`)
       core.info(`Response data: ${JSON.stringify(data, null, 2)}`)
       core.endGroup()
     }
     return {
-      headers: Object.fromEntries(response.headers.entries()),
+      headers: headersObj,
       data,
     }
   }

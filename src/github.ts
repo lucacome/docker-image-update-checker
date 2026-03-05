@@ -19,9 +19,19 @@ export class GitHubContainerRegistry extends ContainerRegistry {
     }
     const response = await fetch(`https://ghcr.io/token?${params}`, {headers})
     if (!response.ok) {
-      throw new Error(`Failed to get token from GitHub Container Registry: ${response.status}`)
+      let body = ''
+      try {
+        body = await response.text()
+      } catch {
+        // ignore body read errors
+      }
+      const details = body ? ` - ${body}` : ''
+      throw new Error(`Failed to get token from GitHub Container Registry: ${response.status} ${response.statusText}${details}`)
     }
-    const data = (await response.json()) as {token: string}
+    const data = (await response.json()) as {token?: string}
+    if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+      throw new Error('GitHub Container Registry token response did not contain a valid token')
+    }
     return data.token
   }
 
