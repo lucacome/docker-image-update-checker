@@ -58,14 +58,14 @@
   },
   "scripts": {
     "all": "yarn format && yarn test && yarn build",
-    "build": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
+    "build": "npx rimraf ./dist && npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "eslint": "npx eslint --max-warnings=0 .",
     "eslint:fix": "npx eslint --fix .",
     "format": "yarn run prettier:fix && yarn run eslint:fix",
     "lint": "yarn run prettier && yarn run eslint",
     "prettier": "npx prettier --check \"./**/*.ts\"",
     "prettier:fix": "npx prettier --write \"./**/*.ts\"",
-    "test": "npx jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
   },
   "type": "module"
 }
