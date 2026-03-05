@@ -1,5 +1,6 @@
 import {ContainerRegistry} from './registry.js'
 import {DockerAuth, getRegistryAuth} from './auth.js'
+import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 
 export class GoogleContainerRegistry extends ContainerRegistry {
   constructor() {
@@ -11,24 +12,9 @@ export class GoogleContainerRegistry extends ContainerRegistry {
     const params = new URLSearchParams({scope: `repository:${repository}:pull`})
     const headers: Record<string, string> = {}
     if (auth) {
-      headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
     }
-    const response = await fetch(`https://gcr.io/token?${params}`, {headers})
-    if (!response.ok) {
-      let body = ''
-      try {
-        body = await response.text()
-      } catch {
-        // ignore body read errors
-      }
-      const details = body ? ` - ${body}` : ''
-      throw new Error(`Failed to obtain GCR token: ${response.status} ${response.statusText || ''}${details}`)
-    }
-    const data = (await response.json()) as {token?: string}
-    if (!data.token || typeof data.token !== 'string' || data.token.length === 0) {
-      throw new Error(`GCR token response did not contain a valid 'token' field`)
-    }
-    return data.token
+    return fetchToken(`https://gcr.io/token?${params}`, headers, 'Failed to obtain GCR token')
   }
 
   getCredentials(): DockerAuth | undefined {

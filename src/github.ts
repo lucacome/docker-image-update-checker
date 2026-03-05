@@ -1,5 +1,6 @@
 import {ContainerRegistry} from './registry.js'
 import {DockerAuth, getRegistryAuth} from './auth.js'
+import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 import * as core from '@actions/core'
 
 export class GitHubContainerRegistry extends ContainerRegistry {
@@ -15,24 +16,9 @@ export class GitHubContainerRegistry extends ContainerRegistry {
     const params = new URLSearchParams({scope: `repository:${repository}:pull`})
     const headers: Record<string, string> = {}
     if (auth) {
-      headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
     }
-    const response = await fetch(`https://ghcr.io/token?${params}`, {headers})
-    if (!response.ok) {
-      let body = ''
-      try {
-        body = await response.text()
-      } catch {
-        // ignore body read errors
-      }
-      const details = body ? ` - ${body}` : ''
-      throw new Error(`Failed to get token from GitHub Container Registry: ${response.status} ${response.statusText}${details}`)
-    }
-    const data = (await response.json()) as {token?: string}
-    if (!data || typeof data.token !== 'string' || data.token.length === 0) {
-      throw new Error('GitHub Container Registry token response did not contain a valid token')
-    }
-    return data.token
+    return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry')
   }
 
   getCredentials(): DockerAuth | undefined {
