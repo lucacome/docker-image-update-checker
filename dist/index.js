@@ -83010,6 +83010,36 @@ function getRegistryAuth(registry) {
     return { username: registryAuth.username, password: registryAuth.password };
 }
 
+const MAX_ERROR_BODY_LENGTH = 1000;
+function truncateBody(body) {
+    if (body.length > MAX_ERROR_BODY_LENGTH) {
+        return body.slice(0, MAX_ERROR_BODY_LENGTH) + '... [truncated]';
+    }
+    return body;
+}
+function buildBasicAuthHeader(username, password) {
+    return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
+}
+async function fetchToken(url, headers, errorPrefix) {
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+        let body = '';
+        try {
+            body = await response.text();
+        }
+        catch {
+            // ignore body read errors
+        }
+        const details = body ? ` - ${truncateBody(body)}` : '';
+        throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`);
+    }
+    const data = (await response.json());
+    if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+        throw new Error(`${errorPrefix}: response did not contain a valid token`);
+    }
+    return data.token;
+}
+
 class DockerHub extends ContainerRegistry {
     constructor() {
         super('index.docker.io/v2/');
@@ -83025,25 +83055,9 @@ class DockerHub extends ContainerRegistry {
         });
         const headers = {};
         if (auth) {
-            headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`;
+            headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        const response = await fetch(`https://auth.docker.io/token?${params}`, { headers });
-        if (!response.ok) {
-            let body = '';
-            try {
-                body = await response.text();
-            }
-            catch {
-                // ignore body read errors
-            }
-            const details = body ? ` - ${body}` : '';
-            throw new Error(`Failed to fetch Docker Hub token: ${response.status} ${response.statusText}${details}`);
-        }
-        const data = (await response.json());
-        if (!data || typeof data.token !== 'string' || data.token.length === 0) {
-            throw new Error('Docker Hub token response did not contain a valid token');
-        }
-        return data.token;
+        return fetchToken(`https://auth.docker.io/token?${params}`, headers, 'Failed to fetch Docker Hub token');
     }
     getCredentials() {
         return getRegistryAuth('https://index.docker.io/v1/');
@@ -83062,25 +83076,9 @@ class GitHubContainerRegistry extends ContainerRegistry {
         const params = new URLSearchParams({ scope: `repository:${repository}:pull` });
         const headers = {};
         if (auth) {
-            headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`;
+            headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        const response = await fetch(`https://ghcr.io/token?${params}`, { headers });
-        if (!response.ok) {
-            let body = '';
-            try {
-                body = await response.text();
-            }
-            catch {
-                // ignore body read errors
-            }
-            const details = body ? ` - ${body}` : '';
-            throw new Error(`Failed to get token from GitHub Container Registry: ${response.status} ${response.statusText}${details}`);
-        }
-        const data = (await response.json());
-        if (!data || typeof data.token !== 'string' || data.token.length === 0) {
-            throw new Error('GitHub Container Registry token response did not contain a valid token');
-        }
-        return data.token;
+        return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry');
     }
     getCredentials() {
         return getRegistryAuth('ghcr.io');
