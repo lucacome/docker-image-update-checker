@@ -23,17 +23,12 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
     const details = body ? ` - ${truncateBody(body)}` : ''
     throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`)
   }
+  const bodyText = await response.text()
   let data: {token?: string}
   try {
-    data = (await response.json()) as {token?: string}
+    data = JSON.parse(bodyText) as {token?: string}
   } catch (e) {
-    let body = ''
-    try {
-      body = await response.clone().text()
-    } catch {
-      // ignore body read errors
-    }
-    const details = body ? ` - ${truncateBody(body)}` : ''
+    const details = bodyText ? ` - ${truncateBody(bodyText)}` : ''
     throw new Error(
       `${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`,
     )
