@@ -34,7 +34,9 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
       // ignore body read errors
     }
     const details = body ? ` - ${truncateBody(body)}` : ''
-    throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`)
+    throw new Error(
+      `${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`,
+    )
   }
   if (!data || typeof data.token !== 'string' || data.token.length === 0) {
     throw new Error(`${errorPrefix}: response did not contain a valid token`)
