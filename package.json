@@ -2,8 +2,7 @@
   "author": "Luca Comellini",
   "dependencies": {
     "@actions/core": "^3.0.0",
-    "@docker/actions-toolkit": "^0.79.0",
-    "axios": "^1.13.6"
+    "@docker/actions-toolkit": "^0.79.0"
   },
   "description": "GitHub Action to check if a Docker image needs to be updated",
   "devDependencies": {

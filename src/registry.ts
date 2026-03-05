@@ -1,4 +1,3 @@
-import axios, {AxiosError} from 'axios'
 import * as core from '@actions/core'
 import {DockerAuth} from './auth.js'
 
@@ -51,16 +50,6 @@ function generateKey(obj: ImageInfo): string {
   return [obj.os, obj.architecture, obj.variant || ''].join('|')
 }
 
-function convertHeaders(headers: Record<string, unknown>): Record<string, string> {
-  const result: Record<string, string> = {}
-  for (const [key, value] of Object.entries(headers)) {
-    if (typeof value === 'string') {
-      result[key] = value
-    }
-  }
-  return result
-}
-
 export abstract class ContainerRegistry {
   constructor(protected baseUrl: string) {}
 
@@ -83,29 +72,22 @@ export abstract class ContainerRegistry {
   }
 
   protected async fetch(url: string, headers?: Record<string, string>): Promise<FetchResult> {
-    try {
-      const response = await axios.get<Manifest>(url, {headers})
-      if (core.isDebug()) {
-        core.startGroup('Fetch response')
-        core.info(`Fetching ${url}`)
-        core.info(`Response status: ${response.status}`)
-        core.info(`Response headers: ${JSON.stringify(response.headers, null, 2)}`)
-        core.info(`Response data: ${JSON.stringify(response.data, null, 2)}`)
-        core.endGroup()
-      }
-      return {
-        headers: convertHeaders(response.headers),
-        data: response.data,
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        const axiosError = error as AxiosError
-        if (axiosError.response) {
-          throw new Error(`Failed to fetch ${url}: ${axiosError.response.status} ${axiosError.response.statusText}`)
-        }
-        throw error
-      }
-      throw new Error('Unknown error occurred during fetch')
+    const response = await globalThis.fetch(url, {headers})
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
+    }
+    const data = (await response.json()) as Manifest
+    if (core.isDebug()) {
+      core.startGroup('Fetch response')
+      core.info(`Fetching ${url}`)
+      core.info(`Response status: ${response.status}`)
+      core.info(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}`)
+      core.info(`Response data: ${JSON.stringify(data, null, 2)}`)
+      core.endGroup()
+    }
+    return {
+      headers: Object.fromEntries(response.headers.entries()),
+      data,
     }
   }
 

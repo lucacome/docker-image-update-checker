@@ -1,4 +1,3 @@
-import axios from 'axios'
 import {ContainerRegistry} from './registry.js'
 import {DockerAuth, getRegistryAuth} from './auth.js'
 import * as core from '@actions/core'
@@ -12,14 +11,17 @@ export class DockerHub extends ContainerRegistry {
     if (!auth) {
       core.info('No credentials found for Docker, using anonymous pull')
     }
-    const response = await axios.get('https://auth.docker.io/token', {
-      params: {
-        service: 'registry.docker.io',
-        scope: `repository:${repository}:pull`,
-      },
-      auth,
+    const params = new URLSearchParams({
+      service: 'registry.docker.io',
+      scope: `repository:${repository}:pull`,
     })
-    return response.data.token
+    const headers: Record<string, string> = {}
+    if (auth) {
+      headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+    }
+    const response = await fetch(`https://auth.docker.io/token?${params}`, {headers})
+    const data = (await response.json()) as {token: string}
+    return data.token
   }
 
   getCredentials(): DockerAuth | undefined {

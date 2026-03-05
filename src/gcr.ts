@@ -1,5 +1,4 @@
 import {ContainerRegistry} from './registry.js'
-import axios from 'axios'
 import {DockerAuth, getRegistryAuth} from './auth.js'
 
 export class GoogleContainerRegistry extends ContainerRegistry {
@@ -9,13 +8,14 @@ export class GoogleContainerRegistry extends ContainerRegistry {
 
   async getToken(repository: string): Promise<string> {
     const auth = this.getCredentials()
-    const response = await axios.get('https://gcr.io/token', {
-      params: {
-        scope: `repository:${repository}:pull`,
-      },
-      auth,
-    })
-    return response.data.token
+    const params = new URLSearchParams({scope: `repository:${repository}:pull`})
+    const headers: Record<string, string> = {}
+    if (auth) {
+      headers['Authorization'] = `Basic ${Buffer.from(`${auth.username}:${auth.password}`).toString('base64')}`
+    }
+    const response = await fetch(`https://gcr.io/token?${params}`, {headers})
+    const data = (await response.json()) as {token: string}
+    return data.token
   }
 
   getCredentials(): DockerAuth | undefined {
