@@ -76,7 +76,14 @@ export abstract class ContainerRegistry {
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
     }
-    const data = (await response.json()) as Manifest
+    let data: Manifest
+    try {
+      data = (await response.json()) as Manifest
+    } catch (e) {
+      throw new Error(
+        `Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`,
+      )
+    }
     const headersObj = Object.fromEntries(response.headers.entries())
     if (core.isDebug()) {
       core.startGroup('Fetch response')

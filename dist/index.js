@@ -29896,7 +29896,13 @@ class ContainerRegistry {
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
         }
-        const data = (await response.json());
+        let data;
+        try {
+            data = (await response.json());
+        }
+        catch (e) {
+            throw new Error(`Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`);
+        }
         const headersObj = Object.fromEntries(response.headers.entries());
         if (isDebug()) {
             startGroup('Fetch response');
@@ -83033,7 +83039,21 @@ async function fetchToken(url, headers, errorPrefix) {
         const details = body ? ` - ${truncateBody(body)}` : '';
         throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`);
     }
-    const data = (await response.json());
+    let data;
+    try {
+        data = (await response.json());
+    }
+    catch (e) {
+        let body = '';
+        try {
+            body = await response.clone().text();
+        }
+        catch {
+            // ignore body read errors
+        }
+        const details = body ? ` - ${truncateBody(body)}` : '';
+        throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`);
+    }
     if (!data || typeof data.token !== 'string' || data.token.length === 0) {
         throw new Error(`${errorPrefix}: response did not contain a valid token`);
     }
