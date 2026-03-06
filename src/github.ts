@@ -1,6 +1,6 @@
 import {ContainerRegistry} from './registry.js'
-import axios from 'axios'
 import {DockerAuth, getRegistryAuth} from './auth.js'
+import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 import * as core from '@actions/core'
 
 export class GitHubContainerRegistry extends ContainerRegistry {
@@ -13,18 +13,12 @@ export class GitHubContainerRegistry extends ContainerRegistry {
     if (!auth) {
       core.info('No credentials found for GitHub, using anonymous pull')
     }
-    const response = await axios.get(`https://ghcr.io/token`, {
-      params: {
-        scope: `repository:${repository}:pull`,
-      },
-      auth,
-    })
-    // check if the call was successful
-    if (response.status !== 200) {
-      core.info(response.data)
-      throw new Error(`Failed to get token from GitHub Container Registry: ${response.status}`)
+    const params = new URLSearchParams({scope: `repository:${repository}:pull`})
+    const headers: Record<string, string> = {}
+    if (auth) {
+      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
     }
-    return response.data.token
+    return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry')
   }
 
   getCredentials(): DockerAuth | undefined {
