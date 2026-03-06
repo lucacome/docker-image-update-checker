@@ -21,7 +21,7 @@ defaults:
 
 jobs:
   #####################################
-  # Singe platform tests
+  # Single platform tests
 
   test1:
     name: Test Update Needed

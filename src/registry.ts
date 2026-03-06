@@ -19,7 +19,7 @@ interface Manifest {
     size: number
     digest: string
   }[]
-  mainfests?: {
+  manifests?: {
     mediaType: string
     digest: string
     size: number

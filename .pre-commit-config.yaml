@@ -21,6 +21,11 @@ repos:
       - id: no-commit-to-branch
       - id: detect-private-key
 
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:
