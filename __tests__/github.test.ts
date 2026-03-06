@@ -69,7 +69,7 @@ describe('GitHub', () => {
   })
 
   test('getImageInfo with variant', async () => {
-    const repository = 'ghcr.io/nginx/nginx-prometheus-exporter'
+    const repository = 'nginx/nginx-prometheus-exporter'
     const tag = '1.3.0'
     const nginxImageInfo = await gitHubRegistry.getImageInfo({repository, tag})
 
