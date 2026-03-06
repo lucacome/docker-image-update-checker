@@ -83033,17 +83033,30 @@ function buildBasicAuthHeader(username, password) {
     return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 }
 async function fetchToken(url, headers, errorPrefix) {
-    const response = await fetch(url, { headers });
-    let body = '';
+    let response;
+    try {
+        response = await fetch(url, { headers });
+    }
+    catch (e) {
+        throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`);
+    }
+    if (!response.ok) {
+        let body = '';
+        try {
+            body = await response.text();
+        }
+        catch {
+            // ignore body read errors on error responses
+        }
+        const details = body ? ` - ${truncateBody(body)}` : '';
+        throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`);
+    }
+    let body;
     try {
         body = await response.text();
     }
-    catch {
-        // ignore body read errors
-    }
-    if (!response.ok) {
-        const details = body ? ` - ${truncateBody(body)}` : '';
-        throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`);
+    catch (e) {
+        throw new Error(`${errorPrefix}: failed to read response body (status: ${response.status}): ${e instanceof Error ? e.message : String(e)}`);
     }
     let data;
     try {

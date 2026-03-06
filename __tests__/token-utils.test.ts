@@ -75,9 +75,18 @@ describe('fetchToken', () => {
     )
   })
 
-  test('throws on invalid JSON when body read also fails', async () => {
+  test('throws network error with prefix when fetch rejects', async () => {
+    jest.mocked(fetch).mockRejectedValue(new Error('getaddrinfo ENOTFOUND example.com'))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
+      'prefix: network error - getaddrinfo ENOTFOUND example.com',
+    )
+  })
+
+  test('throws body-read error with context when 2xx body read fails', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, textThrows: true}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: failed to parse JSON response')
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
+      'prefix: failed to read response body (status: 200): network read error',
+    )
   })
 
   test('throws when token field is missing', async () => {

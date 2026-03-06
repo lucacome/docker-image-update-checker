@@ -12,16 +12,29 @@ export function buildBasicAuthHeader(username: string, password: string): string
 }
 
 export async function fetchToken(url: string, headers: Record<string, string>, errorPrefix: string): Promise<string> {
-  const response = await fetch(url, {headers})
-  let body = ''
+  let response: Response
   try {
-    body = await response.text()
-  } catch {
-    // ignore body read errors
+    response = await fetch(url, {headers})
+  } catch (e) {
+    throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`)
   }
   if (!response.ok) {
+    let body = ''
+    try {
+      body = await response.text()
+    } catch {
+      // ignore body read errors on error responses
+    }
     const details = body ? ` - ${truncateBody(body)}` : ''
     throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`)
+  }
+  let body: string
+  try {
+    body = await response.text()
+  } catch (e) {
+    throw new Error(
+      `${errorPrefix}: failed to read response body (status: ${response.status}): ${e instanceof Error ? e.message : String(e)}`,
+    )
   }
   let data: {token?: string}
   try {
