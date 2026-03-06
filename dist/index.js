@@ -46776,8 +46776,8 @@ function bearerTokenAuthenticationPolicy(options) {
  * @internal
  */
 function parseChallenges(challenges) {
-    // Challenge regex seperates the string to individual challenges with different schemes in the format `Scheme a="b", c=d`
-    // The challenge regex captures parameteres with either quotes values or unquoted values
+    // Challenge regex separates the string to individual challenges with different schemes in the format `Scheme a="b", c=d`
+    // The challenge regex captures parameters with either quotes values or unquoted values
     const challengeRegex = /(\w+)\s+((?:\w+=(?:"[^"]*"|[^,]*),?\s*)+)/g;
     // Parameter regex captures the claims group removed from the scheme in the format `a="b"` and `c="d"`
     // CAE challenge always have quoted parameters. For more reference, https://learn.microsoft.com/entra/identity-platform/claims-challenge
@@ -46827,7 +46827,7 @@ function getCaeChallengeClaims(challenges) {
 function isTokenCredential(credential) {
     // Check for an object with a 'getToken' function and possibly with
     // a 'signRequest' function.  We do this check to make sure that
-    // a ServiceClientCredentials implementor (like TokenClientCredentials
+    // a ServiceClientCredentials implementer (like TokenClientCredentials
     // in ms-rest-nodeauth) doesn't get mistaken for a TokenCredential if
     // it doesn't actually implement TokenCredential also.
     const castCredential = credential;
@@ -49009,7 +49009,7 @@ function parseChallenge(challenge) {
     return keyValuePairs.reduce((a, b) => ({ ...a, ...b }), {});
 }
 /**
- * Extracts the options form a Pipeline Request for later re-use
+ * Extracts the options form a Pipeline Request for later reuse
  */
 function requestToOptions(request) {
     return {
@@ -49350,7 +49350,7 @@ function toPipelineResponse(compatResponse) {
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 /**
- * Client to provide compatability between core V1 & V2.
+ * Client to provide compatibility between core V1 & V2.
  */
 class ExtendedServiceClient extends ServiceClient {
     constructor(options) {
@@ -67636,7 +67636,7 @@ class StorageContextClient extends StorageClient$1 {
  *   SDK will encode it to "http://account.blob.core.windows.net/con/b%253A" and send to server. A blob named "b%3A" will be created.
  *
  * But this strategy will make it not possible to create a blob with "?" in it's name. Because when customer URL string is
- * "http://account.blob.core.windows.net/con/blob?name", the "?name" will be treated as URL paramter instead of blob name.
+ * "http://account.blob.core.windows.net/con/blob?name", the "?name" will be treated as URL parameter instead of blob name.
  * If customer URL string is "http://account.blob.core.windows.net/con/blob%3Fname", a blob named "blob%3Fname" will be created.
  * V2 SDK doesn't have this issue because it doesn't allow customer pass in a full URL, it accepts a separate blob name and encodeURIComponent for it.
  * We cannot accept a SDK cannot create a blob name with "?". So we implement strategy two:
@@ -68379,7 +68379,7 @@ class BlobSASPermissions {
      */
     deleteVersion = false;
     /**
-     * Specfies Tag access granted.
+     * Specifies Tag access granted.
      */
     tag = false;
     /**
@@ -68586,7 +68586,7 @@ class ContainerSASPermissions {
      */
     list = false;
     /**
-     * Specfies Tag access granted.
+     * Specifies Tag access granted.
      */
     tag = false;
     /**
@@ -72909,7 +72909,7 @@ class BlobClient extends StorageClient {
      * Sets tags on the underlying blob.
      * A blob can have up to 10 tags. Tag keys must be between 1 and 128 characters.  Tag values must be between 0 and 256 characters.
      * Valid tag key and value characters include lower and upper case letters, digits (0-9),
-     * space (' '), plus ('+'), minus ('-'), period ('.'), foward slash ('/'), colon (':'), equals ('='), and underscore ('_').
+     * space (' '), plus ('+'), minus ('-'), period ('.'), forward slash ('/'), colon (':'), equals ('='), and underscore ('_').
      *
      * @param tags -
      * @param options -
