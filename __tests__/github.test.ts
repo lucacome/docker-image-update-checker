@@ -5,7 +5,7 @@ describe('GitHub', () => {
   const gitHubRegistry = new GitHubContainerRegistry()
 
   test('getImageInfo', async () => {
-    const repository = 'ghcr.io/nginx/nginx-gateway-fabric/nginx'
+    const repository = 'nginx/nginx-gateway-fabric/nginx'
     const tag = '2.3.0'
     const nginxImageInfo = await gitHubRegistry.getImageInfo({repository, tag})
 
@@ -17,7 +17,7 @@ describe('GitHub', () => {
     expect(nginxImageInfo.get('linux|amd64|')).toHaveProperty('os', 'linux')
     expect(nginxImageInfo.get('linux|amd64|')).toHaveProperty('variant', undefined)
 
-    const repository2 = 'ghcr.io/nginx/nginx-gateway-fabric/nginx'
+    const repository2 = 'nginx/nginx-gateway-fabric/nginx'
     const tag2 = '2.4.0'
     const newNginxImageInfo = await gitHubRegistry.getImageInfo({repository: repository2, tag: tag2})
 
