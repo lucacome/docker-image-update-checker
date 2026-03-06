@@ -15,7 +15,9 @@ function mockResponse(opts: {
     status,
     statusText,
     headers: {get: (name: string) => (name === 'content-type' ? contentType : null)},
-    text: textThrows ? jest.fn<() => Promise<string>>().mockRejectedValue(new Error('network read error')) : jest.fn<() => Promise<string>>().mockResolvedValue(body),
+    text: textThrows
+      ? jest.fn<() => Promise<string>>().mockRejectedValue(new Error('network read error'))
+      : jest.fn<() => Promise<string>>().mockResolvedValue(body),
   } as unknown as Response
 }
 
@@ -52,12 +54,8 @@ describe('fetchToken', () => {
   })
 
   test('throws with status and body on non-ok response', async () => {
-    jest
-      .mocked(fetch)
-      .mockResolvedValue(mockResponse({ok: false, status: 401, statusText: 'Unauthorized', body: 'bad credentials'}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: 401 Unauthorized - bad credentials',
-    )
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: false, status: 401, statusText: 'Unauthorized', body: 'bad credentials'}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: 401 Unauthorized - bad credentials')
   })
 
   test('throws without body details when non-ok response has empty body', async () => {
@@ -66,18 +64,12 @@ describe('fetchToken', () => {
   })
 
   test('throws without body details when body read fails on non-ok response', async () => {
-    jest
-      .mocked(fetch)
-      .mockResolvedValue(mockResponse({ok: false, status: 500, statusText: 'Internal Server Error', textThrows: true}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: 500 Internal Server Error',
-    )
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: false, status: 500, statusText: 'Internal Server Error', textThrows: true}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: 500 Internal Server Error')
   })
 
   test('throws on invalid JSON with body included in message', async () => {
-    jest
-      .mocked(fetch)
-      .mockResolvedValue(mockResponse({ok: true, status: 200, body: '<html>not json</html>', contentType: 'text/html'}))
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: '<html>not json</html>', contentType: 'text/html'}))
     await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
       'prefix: failed to parse JSON response (status: 200, content-type: text/html - <html>not json</html>)',
     )
@@ -85,37 +77,27 @@ describe('fetchToken', () => {
 
   test('throws on invalid JSON when body read also fails', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, textThrows: true}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: failed to parse JSON response',
-    )
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: failed to parse JSON response')
   })
 
   test('throws when token field is missing', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({other: 'field'})}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: response did not contain a valid token',
-    )
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 
   test('throws when token is an empty string', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: ''})}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: response did not contain a valid token',
-    )
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 
   test('throws when token is not a string', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: 42})}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: response did not contain a valid token',
-    )
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 
   test('throws when token is null', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: null})}))
-    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow(
-      'prefix: response did not contain a valid token',
-    )
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 
   test('truncates long error body', async () => {

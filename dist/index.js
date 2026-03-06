@@ -29892,7 +29892,13 @@ class ContainerRegistry {
         return layers.map((layer) => layer.digest);
     }
     async fetch(url, headers) {
-        const response = await globalThis.fetch(url, { headers });
+        let response;
+        try {
+            response = await globalThis.fetch(url, { headers });
+        }
+        catch (e) {
+            throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`);
+        }
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
         }
@@ -83028,29 +83034,22 @@ function buildBasicAuthHeader(username, password) {
 }
 async function fetchToken(url, headers, errorPrefix) {
     const response = await fetch(url, { headers });
+    let body = '';
+    try {
+        body = await response.text();
+    }
+    catch {
+        // ignore body read errors
+    }
     if (!response.ok) {
-        let body = '';
-        try {
-            body = await response.text();
-        }
-        catch {
-            // ignore body read errors
-        }
         const details = body ? ` - ${truncateBody(body)}` : '';
         throw new Error(`${errorPrefix}: ${response.status} ${response.statusText}${details}`);
     }
     let data;
     try {
-        data = (await response.json());
+        data = JSON.parse(body);
     }
     catch (e) {
-        let body = '';
-        try {
-            body = await response.clone().text();
-        }
-        catch {
-            // ignore body read errors
-        }
         const details = body ? ` - ${truncateBody(body)}` : '';
         throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`);
     }

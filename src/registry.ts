@@ -72,7 +72,12 @@ export abstract class ContainerRegistry {
   }
 
   protected async fetch(url: string, headers?: Record<string, string>): Promise<FetchResult> {
-    const response = await globalThis.fetch(url, {headers})
+    let response: Response
+    try {
+      response = await globalThis.fetch(url, {headers})
+    } catch (e) {
+      throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`)
+    }
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
     }
