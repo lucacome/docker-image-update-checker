@@ -29897,7 +29897,7 @@ class ContainerRegistry {
             response = await globalThis.fetch(url, { headers });
         }
         catch (e) {
-            throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`);
+            throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
         }
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
@@ -29907,7 +29907,7 @@ class ContainerRegistry {
             data = (await response.json());
         }
         catch (e) {
-            throw new Error(`Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`);
+            throw new Error(`Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`, { cause: e });
         }
         const headersObj = Object.fromEntries(response.headers.entries());
         if (isDebug()) {
@@ -83038,7 +83038,7 @@ async function fetchToken(url, headers, errorPrefix) {
         response = await fetch(url, { headers });
     }
     catch (e) {
-        throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`);
+        throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
     if (!response.ok) {
         let body = '';
@@ -83056,7 +83056,7 @@ async function fetchToken(url, headers, errorPrefix) {
         body = await response.text();
     }
     catch (e) {
-        throw new Error(`${errorPrefix}: failed to read response body (status: ${response.status}): ${e instanceof Error ? e.message : String(e)}`);
+        throw new Error(`${errorPrefix}: failed to read response body (status: ${response.status}): ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
     let data;
     try {
@@ -83064,7 +83064,7 @@ async function fetchToken(url, headers, errorPrefix) {
     }
     catch (e) {
         const details = body ? ` - ${truncateBody(body)}` : '';
-        throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`);
+        throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
     if (!data || typeof data.token !== 'string' || data.token.length === 0) {
         throw new Error(`${errorPrefix}: response did not contain a valid token`);
