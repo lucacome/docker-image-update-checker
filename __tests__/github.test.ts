@@ -5,8 +5,8 @@ describe('GitHub', () => {
   const gitHubRegistry = new GitHubContainerRegistry()
 
   test('getImageInfo', async () => {
-    const repository = 'ghcr.io/nginxinc/nginx-gateway-fabric/nginx'
-    const tag = '1.1.0'
+    const repository = 'ghcr.io/nginx/nginx-gateway-fabric/nginx'
+    const tag = '2.3.0'
     const nginxImageInfo = await gitHubRegistry.getImageInfo({repository, tag})
 
     expect(nginxImageInfo).not.toBeNull()
@@ -17,8 +17,8 @@ describe('GitHub', () => {
     expect(nginxImageInfo.get('linux|amd64|')).toHaveProperty('os', 'linux')
     expect(nginxImageInfo.get('linux|amd64|')).toHaveProperty('variant', undefined)
 
-    const repository2 = 'ghcr.io/nginxinc/nginx-gateway-fabric/nginx'
-    const tag2 = '1.3.0'
+    const repository2 = 'ghcr.io/nginx/nginx-gateway-fabric/nginx'
+    const tag2 = '2.4.0'
     const newNginxImageInfo = await gitHubRegistry.getImageInfo({repository: repository2, tag: tag2})
 
     expect(newNginxImageInfo).not.toBeNull()
@@ -26,7 +26,7 @@ describe('GitHub', () => {
     expect(newNginxImageInfo.get('linux|amd64|')).toHaveProperty('architecture', 'amd64')
     expect(newNginxImageInfo.get('linux|amd64|')).toHaveProperty(
       'digest',
-      'sha256:b54460b2a2c70743fc2d43e2ad78376cd0abaecba4fcd48dfe8c034e19c15b23',
+      'sha256:449636cc4d9b68da30db9b32575992c949d98a3b9231dba60e5ad5e1c8176d1d',
     )
     expect(newNginxImageInfo.get('linux|amd64|')).toHaveProperty('layers')
     expect(newNginxImageInfo.get('linux|amd64|')).toHaveProperty('os', 'linux')
@@ -40,23 +40,27 @@ describe('GitHub', () => {
     expect(diffs).toEqual([
       {
         architecture: 'amd64',
-        digest: 'sha256:b54460b2a2c70743fc2d43e2ad78376cd0abaecba4fcd48dfe8c034e19c15b23',
+        digest: 'sha256:449636cc4d9b68da30db9b32575992c949d98a3b9231dba60e5ad5e1c8176d1d',
         layers: [
-          'sha256:4abcf20661432fb2d719aaf90656f55c287f8ca915dc1c92ec14ff61e67fbaf8',
-          'sha256:b1e69ebc7f924a03f4e1d3906db5423920d8b40d8f315db72445e6a7041c6237',
-          'sha256:628158b45bceaf19d9e86fbfb08c925d75e1e2ab888cd9b97b7c8a8181232be4',
-          'sha256:346e52e95fa0a52e495913d9d99e4766d1164631ddbf3a79b1b7860c44a4582a',
-          'sha256:8c57fb1cd6448c27acb916942fed2522079e5256bc92466c1351f1b6d5f201e9',
-          'sha256:dc3800d1d0f27990204f4c7f60ef0a8fdbf41a3199d38467475aba551823ccd4',
-          'sha256:e3227d68030df2f1c6db2654cf30f1e42d5700dc7b5c73eb1a4585bbd588affa',
-          'sha256:8c50e1264d11b6f97944fb962f743063fbe75e06535780bb4919d491cf9ccde4',
-          'sha256:e73705b81978bae07455da98270fcf00d50303c3ced48c2d0e0412c041058906',
-          'sha256:08f3247bafb95323f81bd617dc9fe210b361b00e49dda69d6ce419a525423db8',
-          'sha256:7c33792ff5a2bb827715a58b43fd2383cc53a7c3404d7570a0d06f4502f239a4',
-          'sha256:e286804e58a8ad6b276e66d47563a8986ea8e95749c511980dbc5f116d90fed3',
-          'sha256:ba8ea7cf37cb0661494adeddd2c0c9c3bdd7b0ddc866dfa61cc48f269d6276d1',
-          'sha256:e6e0f1ed3be3d015d254554788a89638102f4d854dd9814204ad648269c672b6',
-          'sha256:caf1493c2109a431cd01ebb80dc57e53c3f39dddebc376298648b0763f44a704',
+          'sha256:589002ba0eaed121a1dbf42f6648f29e5be55d5c8a6ee0f8eaa0285cc21ac153',
+          'sha256:9331cd6029cbf318c5576c03d779488ecadd7dd7425d199cbfd0906a6235ffce',
+          'sha256:211bae00ea5606b36896883a2b8f10e9622638d7d5b3a33da6af615d868e4402',
+          'sha256:9739627526d74285cefbf02d43bcbc00fc946527670d43db2fa258e6082c876b',
+          'sha256:6c2f4c63521d43b201a4c0c5d24e71aeb94ed3e67217bb0b91e8fb040382ed06',
+          'sha256:76fc765fd3b0af90def0c6f9d14b2fb36c59d2ab6efc3f330cba39d3fb62f500',
+          'sha256:cd835559902ab574fc1dbdd1e32130771477ac163c5502057ab6dc78e1f7b8fe',
+          'sha256:55cbbd6285fe0ee5fcdef2dc641bfad7889b35d4542cb111968eb7f613bb6eaf',
+          'sha256:c1db737ce32c2e08f4fee54dab5cf6f39b3a29a441c0ca838eea82d7c15eb804',
+          'sha256:78f33eed696426522529e5570a2c5d32fa7c0b93eabc30847f1d493be4d01ec5',
+          'sha256:6534df43d96cc8a50beafa43fc9a1701ae6068b9808e1c917aff9fb100b94819',
+          'sha256:7874c2100b7bb26d8b64a85ce6e92fab51daad5bb9e3d2b3256fd7a70cc43e73',
+          'sha256:74b88b904f6cc097a9368a8e3ab531fa137b55d246996eacf6f53f3ea9e00339',
+          'sha256:e461315ac2621823120487ca4094a2c994edb9e111b9dab0b466be94715fcc2f',
+          'sha256:376f04dcc7fa0606445cd1d61fd662d94fddd328ea5510520aaa169b925b0eb8',
+          'sha256:464099d27bb70252aa0f6c58c28a5091d2e53f5eba3b6980b72526e041c335e6',
+          'sha256:5f556c8aa860adcf77512cc4938e5ebaf455b3566f3ea8bcb57972e8484f58f6',
+          'sha256:ffcdedb89da0026be34fc73f0cdd8fc6ed5f9a05724932544c24c2df21800909',
+          'sha256:535f3d850e81b0be03065be7d5941110f773fc7f2decc095518eab5f165c575b',
         ],
         os: 'linux',
         variant: undefined,
@@ -65,7 +69,7 @@ describe('GitHub', () => {
   })
 
   test('getImageInfo with variant', async () => {
-    const repository = 'ghcr.io/nginxinc/nginx-prometheus-exporter'
+    const repository = 'ghcr.io/nginx/nginx-prometheus-exporter'
     const tag = '1.3.0'
     const nginxImageInfo = await gitHubRegistry.getImageInfo({repository, tag})
 
