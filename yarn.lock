@@ -1494,9 +1494,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-commonjs@npm:^29.0.0":
-  version: 29.0.0
-  resolution: "@rollup/plugin-commonjs@npm:29.0.0"
+"@rollup/plugin-commonjs@npm:^29.0.1":
+  version: 29.0.1
+  resolution: "@rollup/plugin-commonjs@npm:29.0.1"
   dependencies:
     "@rollup/pluginutils": "npm:^5.0.1"
     commondir: "npm:^1.0.1"
@@ -1510,7 +1510,7 @@ __metadata:
   peerDependenciesMeta:
     rollup:
       optional: true
-  checksum: 10c0/e19f99aace255e625c3f92169108d444e522eb1119e26ec3af2e2744ec1d81d765ba1140e59afc9881a8640e0fcfe25a3b927d3c6877b850d57d6acddc1c5223
+  checksum: 10c0/4ef5c04fe85161a20a1b93211a26d4c1c7e685ce98232b5179a079162f9dd599c72b0487743883896381f870cfef692d8120709ff7965ed0356a61c46198dffd
   languageName: node
   linkType: hard
 
@@ -5645,7 +5645,7 @@ __metadata:
     "@eslint/compat": "npm:^2.0.2"
     "@eslint/js": "npm:^9.39.3"
     "@jest/globals": "npm:^30.2.0"
-    "@rollup/plugin-commonjs": "npm:^29.0.0"
+    "@rollup/plugin-commonjs": "npm:^29.0.1"
     "@rollup/plugin-json": "npm:^6.1.0"
     "@rollup/plugin-node-resolve": "npm:^16.0.3"
     "@rollup/plugin-typescript": "npm:^12.3.0"
