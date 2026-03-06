@@ -76,7 +76,7 @@ export abstract class ContainerRegistry {
     try {
       response = await globalThis.fetch(url, {headers})
     } catch (e) {
-      throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`)
+      throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
     }
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
@@ -87,6 +87,7 @@ export abstract class ContainerRegistry {
     } catch (e) {
       throw new Error(
         `Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`,
+        {cause: e},
       )
     }
     const headersObj = Object.fromEntries(response.headers.entries())

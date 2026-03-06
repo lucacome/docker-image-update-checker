@@ -16,7 +16,7 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
   try {
     response = await fetch(url, {headers})
   } catch (e) {
-    throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`)
+    throw new Error(`${errorPrefix}: network error - ${e instanceof Error ? e.message : String(e)}`, {cause: e})
   }
   if (!response.ok) {
     let body = ''
@@ -34,6 +34,7 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
   } catch (e) {
     throw new Error(
       `${errorPrefix}: failed to read response body (status: ${response.status}): ${e instanceof Error ? e.message : String(e)}`,
+      {cause: e},
     )
   }
   let data: {token?: string}
@@ -43,6 +44,7 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
     const details = body ? ` - ${truncateBody(body)}` : ''
     throw new Error(
       `${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`,
+      {cause: e},
     )
   }
   if (!data || typeof data.token !== 'string' || data.token.length === 0) {

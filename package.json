@@ -7,6 +7,7 @@
   "description": "GitHub Action to check if a Docker image needs to be updated",
   "devDependencies": {
     "@eslint/compat": "^2.0.2",
+    "@eslint/eslintrc": "^3.3.4",
     "@eslint/js": "^10.0.1",
     "@jest/globals": "^30.2.0",
     "@rollup/plugin-commonjs": "^29.0.2",
