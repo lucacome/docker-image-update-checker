@@ -5664,7 +5664,7 @@ __metadata:
     jest: "npm:^30.2.0"
     js-yaml: "npm:^4.1.1"
     prettier: "npm:^3.8.1"
-    rollup: "npm:^4.57.1"
+    rollup: "npm:^4.59.0"
     ts-jest: "npm:^29.4.6"
     ts-jest-resolver: "npm:^2.0.1"
     ts-node: "npm:^10.9.2"
@@ -6552,7 +6552,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^4.57.1":
+"rollup@npm:^4.59.0":
   version: 4.59.0
   resolution: "rollup@npm:4.59.0"
   dependencies:
