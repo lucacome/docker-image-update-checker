@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import {ContainerRegistry} from './registry.js'
 import {DockerHub} from './docker-hub.js'
 import {GitHubContainerRegistry} from './github.js'
+import {DockerHardenedImages} from './dhi.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 
@@ -11,6 +12,8 @@ function getRegistryInstance(registry: string): ContainerRegistry {
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()
+    case 'dhi.io':
+      return new DockerHardenedImages()
     default:
       throw new Error(`Invalid registry specified: ${registry}`)
   }
