@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker'
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker.js'
 import {spawnSync} from 'child_process'
 
 export interface DockerAuth {
@@ -35,7 +35,7 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
       })
 
       if (child.error) {
-        core.debug(`Error executing credential helper: ${child.error}`)
+        throw new Error(`Credential helper docker-credential-${config.credsStore} failed to execute: ${child.error.message}`)
       }
 
       const creds = child.stdout
@@ -44,7 +44,10 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
           const {Username, Secret} = JSON.parse(creds)
           return {username: Username, password: Secret}
         } catch (e) {
-          core.debug(`Failed to parse credential helper output: ${e}`)
+          throw new Error(
+            `Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)} — raw output: ${creds}`,
+            {cause: e},
+          )
         }
       }
     }

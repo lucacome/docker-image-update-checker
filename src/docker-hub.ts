@@ -7,7 +7,7 @@ export class DockerHub extends ContainerRegistry {
   constructor() {
     super('index.docker.io/v2/')
   }
-  async getToken(repository: string): Promise<string> {
+  protected async getToken(repository: string): Promise<string> {
     const auth = this.getCredentials()
     if (!auth) {
       core.info('No credentials found for Docker, using anonymous pull')
@@ -23,7 +23,7 @@ export class DockerHub extends ContainerRegistry {
     return fetchToken(`https://auth.docker.io/token?${params}`, headers, 'Failed to fetch Docker Hub token')
   }
 
-  getCredentials(): DockerAuth | undefined {
+  protected getCredentials(): DockerAuth | undefined {
     return getRegistryAuth('https://index.docker.io/v1/')
   }
 }

@@ -11,7 +11,11 @@ export const getIDToken = jest.fn()
 export const getInput = (jest.fn() as jest.MockedFunction<any>).mockReturnValue('')
 export const getMultilineInput = (jest.fn() as jest.MockedFunction<any>).mockReturnValue([])
 export const getState = (jest.fn() as jest.MockedFunction<any>).mockReturnValue('')
-export const group = jest.fn()
+export const group = (jest.fn() as jest.MockedFunction<any>).mockImplementation(async (_name: string, fn?: () => unknown) => {
+  if (typeof fn === 'function') {
+    return await fn()
+  }
+})
 export const info = jest.fn()
 export const isDebug = (jest.fn() as jest.MockedFunction<any>).mockReturnValue(false)
 export const markdownSummary = {}

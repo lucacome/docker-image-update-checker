@@ -1,31 +1,7 @@
 import {jest, describe, it, expect, beforeEach} from '@jest/globals'
 import {DockerHub} from '../src/docker-hub.js'
 import {ImageMap} from '../src/registry.js'
-import {buildBasicAuthHeader} from '../src/token-utils.js'
-
-// ---------------------------------------------------------------------------
-// Mock response factory
-// Covers both json() (registry.ts) and text() (token-utils.ts),
-// and headers.entries() (registry.ts) and headers.get() (token-utils.ts).
-// ---------------------------------------------------------------------------
-function mockResponse(body: unknown, headers: Record<string, string> = {}): Response {
-  const headersMap: Record<string, string> = {
-    'content-type': 'application/json',
-    ...Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v])),
-  }
-  const bodyStr = typeof body === 'string' ? body : JSON.stringify(body)
-  return {
-    ok: true,
-    status: 200,
-    statusText: 'OK',
-    headers: {
-      get: (name: string) => headersMap[name.toLowerCase()] ?? null,
-      entries: () => Object.entries(headersMap)[Symbol.iterator](),
-    },
-    json: (jest.fn() as jest.MockedFunction<() => Promise<unknown>>).mockResolvedValue(typeof body === 'string' ? JSON.parse(body) : body),
-    text: (jest.fn() as jest.MockedFunction<() => Promise<string>>).mockResolvedValue(bodyStr),
-  } as unknown as Response
-}
+import {mockResponse} from './registry-test-utils.js'
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -107,7 +83,7 @@ describe('DockerHub', () => {
     it('should fetch token anonymously with correct URL', async () => {
       jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
 
-      const token = await dockerHub.getToken('library/nginx')
+      const token = await (dockerHub as unknown as {getToken: (r: string) => Promise<string>}).getToken('library/nginx')
 
       expect(token).toBe('test-token')
       expect(fetch).toHaveBeenCalledWith(
@@ -122,11 +98,11 @@ describe('DockerHub', () => {
         .mockReturnValue({username: 'user', password: 'pass'})
       jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
 
-      await dockerHub.getToken('library/nginx')
+      await (dockerHub as unknown as {getToken: (r: string) => Promise<string>}).getToken('library/nginx')
 
       expect(fetch).toHaveBeenCalledWith(
         'https://auth.docker.io/token?service=registry.docker.io&scope=repository%3Alibrary%2Fnginx%3Apull',
-        {headers: {Authorization: buildBasicAuthHeader('user', 'pass')}},
+        {headers: {Authorization: 'Basic dXNlcjpwYXNz'}},
       )
     })
   })

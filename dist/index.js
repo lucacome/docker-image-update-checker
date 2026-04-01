@@ -78005,7 +78005,7 @@ function getRegistryAuth(registry) {
                 encoding: 'utf-8',
             });
             if (child.error) {
-                debug(`Error executing credential helper: ${child.error}`);
+                throw new Error(`Credential helper docker-credential-${config.credsStore} failed to execute: ${child.error.message}`);
             }
             const creds = child.stdout;
             if (creds && child.status === 0) {
@@ -78014,7 +78014,7 @@ function getRegistryAuth(registry) {
                     return { username: Username, password: Secret };
                 }
                 catch (e) {
-                    debug(`Failed to parse credential helper output: ${e}`);
+                    throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)} — raw output: ${creds}`, { cause: e });
                 }
             }
         }

@@ -191,13 +191,18 @@ __mocks__/
 `jest.config.js`. The mock exports `jest.fn()` stubs for every `@actions/core` export.
 Import `jest` from `@jest/globals` inside the mock file (required for ESM mode).
 
-### Mocking `getCredentials()` in registry tests
+### Mocking `getCredentials()` and calling `getToken()` in registry tests
 
-`getCredentials()` is a `protected` method at the TypeScript level but a plain prototype
-method at runtime. Spy on it directly to prevent real Docker credential store access:
+`getToken()` and `getCredentials()` are both `protected` on the base class and its
+implementations. They are plain prototype methods at runtime, so they can be accessed
+in tests via a type cast:
 
 ```ts
+// spy on getCredentials to prevent real Docker credential store access
 jest.spyOn(instance as unknown as {getCredentials: () => undefined}, 'getCredentials').mockReturnValue(undefined)
+
+// call getToken directly in unit tests
+const token = await (instance as unknown as {getToken: (r: string) => Promise<string>}).getToken('library/nginx')
 ```
 
 ### Mock response factory pattern
