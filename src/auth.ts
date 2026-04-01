@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {Docker} from '@docker/actions-toolkit/lib/docker/docker'
+import {Docker} from '@docker/actions-toolkit/lib/docker/docker.js'
 import {spawnSync} from 'child_process'
 
 export interface DockerAuth {
@@ -35,13 +35,17 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
       })
 
       if (child.error) {
-        console.error('Error executing command:', child.error)
+        throw new Error(`Credential helper docker-credential-${config.credsStore} failed to execute: ${child.error.message}`)
       }
 
       const creds = child.stdout
-      if (creds) {
-        const {Username, Secret} = JSON.parse(creds)
-        return {username: Username, password: Secret}
+      if (creds && child.status === 0) {
+        try {
+          const {Username, Secret} = JSON.parse(creds)
+          return {username: Username, password: Secret}
+        } catch (e) {
+          throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
+        }
       }
     }
     core.debug('No credentials found, returning undefined')

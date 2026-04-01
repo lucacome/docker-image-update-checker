@@ -22,7 +22,7 @@ export function findDiffImages(set1: ImageMap, set2: ImageMap): ImageInfo[] {
 
   if (core.isDebug()) {
     core.startGroup('Diff Images')
-    core.info(`Diff Images: ${(JSON.stringify(diffImages), null, 2)}`)
+    core.info(`Diff Images: ${JSON.stringify(diffImages, null, 2)}`)
     core.endGroup()
   }
 

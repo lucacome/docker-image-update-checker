@@ -8,7 +8,7 @@ export class GitHubContainerRegistry extends ContainerRegistry {
     super('ghcr.io/v2/')
   }
 
-  async getToken(repository: string): Promise<string> {
+  protected async getToken(repository: string): Promise<string> {
     const auth = this.getCredentials()
     if (!auth) {
       core.info('No credentials found for GitHub, using anonymous pull')
@@ -21,7 +21,7 @@ export class GitHubContainerRegistry extends ContainerRegistry {
     return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry')
   }
 
-  getCredentials(): DockerAuth | undefined {
+  protected getCredentials(): DockerAuth | undefined {
     return getRegistryAuth('ghcr.io')
   }
 }
