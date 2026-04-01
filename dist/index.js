@@ -29888,7 +29888,7 @@ class ContainerRegistry {
             Authorization: `Bearer ${token}`,
         };
         const fetchResult = await this.fetch(url, headers);
-        const layers = fetchResult.data.layers;
+        const layers = (fetchResult.data.layers ?? []);
         return layers.map((layer) => layer.digest);
     }
     async fetch(url, headers) {
@@ -29951,8 +29951,8 @@ class ContainerRegistry {
                 const imageInfo = {
                     architecture: manifest.platform.architecture,
                     digest: manifest.digest,
-                    os: manifest.platform?.os,
-                    variant: manifest.platform?.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
+                    os: manifest.platform.os,
+                    variant: manifest.platform.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
                     layers: await this.getLayers(manifest.digest, image.repository, token),
                 };
                 debug(`Generated imageInfo: ${JSON.stringify(imageInfo, null, 2)}`);
@@ -29965,6 +29965,9 @@ class ContainerRegistry {
         else if (contentType === 'application/vnd.docker.distribution.manifest.v2+json' ||
             contentType === 'application/vnd.oci.image.manifest.v1+json') {
             debug(`Processing single manifest for image: ${image.repository}:${image.tag}`);
+            if (!dockerContentDigest) {
+                throw new Error(`Missing docker-content-digest header for ${image.repository}:${image.tag}`);
+            }
             const digest = fetchResult.data.config.digest;
             const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${digest}`;
             const blobHeaders = {
@@ -29986,7 +29989,7 @@ class ContainerRegistry {
             return new Map([[generateKey(imageInfo), imageInfo]]);
         }
         else {
-            throw new Error('Unsupported content type');
+            throw new Error(`Unsupported content type: ${contentType}`);
         }
     }
 }
@@ -78001,7 +78004,7 @@ function getRegistryAuth(registry) {
         if (config?.credsStore) {
             debug('No auth field, using credential store to get credentials');
             const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
-                input: `\n${registry}\n`,
+                input: `${registry}\n`,
                 encoding: 'utf-8',
             });
             if (child.error) {
@@ -78212,7 +78215,7 @@ async function run() {
         setOutput('needs-updating', diffs.length > 0);
     }
     catch (error) {
-        setFailed(`Action failed with error: ${error}`);
+        setFailed(`Action failed with error: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 

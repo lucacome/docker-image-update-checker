@@ -8,7 +8,7 @@ export class GoogleContainerRegistry extends ContainerRegistry {
     super('gcr.io/v2/')
   }
 
-  async getToken(repository: string): Promise<string> {
+  protected async getToken(repository: string): Promise<string> {
     const auth = this.getCredentials()
     if (!auth) {
       core.info('No credentials found for GCR, using anonymous pull')
@@ -21,7 +21,7 @@ export class GoogleContainerRegistry extends ContainerRegistry {
     return fetchToken(`https://gcr.io/token?${params}`, headers, 'Failed to obtain GCR token')
   }
 
-  getCredentials(): DockerAuth | undefined {
+  protected getCredentials(): DockerAuth | undefined {
     return getRegistryAuth('https://gcr.io/v2/')
   }
 }

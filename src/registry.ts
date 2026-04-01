@@ -66,7 +66,7 @@ export abstract class ContainerRegistry {
 
     const fetchResult = await this.fetch(url, headers)
 
-    const layers = fetchResult.data.layers as unknown as {digest: string}[]
+    const layers = (fetchResult.data.layers ?? []) as unknown as {digest: string}[]
 
     return layers.map((layer) => layer.digest)
   }
@@ -149,8 +149,8 @@ export abstract class ContainerRegistry {
         const imageInfo = {
           architecture: manifest.platform.architecture,
           digest: manifest.digest,
-          os: manifest.platform?.os,
-          variant: manifest.platform?.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
+          os: manifest.platform.os,
+          variant: manifest.platform.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
           layers: await this.getLayers(manifest.digest, image.repository, token),
         }
         core.debug(`Generated imageInfo: ${JSON.stringify(imageInfo, null, 2)}`)
@@ -164,6 +164,9 @@ export abstract class ContainerRegistry {
       contentType === 'application/vnd.oci.image.manifest.v1+json'
     ) {
       core.debug(`Processing single manifest for image: ${image.repository}:${image.tag}`)
+      if (!dockerContentDigest) {
+        throw new Error(`Missing docker-content-digest header for ${image.repository}:${image.tag}`)
+      }
       const digest = fetchResult.data.config.digest
       const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${digest}`
       const blobHeaders = {
@@ -191,7 +194,7 @@ export abstract class ContainerRegistry {
 
       return new Map([[generateKey(imageInfo), imageInfo]])
     } else {
-      throw new Error('Unsupported content type')
+      throw new Error(`Unsupported content type: ${contentType}`)
     }
   }
 }

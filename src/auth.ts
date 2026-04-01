@@ -30,7 +30,7 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
     if (config?.credsStore) {
       core.debug('No auth field, using credential store to get credentials')
       const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
-        input: `\n${registry}\n`,
+        input: `${registry}\n`,
         encoding: 'utf-8',
       })
 
