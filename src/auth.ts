@@ -35,13 +35,17 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
       })
 
       if (child.error) {
-        console.error('Error executing command:', child.error)
+        core.debug(`Error executing credential helper: ${child.error}`)
       }
 
       const creds = child.stdout
-      if (creds) {
-        const {Username, Secret} = JSON.parse(creds)
-        return {username: Username, password: Secret}
+      if (creds && child.status === 0) {
+        try {
+          const {Username, Secret} = JSON.parse(creds)
+          return {username: Username, password: Secret}
+        } catch (e) {
+          core.debug(`Failed to parse credential helper output: ${e}`)
+        }
       }
     }
     core.debug('No credentials found, returning undefined')

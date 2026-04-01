@@ -13,6 +13,8 @@ config:
 # Define glob expressions to ignore
 ignores:
   - '.github/**'
+  - '.agents/**'
+  - '.claude/**'
 
 # Fix any fixable errors
 fix: true

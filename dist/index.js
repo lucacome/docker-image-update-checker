@@ -78005,12 +78005,17 @@ function getRegistryAuth(registry) {
                 encoding: 'utf-8',
             });
             if (child.error) {
-                console.error('Error executing command:', child.error);
+                debug(`Error executing credential helper: ${child.error}`);
             }
             const creds = child.stdout;
-            if (creds) {
-                const { Username, Secret } = JSON.parse(creds);
-                return { username: Username, password: Secret };
+            if (creds && child.status === 0) {
+                try {
+                    const { Username, Secret } = JSON.parse(creds);
+                    return { username: Username, password: Secret };
+                }
+                catch (e) {
+                    debug(`Failed to parse credential helper output: ${e}`);
+                }
             }
         }
         debug('No credentials found, returning undefined');
@@ -78127,7 +78132,7 @@ function findDiffImages(set1, set2) {
     }
     if (isDebug()) {
         startGroup('Diff Images');
-        info(`Diff Images: ${(JSON.stringify(diffImages), 2)}`);
+        info(`Diff Images: ${JSON.stringify(diffImages, null, 2)}`);
         endGroup();
     }
     return diffImages;
