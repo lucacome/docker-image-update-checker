@@ -46,7 +46,7 @@
     ".": "./dist/index.js"
   },
   "engines": {
-    "node": ">=24.14.0"
+    "node": ">=24.14.1"
   },
   "license": "MIT",
   "main": "src/main.ts",
