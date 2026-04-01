@@ -217,14 +217,14 @@ The mock factory must implement all four:
 ```ts
 function mockResponse(body: unknown, headers: Record<string, string> = {}): Response {
   const headersMap = {'content-type': 'application/json', ...headers}
-  const bodyStr = JSON.stringify(body)
+  const bodyStr = typeof body === 'string' ? body : JSON.stringify(body)
   return {
     ok: true, status: 200, statusText: 'OK',
     headers: {
       get: (name: string) => headersMap[name.toLowerCase()] ?? null,
       entries: () => Object.entries(headersMap)[Symbol.iterator](),
     },
-    json: (jest.fn() as jest.MockedFunction<() => Promise<unknown>>).mockResolvedValue(body),
+    json: (jest.fn() as jest.MockedFunction<() => Promise<unknown>>).mockResolvedValue(typeof body === 'string' ? JSON.parse(body) : body),
     text: (jest.fn() as jest.MockedFunction<() => Promise<string>>).mockResolvedValue(bodyStr),
   } as unknown as Response
 }

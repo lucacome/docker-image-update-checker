@@ -44,10 +44,7 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
           const {Username, Secret} = JSON.parse(creds)
           return {username: Username, password: Secret}
         } catch (e) {
-          throw new Error(
-            `Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)} — raw output: ${creds}`,
-            {cause: e},
-          )
+          throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
         }
       }
     }

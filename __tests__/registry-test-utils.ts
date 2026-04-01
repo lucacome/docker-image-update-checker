@@ -19,6 +19,8 @@ export function mockResponse(body: unknown, headers: Record<string, string> = {}
       get: (name: string) => headersMap[name.toLowerCase()] ?? null,
       entries: () => Object.entries(headersMap)[Symbol.iterator](),
     },
+    // When body is passed as a string it must be valid JSON; JSON.parse will throw at
+    // mock-construction time otherwise. All current test fixtures pass objects, not strings.
     json: (jest.fn() as jest.MockedFunction<() => Promise<unknown>>).mockResolvedValue(typeof body === 'string' ? JSON.parse(body) : body),
     text: (jest.fn() as jest.MockedFunction<() => Promise<string>>).mockResolvedValue(bodyStr),
   } as unknown as Response
