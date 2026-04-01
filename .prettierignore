@@ -1,3 +1,7 @@
 dist/
 lib/
 node_modules/
+*.json
+*.yaml
+*.yml
+*.md

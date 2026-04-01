@@ -59,12 +59,12 @@
   "scripts": {
     "all": "yarn format && yarn test && yarn build",
     "build": "npx rimraf ./dist && npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
-    "eslint": "npx eslint --max-warnings=0 .",
-    "eslint:fix": "npx eslint --fix .",
+    "eslint": "eslint --max-warnings=0 .",
+    "eslint:fix": "eslint --fix .",
     "format": "yarn run prettier:fix && yarn run eslint:fix",
     "lint": "yarn run prettier && yarn run eslint",
-    "prettier": "npx prettier --check \"./**/*.ts\"",
-    "prettier:fix": "npx prettier --write \"./**/*.ts\"",
+    "prettier": "prettier --check \"./**/*.ts\"",
+    "prettier:fix": "prettier --write \"./**/*.ts\"",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest"
   },
   "type": "module"

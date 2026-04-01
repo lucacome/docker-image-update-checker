@@ -104,3 +104,6 @@ lib/**/*
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# mise prepare state file
+.mise/prepare-state.toml
