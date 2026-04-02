@@ -83914,18 +83914,19 @@ class GenericBearerRegistry extends ContainerRegistry {
         if (auth) {
             headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        return fetchToken(`${this.config.tokenUrl}?${params}`, headers, `Failed to fetch ${this.config.name} token`);
+        const tokenUrl = `${this.config.tokenUrl}?${params}`;
+        return fetchToken(tokenUrl, headers, `Failed to fetch ${this.config.name} token from ${tokenUrl}`);
     }
     getCredentials() {
         return getRegistryAuth(this.config.credentialKey);
     }
 }
 
-/** Registry client for Docker Hub (`index.docker.io`). */
+/** Registry client for Docker Hub (`registry-1.docker.io`). */
 class DockerHub extends GenericBearerRegistry {
     constructor() {
         super({
-            baseUrl: 'index.docker.io/v2/',
+            baseUrl: 'registry-1.docker.io/v2/',
             tokenUrl: 'https://auth.docker.io/token',
             service: 'registry.docker.io',
             credentialKey: 'https://index.docker.io/v1/',
@@ -83947,17 +83948,18 @@ class GitHubContainerRegistry extends GenericBearerRegistry {
 }
 
 /**
- * Registry client for Google Container Registry (`gcr.io`).
- * Credentials are stored in the Docker config under `https://gcr.io`
- * (as written by `gcloud auth configure-docker gcr.io`).
+ * Registry client for Google Container Registry (`gcr.io` and regional variants
+ * such as `us.gcr.io`, `eu.gcr.io`, `asia.gcr.io`).
+ * Credentials are stored in the Docker config under `https://<hostname>`
+ * (as written by `gcloud auth configure-docker <hostname>`).
  */
 class GoogleContainerRegistry extends GenericBearerRegistry {
-    constructor() {
+    constructor(hostname = 'gcr.io') {
         super({
-            baseUrl: 'gcr.io/v2/',
-            tokenUrl: 'https://gcr.io/v2/token',
-            service: 'gcr.io',
-            credentialKey: 'https://gcr.io',
+            baseUrl: `${hostname}/v2/`,
+            tokenUrl: `https://${hostname}/v2/token`,
+            service: hostname,
+            credentialKey: `https://${hostname}`,
             name: 'Google Container Registry',
         });
     }
@@ -84089,7 +84091,7 @@ function getRegistryInstance(registry) {
         case 'ghcr.io':
             return new GitHubContainerRegistry();
         case 'gcr.io':
-            return new GoogleContainerRegistry();
+            return new GoogleContainerRegistry(r);
         case 'quay.io':
             return new QuayRegistry();
         default:
@@ -84097,6 +84099,8 @@ function getRegistryInstance(registry) {
                 return new AzureContainerRegistry(r);
             if (r.endsWith('.pkg.dev'))
                 return new GoogleArtifactRegistry(r);
+            if (r.endsWith('.gcr.io'))
+                return new GoogleContainerRegistry(r);
             throw new Error(`Unsupported registry: ${registry}`);
     }
 }

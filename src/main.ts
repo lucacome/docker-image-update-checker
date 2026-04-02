@@ -21,12 +21,13 @@ function getRegistryInstance(registry: string): ContainerRegistry {
     case 'ghcr.io':
       return new GitHubContainerRegistry()
     case 'gcr.io':
-      return new GoogleContainerRegistry()
+      return new GoogleContainerRegistry(r)
     case 'quay.io':
       return new QuayRegistry()
     default:
       if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
       if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
+      if (r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
       throw new Error(`Unsupported registry: ${registry}`)
   }
 }

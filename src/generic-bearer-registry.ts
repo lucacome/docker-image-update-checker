@@ -46,7 +46,8 @@ export class GenericBearerRegistry extends ContainerRegistry {
     if (auth) {
       headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
     }
-    return fetchToken(`${this.config.tokenUrl}?${params}`, headers, `Failed to fetch ${this.config.name} token`)
+    const tokenUrl = `${this.config.tokenUrl}?${params}`
+    return fetchToken(tokenUrl, headers, `Failed to fetch ${this.config.name} token from ${tokenUrl}`)
   }
 
   protected getCredentials(): DockerAuth | undefined {
