@@ -139,7 +139,153 @@ jobs:
 
       - name: Check diff-images
         run: |
-          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/arm64/v8" ]]; then
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # Quay.io tests
+
+  quay-image-up-to-date:
+    name: Quay.io image — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: quay.io/nginx/nginx-ingress:2.1.2
+          image: quay.io/nginx/nginx-ingress:2.1.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  quay-image-update-needed:
+    name: Quay.io image — update needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: quay.io/nginx/nginx-ingress:2.1.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # GCR tests
+
+  gcr-image-up-to-date:
+    name: GCR image — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: gcr.io/distroless/static:nonroot
+          image: gcr.io/distroless/static:nonroot
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # Google Artifact Registry tests
+
+  artifact-registry-image-up-to-date:
+    name: Artifact Registry image — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+          image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  artifact-registry-image-update-needed:
+    name: Artifact Registry image — update needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+          image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:2.0
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
             exit 1
           fi
 

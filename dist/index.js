@@ -83886,50 +83886,134 @@ async function fetchToken(url, headers, errorPrefix) {
     return token;
 }
 
-/** Registry client for Docker Hub (`index.docker.io`). */
-class DockerHub extends ContainerRegistry {
-    constructor() {
-        super('index.docker.io/v2/');
+/**
+ * Registry client for any registry that follows the standard Docker/OCI Bearer token flow:
+ * an optional Basic-auth request to a token endpoint that returns `{"token": "..."}` or
+ * `{"access_token": "..."}`, followed by Bearer-authenticated manifest and layer fetches.
+ *
+ * Subclass this and pass a {@link BearerRegistryConfig} to support a concrete registry.
+ * Can also be instantiated directly when no subclass-specific behaviour is needed.
+ */
+class GenericBearerRegistry extends ContainerRegistry {
+    config;
+    constructor(config) {
+        super(config.baseUrl);
+        this.config = config;
     }
     async getToken(repository) {
         const auth = this.getCredentials();
         if (!auth) {
-            info('No credentials found for Docker, using anonymous pull');
+            info(`No credentials found for ${this.config.name}, using anonymous pull`);
         }
-        const params = new URLSearchParams({
-            service: 'registry.docker.io',
-            scope: `repository:${repository}:pull`,
-        });
+        const params = new URLSearchParams();
+        if (this.config.service) {
+            params.set('service', this.config.service);
+        }
+        params.set('scope', `repository:${repository}:pull`);
         const headers = {};
         if (auth) {
             headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        return fetchToken(`https://auth.docker.io/token?${params}`, headers, 'Failed to fetch Docker Hub token');
+        return fetchToken(`${this.config.tokenUrl}?${params}`, headers, `Failed to fetch ${this.config.name} token`);
     }
     getCredentials() {
-        return getRegistryAuth('https://index.docker.io/v1/');
+        return getRegistryAuth(this.config.credentialKey);
+    }
+}
+
+/** Registry client for Docker Hub (`index.docker.io`). */
+class DockerHub extends GenericBearerRegistry {
+    constructor() {
+        super({
+            baseUrl: 'index.docker.io/v2/',
+            tokenUrl: 'https://auth.docker.io/token',
+            service: 'registry.docker.io',
+            credentialKey: 'https://index.docker.io/v1/',
+            name: 'Docker Hub',
+        });
     }
 }
 
 /** Registry client for GitHub Container Registry (`ghcr.io`). */
-class GitHubContainerRegistry extends ContainerRegistry {
+class GitHubContainerRegistry extends GenericBearerRegistry {
     constructor() {
-        super('ghcr.io/v2/');
+        super({
+            baseUrl: 'ghcr.io/v2/',
+            tokenUrl: 'https://ghcr.io/token',
+            credentialKey: 'ghcr.io',
+            name: 'GitHub Container Registry',
+        });
     }
-    async getToken(repository) {
-        const auth = this.getCredentials();
-        if (!auth) {
-            info('No credentials found for GitHub, using anonymous pull');
-        }
-        const params = new URLSearchParams({ scope: `repository:${repository}:pull` });
-        const headers = {};
-        if (auth) {
-            headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
-        }
-        return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry');
+}
+
+/**
+ * Registry client for Google Container Registry (`gcr.io`).
+ * Credentials are stored in the Docker config under `https://gcr.io`
+ * (as written by `gcloud auth configure-docker gcr.io`).
+ */
+class GoogleContainerRegistry extends GenericBearerRegistry {
+    constructor() {
+        super({
+            baseUrl: 'gcr.io/v2/',
+            tokenUrl: 'https://gcr.io/v2/token',
+            service: 'gcr.io',
+            credentialKey: 'https://gcr.io',
+            name: 'Google Container Registry',
+        });
     }
-    getCredentials() {
-        return getRegistryAuth('ghcr.io');
+}
+
+/**
+ * Registry client for Quay.io (`quay.io`).
+ * Public repositories can be pulled anonymously; robot accounts
+ * (username format `namespace+robotname`) are used for private repos.
+ */
+class QuayRegistry extends GenericBearerRegistry {
+    constructor() {
+        super({
+            baseUrl: 'quay.io/v2/',
+            tokenUrl: 'https://quay.io/v2/auth',
+            service: 'quay.io',
+            credentialKey: 'quay.io',
+            name: 'Quay',
+        });
+    }
+}
+
+/**
+ * Registry client for Azure Container Registry (`<name>.azurecr.io`).
+ * Accepts service principal credentials, admin account credentials, or
+ * scoped repository tokens — all stored in the Docker config under the
+ * registry hostname (as written by `docker login <name>.azurecr.io`).
+ */
+class AzureContainerRegistry extends GenericBearerRegistry {
+    constructor(hostname) {
+        super({
+            baseUrl: `${hostname}/v2/`,
+            tokenUrl: `https://${hostname}/oauth2/token`,
+            service: hostname,
+            credentialKey: hostname,
+            name: 'Azure Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for Google Artifact Registry (`<region>-docker.pkg.dev`).
+ * Credentials are stored in the Docker config under the registry hostname
+ * (as written by `gcloud auth configure-docker <region>-docker.pkg.dev`).
+ * The username is typically `oauth2accesstoken` with a short-lived GCP access
+ * token, or `_json_key` / `_json_key_base64` with a service account key.
+ */
+class GoogleArtifactRegistry extends GenericBearerRegistry {
+    constructor(hostname) {
+        super({
+            baseUrl: `${hostname}/v2/`,
+            tokenUrl: `https://${hostname}/v2/token`,
+            service: hostname,
+            credentialKey: hostname,
+            name: 'Google Artifact Registry',
+        });
     }
 }
 
@@ -83998,13 +84082,22 @@ function getDiffs(platforms, image1, image2) {
  * @throws {Error} if the registry is not supported
  */
 function getRegistryInstance(registry) {
-    switch (registry.toLowerCase()) {
+    const r = registry.toLowerCase();
+    switch (r) {
         case 'docker.io':
             return new DockerHub();
         case 'ghcr.io':
             return new GitHubContainerRegistry();
+        case 'gcr.io':
+            return new GoogleContainerRegistry();
+        case 'quay.io':
+            return new QuayRegistry();
         default:
-            throw new Error(`Invalid registry specified: ${registry}`);
+            if (r.endsWith('.azurecr.io'))
+                return new AzureContainerRegistry(r);
+            if (r.endsWith('.pkg.dev'))
+                return new GoogleArtifactRegistry(r);
+            throw new Error(`Unsupported registry: ${registry}`);
     }
 }
 /**

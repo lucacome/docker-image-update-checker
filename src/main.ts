@@ -2,6 +2,10 @@ import * as core from '@actions/core'
 import {ContainerRegistry} from './registry.js'
 import {DockerHub} from './docker-hub.js'
 import {GitHubContainerRegistry} from './github.js'
+import {GoogleContainerRegistry} from './gcr.js'
+import {QuayRegistry} from './quay.js'
+import {AzureContainerRegistry} from './acr.js'
+import {GoogleArtifactRegistry} from './artifact-registry.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 
@@ -10,13 +14,20 @@ import {Util} from '@docker/actions-toolkit/lib/util.js'
  * @throws {Error} if the registry is not supported
  */
 function getRegistryInstance(registry: string): ContainerRegistry {
-  switch (registry.toLowerCase()) {
+  const r = registry.toLowerCase()
+  switch (r) {
     case 'docker.io':
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()
+    case 'gcr.io':
+      return new GoogleContainerRegistry()
+    case 'quay.io':
+      return new QuayRegistry()
     default:
-      throw new Error(`Invalid registry specified: ${registry}`)
+      if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
+      if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
+      throw new Error(`Unsupported registry: ${registry}`)
   }
 }
 
