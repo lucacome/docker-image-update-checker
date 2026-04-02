@@ -29960,7 +29960,8 @@ class ContainerRegistry {
             debug(`Initial imagesInfo: ${JSON.stringify(Array.from(imagesInfo.values()), null, 2)}`);
             for (const manifest of manifestList.manifests) {
                 debug(`Processing manifest: ${JSON.stringify(manifest, null, 2)}`);
-                if (manifest.platform.architecture === 'unknown') {
+                // Skip entries with no platform (e.g. nested index entries) or unknown platform (e.g. BuildKit attestations)
+                if (!manifest.platform || manifest.platform.architecture === 'unknown') {
                     continue;
                 }
                 const imageInfo = {
@@ -78101,10 +78102,13 @@ async function fetchToken(url, headers, errorPrefix) {
         const details = body ? ` - ${truncateBody(body)}` : '';
         throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
-    if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+    // Per the distribution spec, registries may return either `token` or `access_token`
+    // (OAuth2 compatibility alias). Prefer `token`; fall back to `access_token`.
+    const token = typeof data.token === 'string' ? data.token : data.access_token;
+    if (!token || typeof token !== 'string' || token.length === 0) {
         throw new Error(`${errorPrefix}: response did not contain a valid token`);
     }
-    return data.token;
+    return token;
 }
 
 /** Registry client for Docker Hub (`index.docker.io`). */

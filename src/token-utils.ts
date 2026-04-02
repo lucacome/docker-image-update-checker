@@ -44,9 +44,9 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
       {cause: e},
     )
   }
-  let data: {token?: string}
+  let data: {token?: string; access_token?: string}
   try {
-    data = JSON.parse(body) as {token?: string}
+    data = JSON.parse(body) as {token?: string; access_token?: string}
   } catch (e) {
     const details = body ? ` - ${truncateBody(body)}` : ''
     throw new Error(
@@ -54,8 +54,11 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
       {cause: e},
     )
   }
-  if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+  // Per the distribution spec, registries may return either `token` or `access_token`
+  // (OAuth2 compatibility alias). Prefer `token`; fall back to `access_token`.
+  const token = typeof data.token === 'string' ? data.token : data.access_token
+  if (!token || typeof token !== 'string' || token.length === 0) {
     throw new Error(`${errorPrefix}: response did not contain a valid token`)
   }
-  return data.token
+  return token
 }

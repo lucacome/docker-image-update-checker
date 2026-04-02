@@ -23,7 +23,7 @@ interface Manifest {
     mediaType: string
     digest: string
     size: number
-    platform: {
+    platform?: {
       architecture: string
       os: string
       variant?: string
@@ -148,10 +148,10 @@ export abstract class ContainerRegistry {
       const manifestList = fetchResult.data as unknown as {
         manifests: {
           digest: string
-          platform: {
+          platform?: {
             architecture: string
             os: string
-            variant: string
+            variant?: string
           }
         }[]
       }
@@ -160,7 +160,8 @@ export abstract class ContainerRegistry {
       core.debug(`Initial imagesInfo: ${JSON.stringify(Array.from(imagesInfo.values()), null, 2)}`)
       for (const manifest of manifestList.manifests) {
         core.debug(`Processing manifest: ${JSON.stringify(manifest, null, 2)}`)
-        if (manifest.platform.architecture === 'unknown') {
+        // Skip entries with no platform (e.g. nested index entries) or unknown platform (e.g. BuildKit attestations)
+        if (!manifest.platform || manifest.platform.architecture === 'unknown') {
           continue
         }
         const imageInfo = {
