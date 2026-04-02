@@ -161,7 +161,7 @@ export class MyRegistry extends ContainerRegistry {
 - `core.info(msg)` — user-visible operational output
 - `core.warning(msg)` — non-fatal issues (e.g., missing optional credentials)
 - `core.startGroup` / `core.endGroup` — wrap related log lines for collapsible sections
-- `console.error()` — avoid; use `core.error()` instead (one existing exception in `auth.ts`)
+- `console.error()` — avoid; use `core.error()` instead
 
 ---
 

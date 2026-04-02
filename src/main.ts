@@ -5,6 +5,10 @@ import {GitHubContainerRegistry} from './github.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 
+/**
+ * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
+ * @throws {Error} if the registry is not supported
+ */
 function getRegistryInstance(registry: string): ContainerRegistry {
   switch (registry.toLowerCase()) {
     case 'docker.io':
@@ -16,6 +20,10 @@ function getRegistryInstance(registry: string): ContainerRegistry {
   }
 }
 
+/**
+ * Entry point for the GitHub Action. Reads inputs, compares base and target image layers
+ * across platforms, and sets the `needs-updating`, `diff-images`, and `diff-json` outputs.
+ */
 export async function run(): Promise<void> {
   try {
     const baseInput = core.getInput('base-image')
@@ -59,6 +67,6 @@ export async function run(): Promise<void> {
     core.setOutput('diff-json', JSON.stringify(diffs))
     core.setOutput('needs-updating', diffs.length > 0)
   } catch (error) {
-    core.setFailed(`Action failed with error: ${error}`)
+    core.setFailed(`Action failed with error: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

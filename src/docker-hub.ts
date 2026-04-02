@@ -3,6 +3,7 @@ import {DockerAuth, getRegistryAuth} from './auth.js'
 import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 import * as core from '@actions/core'
 
+/** Registry client for Docker Hub (`index.docker.io`). */
 export class DockerHub extends ContainerRegistry {
   constructor() {
     super('index.docker.io/v2/')

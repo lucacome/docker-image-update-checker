@@ -46,17 +46,24 @@ export interface ImageInfo {
 
 export type ImageMap = Map<string, ImageInfo>
 
+/** Generates a stable map key for an {@link ImageInfo} from its os, architecture, and variant. */
 function generateKey(obj: ImageInfo): string {
   return [obj.os, obj.architecture, obj.variant || ''].join('|')
 }
 
+/** Abstract base class for container registry clients. */
 export abstract class ContainerRegistry {
   constructor(protected baseUrl: string) {}
 
+  /** Returns a bearer token scoped to pull access for the given repository. */
   protected abstract getToken(repository: string): Promise<string>
 
+  /** Returns stored Docker credentials for this registry, or undefined for anonymous access. */
   protected abstract getCredentials(): DockerAuth | undefined
 
+  /**
+   * Fetches the layer digests for the manifest identified by `digest`.
+   */
   protected async getLayers(digest: string, repo: string, token: string): Promise<string[]> {
     const url = `https://${this.baseUrl}${repo}/manifests/${digest}`
     const headers = {
@@ -66,11 +73,15 @@ export abstract class ContainerRegistry {
 
     const fetchResult = await this.fetch(url, headers)
 
-    const layers = fetchResult.data.layers as unknown as {digest: string}[]
+    const layers = (fetchResult.data.layers ?? []) as unknown as {digest: string}[]
 
     return layers.map((layer) => layer.digest)
   }
 
+  /**
+   * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+   * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
+   */
   protected async fetch(url: string, headers?: Record<string, string>): Promise<FetchResult> {
     let response: Response
     try {
@@ -105,6 +116,12 @@ export abstract class ContainerRegistry {
     }
   }
 
+  /**
+   * Fetches the manifest for the given image and returns a map of platform key → {@link ImageInfo},
+   * including layer digests for each platform. Supports manifest lists, OCI image indexes,
+   * and single-platform manifests.
+   * @throws {Error} if the content type is unsupported or a required header/field is missing
+   */
   async getImageInfo(image: Image): Promise<ImageMap> {
     core.debug(`Fetching token for repository: ${image.repository}`)
     const token = await this.getToken(image.repository)
@@ -149,8 +166,8 @@ export abstract class ContainerRegistry {
         const imageInfo = {
           architecture: manifest.platform.architecture,
           digest: manifest.digest,
-          os: manifest.platform?.os,
-          variant: manifest.platform?.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
+          os: manifest.platform.os,
+          variant: manifest.platform.variant ? manifest.platform.variant : manifest.platform.architecture === 'arm64' ? 'v8' : undefined,
           layers: await this.getLayers(manifest.digest, image.repository, token),
         }
         core.debug(`Generated imageInfo: ${JSON.stringify(imageInfo, null, 2)}`)
@@ -164,6 +181,9 @@ export abstract class ContainerRegistry {
       contentType === 'application/vnd.oci.image.manifest.v1+json'
     ) {
       core.debug(`Processing single manifest for image: ${image.repository}:${image.tag}`)
+      if (!dockerContentDigest) {
+        throw new Error(`Missing docker-content-digest header for ${image.repository}:${image.tag}`)
+      }
       const digest = fetchResult.data.config.digest
       const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${digest}`
       const blobHeaders = {
@@ -176,6 +196,11 @@ export abstract class ContainerRegistry {
         architecture: string
         os: string
         variant: string
+      }
+      if (!architecture || !os) {
+        throw new Error(
+          `Blob config for ${image.repository}:${image.tag} is missing required fields: architecture=${architecture}, os=${os}`,
+        )
       }
       const manifest = {architecture, os, variant}
       core.debug(`Manifest for ${image.repository}:${image.tag}: ${JSON.stringify(manifest, null, 2)}`)
@@ -191,7 +216,7 @@ export abstract class ContainerRegistry {
 
       return new Map([[generateKey(imageInfo), imageInfo]])
     } else {
-      throw new Error('Unsupported content type')
+      throw new Error(`Unsupported content type: ${contentType}`)
     }
   }
 }

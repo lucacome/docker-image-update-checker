@@ -18,6 +18,8 @@ outputs:
     description: "Whether the image needs updating"
   diff-images:
     description: "The diff of the images"
+  diff-json:
+    description: "The diff of the images as JSON"
 
 runs:
   using: node24
