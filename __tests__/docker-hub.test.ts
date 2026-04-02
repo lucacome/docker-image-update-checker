@@ -179,5 +179,124 @@ describe('DockerHub', () => {
       // token + manifest + blob + getLayers
       expect(fetch).toHaveBeenCalledTimes(4)
     })
+
+    it('should throw with the actual content type when it is not recognised', async () => {
+      // fetch 1: token
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+      // fetch 2: manifest with an unrecognised content type
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse({}, {'content-type': 'application/json'}))
+
+      await expect(dockerHub.getImageInfo({repository: 'library/nginx', tag: 'latest'})).rejects.toThrow(
+        'Unsupported content type: application/json',
+      )
+    })
+
+    it('should throw when docker-content-digest header is absent on a single manifest', async () => {
+      // fetch 1: token
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+      // fetch 2: single manifest — no docker-content-digest header
+      jest
+        .mocked(fetch)
+        .mockResolvedValueOnce(mockResponse(SINGLE_MANIFEST, {'content-type': 'application/vnd.docker.distribution.manifest.v2+json'}))
+
+      await expect(dockerHub.getImageInfo({repository: 'myorg/myimage', tag: '1.0.0'})).rejects.toThrow(
+        'Missing docker-content-digest header for myorg/myimage:1.0.0',
+      )
+    })
+
+    it('should throw when blob config is missing required architecture or os fields', async () => {
+      // fetch 1: token
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+      // fetch 2: single manifest
+      jest.mocked(fetch).mockResolvedValueOnce(
+        mockResponse(SINGLE_MANIFEST, {
+          'content-type': 'application/vnd.docker.distribution.manifest.v2+json',
+          'docker-content-digest': 'sha256:overalldigest',
+        }),
+      )
+      // fetch 3: blob config missing 'os'
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse({architecture: 'amd64'}))
+
+      await expect(dockerHub.getImageInfo({repository: 'myorg/myimage', tag: '1.0.0'})).rejects.toThrow(
+        'Invalid registry response from https://index.docker.io/v2/myorg/myimage/blobs/sha256:singleconfig',
+      )
+    })
+
+    it('should return empty layers when a platform manifest has no layers field', async () => {
+      // fetch 1: token
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+      // fetch 2: manifest list
+      jest.mocked(fetch).mockResolvedValueOnce(
+        mockResponse(MANIFEST_LIST, {
+          'content-type': 'application/vnd.docker.distribution.manifest.list.v2+json',
+          'docker-content-digest': 'sha256:listdigest',
+        }),
+      )
+      // fetch 3: amd64 manifest — no layers field
+      jest.mocked(fetch).mockResolvedValueOnce(
+        mockResponse({
+          schemaVersion: 2,
+          mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
+          config: {mediaType: 'application/vnd.docker.container.image.v1+json', size: 100, digest: 'sha256:amd64config'},
+        }),
+      )
+      // fetch 4: arm64 manifest — no layers field
+      jest.mocked(fetch).mockResolvedValueOnce(
+        mockResponse({
+          schemaVersion: 2,
+          mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
+          config: {mediaType: 'application/vnd.docker.container.image.v1+json', size: 100, digest: 'sha256:arm64config'},
+        }),
+      )
+
+      const imageMap: ImageMap = await dockerHub.getImageInfo({repository: 'library/nginx', tag: 'latest'})
+
+      // unknown platform skipped, so 2 entries (amd64 + arm64)
+      expect(imageMap.size).toBe(2)
+      expect(imageMap.get('linux|amd64|')!.layers).toEqual([])
+      expect(imageMap.get('linux|arm64|v8')!.layers).toEqual([])
+    })
+
+    it('should skip manifest entries with no platform field (OCI image-index spec: platform is OPTIONAL)', async () => {
+      // A manifest list where one entry has no platform (e.g. a nested index / referrer entry)
+      const manifestListWithMissingPlatform = {
+        schemaVersion: 2,
+        mediaType: 'application/vnd.docker.distribution.manifest.list.v2+json',
+        manifests: [
+          {
+            mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
+            digest: 'sha256:amd64digest',
+            size: 1000,
+            platform: {architecture: 'amd64', os: 'linux'},
+          },
+          {
+            // No platform field — must be skipped without crashing
+            mediaType: 'application/vnd.docker.distribution.manifest.v2+json',
+            digest: 'sha256:noPlatformDigest',
+            size: 500,
+          },
+        ],
+      }
+
+      // fetch 1: token
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+      // fetch 2: manifest list
+      jest.mocked(fetch).mockResolvedValueOnce(
+        mockResponse(manifestListWithMissingPlatform, {
+          'content-type': 'application/vnd.docker.distribution.manifest.list.v2+json',
+          'docker-content-digest': 'sha256:listdigest',
+        }),
+      )
+      // fetch 3: amd64 layers (only one non-skipped platform)
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(AMD64_LAYERS_MANIFEST))
+
+      const imageMap: ImageMap = await dockerHub.getImageInfo({repository: 'library/nginx', tag: 'latest'})
+
+      // Only the amd64 entry should be present; the no-platform entry must be silently skipped
+      expect(imageMap.size).toBe(1)
+      expect(imageMap.has('linux|amd64|')).toBe(true)
+      // exactly 3 fetch calls: token + manifest list + 1 platform layer fetch
+      expect(fetch).toHaveBeenCalledTimes(3)
+    })
   })
 })
