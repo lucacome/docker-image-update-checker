@@ -182,8 +182,8 @@ jobs:
         id: test
         uses: ./
         with:
-          base-image: nginx:1.21.0
-          image: quay.io/nginx/nginx-ingress:2.1.0
+          base-image: nginx:1.21.6
+          image: quay.io/nginx/nginx-ingress:2.1.2
           platforms: linux/amd64
 
       - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
