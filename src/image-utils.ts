@@ -7,6 +7,10 @@ export type ImageInput = {
   tag: string
 }
 
+/**
+ * Compares two ImageMaps and returns the entries from `set2` where not all layers of the
+ * corresponding `set1` entry are present. A non-empty result means the image needs rebuilding.
+ */
 export function findDiffImages(set1: ImageMap, set2: ImageMap): ImageInfo[] {
   const diffImages: ImageInfo[] = []
 
@@ -29,6 +33,11 @@ export function findDiffImages(set1: ImageMap, set2: ImageMap): ImageInfo[] {
   return diffImages
 }
 
+/**
+ * Parses a Docker image reference string into its registry, image path, and tag components.
+ * Official Docker Hub images (e.g. `nginx`) are expanded to `library/nginx`.
+ * Defaults to registry `docker.io` and tag `latest` when not specified.
+ */
 export function parseImageInput(imageString: string): ImageInput {
   const defaultRegistry = 'docker.io'
 
@@ -46,6 +55,11 @@ export function parseImageInput(imageString: string): ImageInput {
   }
 }
 
+/**
+ * Filters the diff results from {@link findDiffImages} to only the requested platforms.
+ * Pass `['all']` to return every differing platform without filtering.
+ * `arm64` platforms without an explicit variant are normalised to `arm64/v8`.
+ */
 export function getDiffs(platforms: string[], image1: ImageMap, image2: ImageMap): ImageInfo[] {
   const diffImages = findDiffImages(image1, image2)
 

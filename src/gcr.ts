@@ -3,6 +3,7 @@ import {DockerAuth, getRegistryAuth} from './auth.js'
 import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 import * as core from '@actions/core'
 
+/** Registry client for Google Container Registry (`gcr.io`). */
 export class GoogleContainerRegistry extends ContainerRegistry {
   constructor() {
     super('gcr.io/v2/')

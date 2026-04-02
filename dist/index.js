@@ -29873,14 +29873,19 @@ function getState(name) {
     return process.env[`STATE_${name}`] || '';
 }
 
+/** Generates a stable map key for an {@link ImageInfo} from its os, architecture, and variant. */
 function generateKey(obj) {
     return [obj.os, obj.architecture, obj.variant || ''].join('|');
 }
+/** Abstract base class for container registry clients. */
 class ContainerRegistry {
     baseUrl;
     constructor(baseUrl) {
         this.baseUrl = baseUrl;
     }
+    /**
+     * Fetches the layer digests for the manifest identified by `digest`.
+     */
     async getLayers(digest, repo, token) {
         const url = `https://${this.baseUrl}${repo}/manifests/${digest}`;
         const headers = {
@@ -29891,6 +29896,10 @@ class ContainerRegistry {
         const layers = (fetchResult.data.layers ?? []);
         return layers.map((layer) => layer.digest);
     }
+    /**
+     * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+     * @throws {Error} on network failure, non-2xx status, or unparseable JSON response
+     */
     async fetch(url, headers) {
         let response;
         try {
@@ -29923,6 +29932,12 @@ class ContainerRegistry {
             data,
         };
     }
+    /**
+     * Fetches the manifest for the given image and returns a map of platform key → {@link ImageInfo},
+     * including layer digests for each platform. Supports manifest lists, OCI image indexes,
+     * and single-platform manifests.
+     * @throws {Error} if the content type is unsupported or a required header/field is missing
+     */
     async getImageInfo(image) {
         debug(`Fetching token for repository: ${image.repository}`);
         const token = await this.getToken(image.repository);
@@ -77987,6 +78002,11 @@ class Docker {
     }
 }
 
+/**
+ * Resolves Docker credentials for the given registry from the local Docker config file.
+ * Tries direct username/password fields first, then a base64-encoded auth field,
+ * then the configured credential store helper. Returns undefined if no credentials are found.
+ */
 function getRegistryAuth(registry) {
     const config = Docker.configFile();
     if (!config) {
@@ -78031,15 +78051,22 @@ function getRegistryAuth(registry) {
 }
 
 const MAX_ERROR_BODY_LENGTH = 1000;
+/** Truncates a string to MAX_ERROR_BODY_LENGTH characters, appending a marker if truncated. */
 function truncateBody(body) {
     if (body.length > MAX_ERROR_BODY_LENGTH) {
         return body.slice(0, MAX_ERROR_BODY_LENGTH) + '... [truncated]';
     }
     return body;
 }
+/** Builds an HTTP Basic Authorization header value from a username and password. */
 function buildBasicAuthHeader(username, password) {
     return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
 }
+/**
+ * Fetches a bearer token from a registry auth endpoint.
+ * Expects a JSON response containing a `token` string field.
+ * @throws {Error} on network failure, non-2xx status, invalid JSON, or a missing/empty token field
+ */
 async function fetchToken(url, headers, errorPrefix) {
     let response;
     try {
@@ -78080,6 +78107,7 @@ async function fetchToken(url, headers, errorPrefix) {
     return data.token;
 }
 
+/** Registry client for Docker Hub (`index.docker.io`). */
 class DockerHub extends ContainerRegistry {
     constructor() {
         super('index.docker.io/v2/');
@@ -78104,6 +78132,7 @@ class DockerHub extends ContainerRegistry {
     }
 }
 
+/** Registry client for GitHub Container Registry (`ghcr.io`). */
 class GitHubContainerRegistry extends ContainerRegistry {
     constructor() {
         super('ghcr.io/v2/');
@@ -78125,6 +78154,10 @@ class GitHubContainerRegistry extends ContainerRegistry {
     }
 }
 
+/**
+ * Compares two ImageMaps and returns the entries from `set2` where not all layers of the
+ * corresponding `set1` entry are present. A non-empty result means the image needs rebuilding.
+ */
 function findDiffImages(set1, set2) {
     const diffImages = [];
     for (const [key, obj1] of set1) {
@@ -78143,6 +78176,11 @@ function findDiffImages(set1, set2) {
     }
     return diffImages;
 }
+/**
+ * Parses a Docker image reference string into its registry, image path, and tag components.
+ * Official Docker Hub images (e.g. `nginx`) are expanded to `library/nginx`.
+ * Defaults to registry `docker.io` and tag `latest` when not specified.
+ */
 function parseImageInput(imageString) {
     const defaultRegistry = 'docker.io';
     const [registryAndImage, tag] = imageString.split(':');
@@ -78156,6 +78194,11 @@ function parseImageInput(imageString) {
         tag: tag ?? 'latest',
     };
 }
+/**
+ * Filters the diff results from {@link findDiffImages} to only the requested platforms.
+ * Pass `['all']` to return every differing platform without filtering.
+ * `arm64` platforms without an explicit variant are normalised to `arm64/v8`.
+ */
 function getDiffs(platforms, image1, image2) {
     const diffImages = findDiffImages(image1, image2);
     if (platforms.length === 1 && platforms[0] === 'all') {
@@ -78171,6 +78214,10 @@ function getDiffs(platforms, image1, image2) {
     }
 }
 
+/**
+ * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
+ * @throws {Error} if the registry is not supported
+ */
 function getRegistryInstance(registry) {
     switch (registry.toLowerCase()) {
         case 'docker.io':
@@ -78181,6 +78228,10 @@ function getRegistryInstance(registry) {
             throw new Error(`Invalid registry specified: ${registry}`);
     }
 }
+/**
+ * Entry point for the GitHub Action. Reads inputs, compares base and target image layers
+ * across platforms, and sets the `needs-updating`, `diff-images`, and `diff-json` outputs.
+ */
 async function run() {
     try {
         const baseInput = getInput('base-image');

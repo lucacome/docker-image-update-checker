@@ -7,6 +7,11 @@ export interface DockerAuth {
   password: string
 }
 
+/**
+ * Resolves Docker credentials for the given registry from the local Docker config file.
+ * Tries direct username/password fields first, then a base64-encoded auth field,
+ * then the configured credential store helper. Returns undefined if no credentials are found.
+ */
 export function getRegistryAuth(registry: string): DockerAuth | undefined {
   const config = Docker.configFile()
   if (!config) {

@@ -1,5 +1,6 @@
 const MAX_ERROR_BODY_LENGTH = 1000
 
+/** Truncates a string to MAX_ERROR_BODY_LENGTH characters, appending a marker if truncated. */
 function truncateBody(body: string): string {
   if (body.length > MAX_ERROR_BODY_LENGTH) {
     return body.slice(0, MAX_ERROR_BODY_LENGTH) + '... [truncated]'
@@ -7,10 +8,16 @@ function truncateBody(body: string): string {
   return body
 }
 
+/** Builds an HTTP Basic Authorization header value from a username and password. */
 export function buildBasicAuthHeader(username: string, password: string): string {
   return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
 }
 
+/**
+ * Fetches a bearer token from a registry auth endpoint.
+ * Expects a JSON response containing a `token` string field.
+ * @throws {Error} on network failure, non-2xx status, invalid JSON, or a missing/empty token field
+ */
 export async function fetchToken(url: string, headers: Record<string, string>, errorPrefix: string): Promise<string> {
   let response: Response
   try {

@@ -46,17 +46,24 @@ export interface ImageInfo {
 
 export type ImageMap = Map<string, ImageInfo>
 
+/** Generates a stable map key for an {@link ImageInfo} from its os, architecture, and variant. */
 function generateKey(obj: ImageInfo): string {
   return [obj.os, obj.architecture, obj.variant || ''].join('|')
 }
 
+/** Abstract base class for container registry clients. */
 export abstract class ContainerRegistry {
   constructor(protected baseUrl: string) {}
 
+  /** Returns a bearer token scoped to pull access for the given repository. */
   protected abstract getToken(repository: string): Promise<string>
 
+  /** Returns stored Docker credentials for this registry, or undefined for anonymous access. */
   protected abstract getCredentials(): DockerAuth | undefined
 
+  /**
+   * Fetches the layer digests for the manifest identified by `digest`.
+   */
   protected async getLayers(digest: string, repo: string, token: string): Promise<string[]> {
     const url = `https://${this.baseUrl}${repo}/manifests/${digest}`
     const headers = {
@@ -71,6 +78,10 @@ export abstract class ContainerRegistry {
     return layers.map((layer) => layer.digest)
   }
 
+  /**
+   * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+   * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
+   */
   protected async fetch(url: string, headers?: Record<string, string>): Promise<FetchResult> {
     let response: Response
     try {
@@ -105,6 +116,12 @@ export abstract class ContainerRegistry {
     }
   }
 
+  /**
+   * Fetches the manifest for the given image and returns a map of platform key → {@link ImageInfo},
+   * including layer digests for each platform. Supports manifest lists, OCI image indexes,
+   * and single-platform manifests.
+   * @throws {Error} if the content type is unsupported or a required header/field is missing
+   */
   async getImageInfo(image: Image): Promise<ImageMap> {
     core.debug(`Fetching token for repository: ${image.repository}`)
     const token = await this.getToken(image.repository)

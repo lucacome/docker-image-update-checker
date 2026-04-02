@@ -3,6 +3,7 @@ import {DockerAuth, getRegistryAuth} from './auth.js'
 import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
 import * as core from '@actions/core'
 
+/** Registry client for GitHub Container Registry (`ghcr.io`). */
 export class GitHubContainerRegistry extends ContainerRegistry {
   constructor() {
     super('ghcr.io/v2/')
