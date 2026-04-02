@@ -218,7 +218,7 @@ describe('DockerHub', () => {
       jest.mocked(fetch).mockResolvedValueOnce(mockResponse({architecture: 'amd64'}))
 
       await expect(dockerHub.getImageInfo({repository: 'myorg/myimage', tag: '1.0.0'})).rejects.toThrow(
-        'Blob config for myorg/myimage:1.0.0 is missing required fields',
+        'Invalid registry response from https://index.docker.io/v2/myorg/myimage/blobs/sha256:singleconfig',
       )
     })
 

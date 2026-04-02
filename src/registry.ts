@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import {z} from 'zod'
 import {DockerAuth} from './auth.js'
 
 export interface Image {
@@ -6,34 +7,59 @@ export interface Image {
   tag: string
 }
 
-interface Manifest {
-  schemaVersion: number
-  mediaType: string
-  config: {
-    mediaType: string
-    size: number
-    digest: string
-  }
-  layers?: {
-    mediaType: string
-    size: number
-    digest: string
-  }[]
-  manifests?: {
-    mediaType: string
-    digest: string
-    size: number
-    platform?: {
-      architecture: string
-      os: string
-      variant?: string
-    }
-  }[]
-}
+// ─── OCI / Docker registry response schemas ───────────────────────────────────
+
+/**
+ * A single entry inside a manifest list / OCI image index.
+ * `platform` is optional per the OCI image-index spec (nested indexes, referrer manifests, etc.)
+ */
+const ManifestEntrySchema = z.object({
+  digest: z.string(),
+  platform: z
+    .object({
+      architecture: z.string(),
+      os: z.string(),
+      variant: z.string().optional(),
+    })
+    .optional(),
+})
+
+/** Docker manifest list (schema v2) or OCI image index. */
+const ManifestListSchema = z.object({
+  manifests: z.array(ManifestEntrySchema),
+})
+
+/** Docker v2 / OCI single-platform manifest — only the fields we need. */
+const SingleManifestSchema = z.object({
+  config: z.object({
+    digest: z.string(),
+  }),
+})
+
+/** Blob config (image config JSON) — only the fields we need. */
+const BlobConfigSchema = z.object({
+  architecture: z.string(),
+  os: z.string(),
+  variant: z.string().optional(),
+})
+
+/** Manifest returned by a per-digest fetch — only the layers array. */
+const LayersManifestSchema = z.object({
+  layers: z.array(z.object({digest: z.string()})).optional(),
+})
+
+// ─── Inferred types ────────────────────────────────────────────────────────────
+
+type ManifestList = z.infer<typeof ManifestListSchema>
+type SingleManifest = z.infer<typeof SingleManifestSchema>
+type BlobConfig = z.infer<typeof BlobConfigSchema>
+type LayersManifest = z.infer<typeof LayersManifestSchema>
+
+// ─── Shared helpers ────────────────────────────────────────────────────────────
 
 interface FetchResult {
   headers: Record<string, string>
-  data: Manifest
+  data: unknown
 }
 
 export interface ImageInfo {
@@ -50,6 +76,21 @@ export type ImageMap = Map<string, ImageInfo>
 function generateKey(obj: ImageInfo): string {
   return [obj.os, obj.architecture, obj.variant || ''].join('|')
 }
+
+/**
+ * Parses `data` with the given Zod schema and rethrows any ZodError as a plain Error
+ * that includes the context URL and a human-readable issue summary.
+ */
+function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, url: string): T {
+  const result = schema.safeParse(data)
+  if (!result.success) {
+    const issues = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
+    throw new Error(`Invalid registry response from ${url}: ${issues}`, {cause: result.error})
+  }
+  return result.data
+}
+
+// ─── Abstract base class ────────────────────────────────────────────────────────
 
 /** Abstract base class for container registry clients. */
 export abstract class ContainerRegistry {
@@ -72,10 +113,8 @@ export abstract class ContainerRegistry {
     }
 
     const fetchResult = await this.fetch(url, headers)
-
-    const layers = (fetchResult.data.layers ?? []) as unknown as {digest: string}[]
-
-    return layers.map((layer) => layer.digest)
+    const parsed: LayersManifest = parseOrThrow(LayersManifestSchema, fetchResult.data, url)
+    return (parsed.layers ?? []).map((layer) => layer.digest)
   }
 
   /**
@@ -92,9 +131,9 @@ export abstract class ContainerRegistry {
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
     }
-    let data: Manifest
+    let data: unknown
     try {
-      data = (await response.json()) as Manifest
+      data = await response.json()
     } catch (e) {
       throw new Error(
         `Failed to parse JSON response from ${url} (status: ${response.status}, content-type: ${response.headers.get('content-type')}): ${e instanceof Error ? e.message : String(e)}`,
@@ -145,16 +184,7 @@ export abstract class ContainerRegistry {
       contentType === 'application/vnd.oci.image.index.v1+json'
     ) {
       core.debug(`Processing manifest list for image: ${image.repository}:${image.tag}`)
-      const manifestList = fetchResult.data as unknown as {
-        manifests: {
-          digest: string
-          platform?: {
-            architecture: string
-            os: string
-            variant?: string
-          }
-        }[]
-      }
+      const manifestList: ManifestList = parseOrThrow(ManifestListSchema, fetchResult.data, url)
 
       const imagesInfo = new Map<string, ImageInfo>()
       core.debug(`Initial imagesInfo: ${JSON.stringify(Array.from(imagesInfo.values()), null, 2)}`)
@@ -185,32 +215,23 @@ export abstract class ContainerRegistry {
       if (!dockerContentDigest) {
         throw new Error(`Missing docker-content-digest header for ${image.repository}:${image.tag}`)
       }
-      const digest = fetchResult.data.config.digest
-      const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${digest}`
+      const singleManifest: SingleManifest = parseOrThrow(SingleManifestSchema, fetchResult.data, url)
+      const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${singleManifest.config.digest}`
       const blobHeaders = {
         Accept: 'application/vnd.docker.container.image.v1+json,application/vnd.oci.image.config.v1+json',
         Authorization: `Bearer ${token}`,
       }
       const blobFetchResult = await this.fetch(blobUrl, blobHeaders)
+      const blobConfig: BlobConfig = parseOrThrow(BlobConfigSchema, blobFetchResult.data, blobUrl)
 
-      const {architecture, os, variant} = blobFetchResult.data as unknown as {
-        architecture: string
-        os: string
-        variant: string
-      }
-      if (!architecture || !os) {
-        throw new Error(
-          `Blob config for ${image.repository}:${image.tag} is missing required fields: architecture=${architecture}, os=${os}`,
-        )
-      }
-      const manifest = {architecture, os, variant}
-      core.debug(`Manifest for ${image.repository}:${image.tag}: ${JSON.stringify(manifest, null, 2)}`)
+      const {architecture, os, variant} = blobConfig
+      core.debug(`Manifest for ${image.repository}:${image.tag}: ${JSON.stringify({architecture, os, variant}, null, 2)}`)
 
       const imageInfo = {
-        architecture: manifest.architecture,
+        architecture,
         digest: dockerContentDigest,
-        os: manifest.os,
-        variant: manifest.variant ? manifest.variant : manifest.architecture === 'arm64' ? 'v8' : undefined,
+        os,
+        variant: variant ? variant : architecture === 'arm64' ? 'v8' : undefined,
         layers: await this.getLayers(dockerContentDigest, image.repository, token),
       }
       core.debug(`Found image for ${image.repository}:${image.tag}: ${JSON.stringify(imageInfo)}`)

@@ -15,7 +15,10 @@ export function buildBasicAuthHeader(username: string, password: string): string
 
 /**
  * Fetches a bearer token from a registry auth endpoint.
- * Expects a JSON response containing a `token` string field.
+ * Accepts a JSON response containing either a `token` field or an `access_token` field
+ * (OAuth2 compatibility alias per the distribution spec). A non-empty `token` value takes
+ * precedence; an empty-string `token` is treated as absent and falls back to `access_token`.
+ * Optional chaining guards against `JSON.parse` returning `null` or a non-object value.
  * @throws {Error} on network failure, non-2xx status, invalid JSON, or a missing/empty token field
  */
 export async function fetchToken(url: string, headers: Record<string, string>, errorPrefix: string): Promise<string> {
