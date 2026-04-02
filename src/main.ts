@@ -67,6 +67,6 @@ export async function run(): Promise<void> {
     core.setOutput('diff-json', JSON.stringify(diffs))
     core.setOutput('needs-updating', diffs.length > 0)
   } catch (error) {
-    core.setFailed(`Action failed with error: ${error instanceof Error ? error.message : String(error)}`)
+    core.setFailed(`Action failed with error: ${error instanceof Error ? error.message || String(error) : String(error)}`)
   }
 }

@@ -82291,7 +82291,7 @@ async function run() {
         setOutput('needs-updating', diffs.length > 0);
     }
     catch (error) {
-        setFailed(`Action failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        setFailed(`Action failed with error: ${error instanceof Error ? error.message || String(error) : String(error)}`);
     }
 }
 
