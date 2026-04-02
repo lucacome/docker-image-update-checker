@@ -333,10 +333,141 @@ jobs:
           fi
 
   #####################################
+  # Amazon ECR tests
+
+  ecr-public-image-up-to-date:
+    name: ECR Public image — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: public.ecr.aws/nginx/nginx:1.21.6
+          image: public.ecr.aws/nginx/nginx-ingress:2.2.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  ecr-public-image-update-needed:
+    name: ECR Public image — update needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: public.ecr.aws/nginx/nginx:1.21.6
+          image: public.ecr.aws/nginx/nginx-ingress:2.1.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+  ecr-public-image-with-login-up-to-date:
+    name: ECR Public image with login — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Amazon ECR Public
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ecr: true
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: public.ecr.aws/nginx/nginx:1.21.6
+          image: public.ecr.aws/nginx/nginx-ingress:2.2.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  ecr-public-image-with-login-update-needed:
+    name: ECR Public image with login — update needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Amazon ECR Public
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: public.ecr.aws
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          ecr: true
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: public.ecr.aws/nginx/nginx:1.21.6
+          image: public.ecr.aws/nginx/nginx-ingress:2.1.2
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+  #####################################
   # Google Artifact Registry tests
 
-  artifact-registry-image-up-to-date:
-    name: Artifact Registry image — up to date
+  gar-image-up-to-date:
+    name: GAR image — up to date
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -360,8 +491,8 @@ jobs:
             exit 1
           fi
 
-  artifact-registry-image-update-needed:
-    name: Artifact Registry image — update needed
+  gar-image-update-needed:
+    name: GAR image — update needed
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository

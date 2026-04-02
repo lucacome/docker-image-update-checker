@@ -84019,6 +84019,34 @@ class GoogleArtifactRegistry extends GenericBearerRegistry {
     }
 }
 
+/** Registry client for Amazon ECR Public (`public.ecr.aws`). */
+class ECRPublicRegistry extends GenericBearerRegistry {
+    constructor() {
+        super({
+            baseUrl: 'public.ecr.aws/v2/',
+            tokenUrl: 'https://public.ecr.aws/token/',
+            service: 'public.ecr.aws',
+            credentialKey: 'public.ecr.aws',
+            name: 'Amazon ECR Public',
+        });
+    }
+}
+/**
+ * Registry client for Amazon ECR Private.
+ * @param hostname - e.g. `123456789.dkr.ecr.us-east-1.amazonaws.com`
+ */
+class ECRPrivateRegistry extends GenericBearerRegistry {
+    constructor(hostname) {
+        super({
+            baseUrl: `${hostname}/v2/`,
+            tokenUrl: `https://${hostname}/`,
+            service: 'ecr.amazonaws.com',
+            credentialKey: hostname,
+            name: 'Amazon ECR',
+        });
+    }
+}
+
 /**
  * Compares two ImageMaps and returns the entries from `set2` where not all layers of the
  * corresponding `set1` entry are present. A non-empty result means the image needs rebuilding.
@@ -84094,6 +84122,8 @@ function getRegistryInstance(registry) {
             return new GoogleContainerRegistry(r);
         case 'quay.io':
             return new QuayRegistry();
+        case 'public.ecr.aws':
+            return new ECRPublicRegistry();
         default:
             if (r.endsWith('.azurecr.io'))
                 return new AzureContainerRegistry(r);
@@ -84101,6 +84131,8 @@ function getRegistryInstance(registry) {
                 return new GoogleArtifactRegistry(r);
             if (r.endsWith('.gcr.io'))
                 return new GoogleContainerRegistry(r);
+            if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
+                return new ECRPrivateRegistry(r);
             throw new Error(`Unsupported registry: ${registry}`);
     }
 }
