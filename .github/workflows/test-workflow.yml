@@ -48,6 +48,21 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   test2:
     name: Test Update Not Needed
     runs-on: macos-15
@@ -122,6 +137,12 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/arm64/v8" ]]; then
+            exit 1
+          fi
+
   test386:
     name: Test Update Needed on 386
     runs-on: ubuntu-24.04
@@ -144,6 +165,12 @@ jobs:
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/386" ]]; then
             exit 1
           fi
 
@@ -288,6 +315,30 @@ jobs:
             exit 1
           fi
 
+  test12:
+    name: Test Update Needed on all platforms (default)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: nginx/nginx-ingress:2.1.0
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
   #####################################
   # Test with platform variants
 
@@ -347,5 +398,64 @@ jobs:
       - name: Check value
         run: |
           if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # Test with GHCR as base-image
+
+  test13:
+    name: Test GHCR as Base Image, Update Not Needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          platforms: linux/arm64,linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  test14:
+    name: Test GHCR as Base Image, Update Needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          image: nginx:1.21.0
+          platforms: linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
             exit 1
           fi
