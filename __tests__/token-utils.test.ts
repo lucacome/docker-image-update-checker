@@ -122,8 +122,18 @@ describe('fetchToken', () => {
     await expect(fetchToken('https://example.com/token', {}, 'prefix')).resolves.toBe('primarytoken')
   })
 
+  test('falls back to access_token when token field is an empty string', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: '', access_token: 'valid'})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).resolves.toBe('valid')
+  })
+
   test('throws when access_token is an empty string', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({access_token: ''})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
+  })
+
+  test('throws when JSON response is null (JSON.parse("null") edge case)', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: 'null'}))
     await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 

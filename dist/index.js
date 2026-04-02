@@ -78103,8 +78103,10 @@ async function fetchToken(url, headers, errorPrefix) {
         throw new Error(`${errorPrefix}: failed to parse JSON response (status: ${response.status}, content-type: ${response.headers.get('content-type')}${details}): ${e instanceof Error ? e.message : String(e)}`, { cause: e });
     }
     // Per the distribution spec, registries may return either `token` or `access_token`
-    // (OAuth2 compatibility alias). Prefer `token`; fall back to `access_token`.
-    const token = typeof data.token === 'string' ? data.token : data.access_token;
+    // (OAuth2 compatibility alias). Prefer `token` only when it is a non-empty string;
+    // an empty-string `token` field is treated as absent and falls back to `access_token`.
+    // Optional chaining guards against JSON.parse returning null or a non-object value.
+    const token = typeof data?.token === 'string' && data.token.length > 0 ? data.token : data?.access_token;
     if (!token || typeof token !== 'string' || token.length === 0) {
         throw new Error(`${errorPrefix}: response did not contain a valid token`);
     }
