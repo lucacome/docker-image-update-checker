@@ -89,7 +89,7 @@ describe('fetchToken', () => {
     )
   })
 
-  test('throws when token field is missing', async () => {
+  test('throws when neither token nor access_token field is present', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({other: 'field'})}))
     await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
@@ -106,6 +106,34 @@ describe('fetchToken', () => {
 
   test('throws when token is null', async () => {
     jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: null})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
+  })
+
+  // Distribution spec: "we will also accept `token` under the name `access_token`"
+  test('returns access_token when token field is absent (OAuth2 compatibility)', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({access_token: 'oauth2token'})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).resolves.toBe('oauth2token')
+  })
+
+  test('prefers token over access_token when both are present', async () => {
+    jest
+      .mocked(fetch)
+      .mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: 'primarytoken', access_token: 'oauthtoken'})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).resolves.toBe('primarytoken')
+  })
+
+  test('falls back to access_token when token field is an empty string', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({token: '', access_token: 'valid'})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).resolves.toBe('valid')
+  })
+
+  test('throws when access_token is an empty string', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: JSON.stringify({access_token: ''})}))
+    await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
+  })
+
+  test('throws when JSON response is null (JSON.parse("null") edge case)', async () => {
+    jest.mocked(fetch).mockResolvedValue(mockResponse({ok: true, status: 200, body: 'null'}))
     await expect(fetchToken('https://example.com/token', {}, 'prefix')).rejects.toThrow('prefix: response did not contain a valid token')
   })
 

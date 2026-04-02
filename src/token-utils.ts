@@ -15,7 +15,10 @@ export function buildBasicAuthHeader(username: string, password: string): string
 
 /**
  * Fetches a bearer token from a registry auth endpoint.
- * Expects a JSON response containing a `token` string field.
+ * Accepts a JSON response containing either a `token` field or an `access_token` field
+ * (OAuth2 compatibility alias per the distribution spec). A non-empty `token` value takes
+ * precedence; an empty-string `token` is treated as absent and falls back to `access_token`.
+ * Optional chaining guards against `JSON.parse` returning `null` or a non-object value.
  * @throws {Error} on network failure, non-2xx status, invalid JSON, or a missing/empty token field
  */
 export async function fetchToken(url: string, headers: Record<string, string>, errorPrefix: string): Promise<string> {
@@ -44,9 +47,9 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
       {cause: e},
     )
   }
-  let data: {token?: string}
+  let data: {token?: string; access_token?: string}
   try {
-    data = JSON.parse(body) as {token?: string}
+    data = JSON.parse(body) as {token?: string; access_token?: string}
   } catch (e) {
     const details = body ? ` - ${truncateBody(body)}` : ''
     throw new Error(
@@ -54,8 +57,13 @@ export async function fetchToken(url: string, headers: Record<string, string>, e
       {cause: e},
     )
   }
-  if (!data || typeof data.token !== 'string' || data.token.length === 0) {
+  // Per the distribution spec, registries may return either `token` or `access_token`
+  // (OAuth2 compatibility alias). Prefer `token` only when it is a non-empty string;
+  // an empty-string `token` field is treated as absent and falls back to `access_token`.
+  // Optional chaining guards against JSON.parse returning null or a non-object value.
+  const token = typeof data?.token === 'string' && data.token.length > 0 ? data.token : data?.access_token
+  if (!token || typeof token !== 'string' || token.length === 0) {
     throw new Error(`${errorPrefix}: response did not contain a valid token`)
   }
-  return data.token
+  return token
 }
