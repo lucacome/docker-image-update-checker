@@ -180,6 +180,11 @@ export abstract class ContainerRegistry {
         os: string
         variant: string
       }
+      if (!architecture || !os) {
+        throw new Error(
+          `Blob config for ${image.repository}:${image.tag} is missing required fields: architecture=${architecture}, os=${os}`,
+        )
+      }
       const manifest = {architecture, os, variant}
       core.debug(`Manifest for ${image.repository}:${image.tag}: ${JSON.stringify(manifest, null, 2)}`)
 

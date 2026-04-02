@@ -29976,6 +29976,9 @@ class ContainerRegistry {
             };
             const blobFetchResult = await this.fetch(blobUrl, blobHeaders);
             const { architecture, os, variant } = blobFetchResult.data;
+            if (!architecture || !os) {
+                throw new Error(`Blob config for ${image.repository}:${image.tag} is missing required fields: architecture=${architecture}, os=${os}`);
+            }
             const manifest = { architecture, os, variant };
             debug(`Manifest for ${image.repository}:${image.tag}: ${JSON.stringify(manifest, null, 2)}`);
             const imageInfo = {
