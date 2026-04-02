@@ -29898,7 +29898,7 @@ class ContainerRegistry {
     }
     /**
      * Performs a fetch against the registry API and returns parsed JSON along with response headers.
-     * @throws {Error} on network failure, non-2xx status, or unparseable JSON response
+     * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
      */
     async fetch(url, headers) {
         let response;
