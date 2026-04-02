@@ -23,8 +23,8 @@ jobs:
   #####################################
   # Single platform tests
 
-  test1:
-    name: Test Update Needed
+  single-amd64-update-needed:
+    name: Single platform (amd64) — update needed
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -48,8 +48,23 @@ jobs:
             exit 1
           fi
 
-  test2:
-    name: Test Update Not Needed
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
+  single-amd64-up-to-date:
+    name: Single platform (amd64) — up to date
     runs-on: macos-15
     steps:
       - name: Checkout Repository
@@ -73,8 +88,8 @@ jobs:
             exit 1
           fi
 
-  test3:
-    name: Test image with only one platform
+  single-arch-image-up-to-date:
+    name: Single-arch image — up to date
     runs-on: windows-2025
     steps:
       - name: Checkout Repository
@@ -97,8 +112,8 @@ jobs:
             exit 1
           fi
 
-  test4:
-    name: Test Update Needed on ARM64
+  single-arm64-update-needed:
+    name: Single platform (arm64) — update needed
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -122,8 +137,14 @@ jobs:
             exit 1
           fi
 
-  test386:
-    name: Test Update Needed on 386
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/arm64/v8" ]]; then
+            exit 1
+          fi
+
+  single-386-update-needed:
+    name: Single platform (386) — update needed
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -147,11 +168,17 @@ jobs:
             exit 1
           fi
 
-  #####################################
-  # Test with multiple platforms
+      - name: Check diff-images
+        run: |
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/386" ]]; then
+            exit 1
+          fi
 
-  test5:
-    name: Test Update Needed on multiple platforms with spaces
+  #####################################
+  # Multiple platforms tests
+
+  multi-platform-update-needed:
+    name: Multiple platforms — update needed
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -175,8 +202,8 @@ jobs:
             exit 1
           fi
 
-  test6:
-    name: Test Update Not Needed on multiple platforms
+  multi-platform-up-to-date:
+    name: Multiple platforms — up to date
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -200,8 +227,122 @@ jobs:
             exit 1
           fi
 
-  test7:
-    name: Test GitHub
+  all-platforms-up-to-date:
+    name: All platforms — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: library/nginx:1.21.0
+          platforms: all
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  all-platforms-update-needed:
+    name: All platforms (default) — update needed
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: nginx:1.21.0
+          image: nginx/nginx-ingress:2.1.0
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # Platform variant tests
+
+  variants-with-login-update-needed:
+    name: Variants with login — update needed
+    runs-on: windows-2025
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Login to Docker Registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: alpine:latest
+          image: golang:1.14.15-alpine3.13
+          platforms: linux/arm64/v8,linux/arm/v7,linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+            exit 1
+          fi
+
+  variants-up-to-date:
+    name: Variants — up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Test Action
+        id: test
+        uses: ./
+        with:
+          base-image: alpine:3.17.2
+          image: alpine:3.17.2
+          platforms: |
+            linux/arm64/v8
+            linux/arm/v7
+            linux/amd64
+
+      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+        run: |
+          echo "Images: ${{ steps.test.outputs.diff-images }}"
+
+      - name: Check value
+        run: |
+          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+            exit 1
+          fi
+
+  #####################################
+  # GHCR tests
+
+  ghcr-image-up-to-date:
+    name: GHCR image — up to date
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -225,8 +366,8 @@ jobs:
             exit 1
           fi
 
-  test8:
-    name: Test GitHub with Login
+  ghcr-image-with-login-up-to-date:
+    name: GHCR image with login — up to date
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -263,8 +404,8 @@ jobs:
             exit 1
           fi
 
-  test9:
-    name: Test Update Not Needed on multiple (all) platforms
+  ghcr-base-up-to-date:
+    name: GHCR base — up to date
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -274,9 +415,9 @@ jobs:
         id: test
         uses: ./
         with:
-          base-image: nginx:1.21.0
-          image: library/nginx:1.21.0
-          platforms: all
+          base-image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          platforms: linux/arm64,linux/amd64
 
       - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
@@ -288,29 +429,20 @@ jobs:
             exit 1
           fi
 
-  #####################################
-  # Test with platform variants
-
-  test10:
-    name: Test Update Needed (Docker login) on multiple platforms with variants
-    runs-on: windows-2025
+  ghcr-base-update-needed:
+    name: GHCR base — update needed
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Login to Docker Registry
-        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Test Action
         id: test
         uses: ./
         with:
-          base-image: alpine:latest
-          image: golang:1.14.15-alpine3.13
-          platforms: linux/arm64/v8,linux/arm/v7,linux/amd64
+          base-image: ghcr.io/nginxinc/nginx-gateway-fabric/nginx:1.0.0
+          image: nginx:1.21.0
+          platforms: linux/amd64
 
       - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
         run: |
@@ -322,30 +454,8 @@ jobs:
             exit 1
           fi
 
-  test11:
-    name: Test Update Not Needed on multiple platforms with variants
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Test Action
-        id: test
-        uses: ./
-        with:
-          base-image: alpine:3.17.2
-          image: alpine:3.17.2
-          platforms: |
-            linux/arm64/v8
-            linux/arm/v7
-            linux/amd64
-
-      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+      - name: Check diff-images
         run: |
-          echo "Images: ${{ steps.test.outputs.diff-images }}"
-
-      - name: Check value
-        run: |
-          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
             exit 1
           fi
