@@ -6,7 +6,13 @@
 [![GitHub license badge](https://badgen.net/github/license/lucacome/docker-image-update-checker)](https://github.com/lucacome/docker-image-update-checker/blob/main/LICENSE)
 [![GitHub Workflows badge](https://img.shields.io/endpoint?url=https%3A%2F%2Flucacome-curiousgreenangelfish.web.val.run)](https://github.com/search?q=docker-image-update-checker+path%3A.github%2Fworkflows%2F+language%3AYAML&type=Code)
 
-This action checks if a Docker image needs to be updated based on the base image it uses (e.g. `FROM nginx:1.21.0`). By default it checks for all platforms, but you can specify the platforms to check.
+This action checks whether your **already-published Docker image** is out of date relative to its base image. It works by comparing the layers of your image (e.g. `user/app:latest`) against the current layers of the base image you specify (e.g. `debian:13.1`), the image referenced in your Dockerfile's `FROM` instruction. If the base image was silently re-published under the same tag, for example because of a security patch or OS update, this action detects the drift so you can trigger a rebuild.
+
+> [!NOTE]
+>
+> This is **not** the same as what Dependabot/Renovate does. Dependabot/Renovate opens PRs when a *new tag* is published (e.g. `debian:13.1` → `debian:13.2`). This action handles the complementary case: the tag hasn't changed, but the image behind it has.
+
+By default this action checks differences across all platforms (e.g. `linux/amd64,linux/arm64,linux/arm/v7`), but you can specify which platforms to check.
 
 ## Supported Registries
 
@@ -27,29 +33,29 @@ This action checks if a Docker image needs to be updated based on the base image
 
 ## Inputs
 
-| Name         | Type   | Description                                                                |
-| ------------ | ------ | -------------------------------------------------------------------------- |
-| `base-image` | String | Base Docker Image. This is the image you have as `FROM` in your Dockerfile |
-| `image`      | String | Your image based on `base-image`                                           |
-| `platforms`  | String | Platforms to check (default `all`), e.g. `linux/amd64,linux/arm64`         |
+| Name         | Type   | Description                                                                       |
+| ------------ | ------ | --------------------------------------------------------------------------------- |
+| `base-image` | String | Base Docker image — i.e. the value you use in `FROM` in your Dockerfile           |
+| `image`      | String | Your already-published image to check for updates                                 |
+| `platforms`  | String | Platforms to check (default `all`), e.g. `linux/amd64,linux/arm64`                |
 
-## Output
+## Outputs
 
-| Name             | Type   | Description                                                                           |
-| ---------------- | ------ | ------------------------------------------------------------------------------------- |
-| `needs-updating` | String | 'true' or 'false' if the image needs to be updated or not                             |
-| `diff-images`    | String | List of images (platforms) that need to be updated                                    |
-| `diff-json`      | String | JSON output of the images (platforms) that need to be updated with the list of layers |
+| Name             | Type   | Description                                                                                                               |
+| ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `needs-updating` | String | `true` if any platform needs updating, `false` otherwise                                                                  |
+| `diff-images`    | String | Comma-separated list of platforms that need updating, e.g. `linux/amd64,linux/arm64`                                      |
+| `diff-json`      | String | JSON array of objects — one per platform — each with `os`, `architecture`, `variant`, `digest`, and `layers` fields       |
 
 ## Runners
 
 The action works on `ubuntu` and `windows` runners with or without a `docker/login-action` step. Without a login step it will perform an anonymous pull of the manifests, except for Docker Hub because GitHub-hosted runners already have a Docker Hub authentication token embedded — see the [`docker/login-action` docs](https://github.com/docker/login-action?tab=readme-ov-file#set-scopes-for-the-authentication-token) for details.
 
-It also works on `macos` runners, but because `docker` is not installed by default you can only use it with public images and anonymous pulls.
+It also works on `macos` runners, but `docker` is not installed by default on macOS runners, so unless you manually install Docker, you can only use it with public images and anonymous pulls.
 
 ## Authentication
 
-To authenticate with a Docker registry, you can use the [`docker/login-action`](https://github.com/docker/login-action) in a step before this action.
+To authenticate with a Docker registry, add a [`docker/login-action`](https://github.com/docker/login-action) step **before** this action. If `base-image` and `image` are from different registries, run `docker/login-action` once for each registry that requires credentials.
 
 ## Examples
 
@@ -59,7 +65,7 @@ To authenticate with a Docker registry, you can use the [`docker/login-action`](
 
 ### Minimal
 
-Check if the image `user/app:latest`, that has `nginx` as a base image, needs to be updated:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated:
 
 ```yaml
 name: Check docker image
@@ -76,7 +82,7 @@ jobs:
         id: check
         uses: lucacome/docker-image-update-checker@v3.0.1
         with:
-          base-image: nginx:1.21.0
+          base-image: debian:13.1
           image: user/app:latest
 
       - name: Check result
@@ -86,7 +92,7 @@ jobs:
 
 ### Single platform
 
-Check if the image `user/app:latest`, that has `nginx` has a base image, needs to be updated and build and push the image if needed:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated and build and push the image if needed:
 
 ```yaml
 name: Check docker image
@@ -100,18 +106,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6
 
       - name: Check if update available
         id: check
         uses: lucacome/docker-image-update-checker@v3.0.1
         with:
-          base-image: nginx:1.21.0
+          base-image: debian:13.1
           image: user/app:latest
           platforms: linux/amd64
 
       - name: Build and push
-        uses: docker/build-push-action@v7.0.0
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -121,7 +127,7 @@ jobs:
 
 ### Multiple platforms
 
-Check if the image `user/app:latest`, that has `nginx` has a base image, needs to be updated for `linux/amd64` and `linux/arm64`:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated for `linux/amd64` and `linux/arm64`:
 
 ```yaml
 name: Check docker image for multiple platforms
@@ -137,7 +143,7 @@ jobs:
       needs-updating: ${{ steps.check.outputs.needs-updating }}
     steps:
       - name: Login to Docker Registry
-        uses: docker/login-action@v4.0.0
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -146,7 +152,7 @@ jobs:
         id: check
         uses: lucacome/docker-image-update-checker@v3.0.1
         with:
-          base-image: nginx:1.21.0
+          base-image: debian:13.1
           image: user/app:latest
           platforms: linux/amd64,linux/arm64 # Use 'all' to check all platforms
 
@@ -156,18 +162,18 @@ jobs:
     if: needs.check.outputs.needs-updating == 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@v4.0.0
+        uses: docker/setup-qemu-action@v4
         with:
           platforms: arm64
 
       - name: Docker Buildx
-        uses: docker/setup-buildx-action@v4.0.0
+        uses: docker/setup-buildx-action@v4
 
       - name: Build and push
-        uses: docker/build-push-action@v7.0.0
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
@@ -181,6 +187,6 @@ jobs:
 
 ## Debugging
 
-If something is not working as expected, you can enable debug logging to get more information (a lot more information).
+If something is not working as expected, you can enable debug logging to get significantly more detail.
 You can re-run the action with the `Enable debug logging` checkbox checked for a single run or set the `ACTIONS_STEP_DEBUG` secret to `true` in the repository's secrets.
 For more information on debugging actions, see [Enabling debug logging](https://docs.github.com/en/actions/managing-workflow-runs/enabling-debug-logging).
