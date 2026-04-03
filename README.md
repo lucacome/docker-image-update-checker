@@ -8,6 +8,20 @@
 
 This action checks if a Docker image needs to be updated based on the base image it uses (e.g. `FROM nginx:1.21.0`). By default it checks for all platforms, but you can specify the platforms to check.
 
+## Supported Registries
+
+| Registry                   | Hostname pattern                       |
+|----------------------------|----------------------------------------|
+| Docker Hub                 | `docker.io`                            |
+| GitHub Container Registry  | `ghcr.io`                              |
+| Google Container Registry  | `gcr.io`, `*.gcr.io`                   |
+| Google Artifact Registry   | `*.pkg.dev`                            |
+| Amazon ECR Public          | `public.ecr.aws`                       |
+| Amazon ECR Private         | `*.dkr.ecr.*.amazonaws.com`            |
+| Azure Container Registry   | `*.azurecr.io`                         |
+| Quay.io                    | `quay.io`                              |
+| Any OCI-compliant registry | auto-discovered via `WWW-Authenticate` |
+
 ## Inputs
 
 | Name         | Type   | Description                                                                |
@@ -26,9 +40,9 @@ This action checks if a Docker image needs to be updated based on the base image
 
 ## Runners
 
-The action works on `ubuntu` and `windows` runners with or without a `docker/login-action` step. Without a login step, it will perform an anonymous pull of the manifests, except for Docker Hub because the Runners already have a token provided by GitHub (I can't find any documentation on this, but the token is there and it works).
+The action works on `ubuntu` and `windows` runners with or without a `docker/login-action` step. Without a login step it will perform an anonymous pull of the manifests, except for Docker Hub because GitHub-hosted runners already have a Docker Hub authentication token embedded — see the [`docker/login-action` docs](https://github.com/docker/login-action?tab=readme-ov-file#set-scopes-for-the-authentication-token) for details.
 
-It also works on `macos` runners, but because `docker` is not installed on the runners, you can't use the `docker/login-action`, so you can only use it with public images and anonymous pulls.
+It also works on `macos` runners, but because `docker` is not installed by default you can only use it with public images and anonymous pulls.
 
 ## Authentication
 

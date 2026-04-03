@@ -21,7 +21,7 @@ function getRegistryInstance(registry: string): ContainerRegistry {
   // Pattern-based checks before the switch so they take priority over the generic fallback
   if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
   if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
-  if (r.endsWith('gcr.io')) return new GoogleContainerRegistry(r)
+  if (r === 'gcr.io' || r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
   if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
 
   switch (r) {

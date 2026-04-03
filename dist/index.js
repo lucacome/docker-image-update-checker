@@ -84191,7 +84191,7 @@ function getRegistryInstance(registry) {
         return new AzureContainerRegistry(r);
     if (r.endsWith('.pkg.dev'))
         return new GoogleArtifactRegistry(r);
-    if (r.endsWith('gcr.io'))
+    if (r === 'gcr.io' || r.endsWith('.gcr.io'))
         return new GoogleContainerRegistry(r);
     if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
         return new ECRPrivateRegistry(r);
