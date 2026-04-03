@@ -1,28 +1,12 @@
-import {ContainerRegistry} from './registry.js'
-import {DockerAuth, getRegistryAuth} from './auth.js'
-import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
-import * as core from '@actions/core'
+import {GenericRegistry} from './generic-registry.js'
 
 /** Registry client for GitHub Container Registry (`ghcr.io`). */
-export class GitHubContainerRegistry extends ContainerRegistry {
+export class GitHubContainerRegistry extends GenericRegistry {
   constructor() {
-    super('ghcr.io/v2/')
-  }
-
-  protected async getToken(repository: string): Promise<string> {
-    const auth = this.getCredentials()
-    if (!auth) {
-      core.info('No credentials found for GitHub, using anonymous pull')
-    }
-    const params = new URLSearchParams({scope: `repository:${repository}:pull`})
-    const headers: Record<string, string> = {}
-    if (auth) {
-      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
-    }
-    return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry')
-  }
-
-  protected getCredentials(): DockerAuth | undefined {
-    return getRegistryAuth('ghcr.io')
+    super('ghcr.io', {
+      realm: 'https://ghcr.io/token',
+      credentialKey: 'ghcr.io',
+      name: 'GitHub Container Registry',
+    })
   }
 }

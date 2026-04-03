@@ -2,21 +2,49 @@ import * as core from '@actions/core'
 import {ContainerRegistry} from './registry.js'
 import {DockerHub} from './docker-hub.js'
 import {GitHubContainerRegistry} from './github.js'
+import {GoogleContainerRegistry} from './gcr.js'
+import {QuayRegistry} from './quay.js'
+import {AzureContainerRegistry} from './acr.js'
+import {GoogleArtifactRegistry} from './gar.js'
+import {ECRPublicRegistry, ECRPrivateRegistry} from './ecr.js'
+import {GitLabContainerRegistry} from './gitlab.js'
+import {DigitalOceanContainerRegistry} from './digitalocean.js'
+import {OracleContainerRegistry} from './ocir.js'
+import {GenericRegistry} from './generic-registry.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 
 /**
  * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
- * @throws {Error} if the registry is not supported
+ * Falls back to {@link GenericRegistry} (Bearer auto-discovery) for unknown registries.
  */
-function getRegistryInstance(registry: string): ContainerRegistry {
-  switch (registry.toLowerCase()) {
+export function getRegistryInstance(registry: string): ContainerRegistry {
+  const r = registry.toLowerCase()
+
+  // Pattern-based checks before the switch so they take priority over the generic fallback
+  if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
+  if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
+  if (r === 'gcr.io' || r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
+  if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
+  if (r.endsWith('.ocir.io')) return new OracleContainerRegistry(r)
+
+  switch (r) {
     case 'docker.io':
+    case 'index.docker.io':
+    case 'registry-1.docker.io':
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()
+    case 'quay.io':
+      return new QuayRegistry()
+    case 'public.ecr.aws':
+      return new ECRPublicRegistry()
+    case 'registry.gitlab.com':
+      return new GitLabContainerRegistry()
+    case 'registry.digitalocean.com':
+      return new DigitalOceanContainerRegistry()
     default:
-      throw new Error(`Invalid registry specified: ${registry}`)
+      return new GenericRegistry(r)
   }
 }
 

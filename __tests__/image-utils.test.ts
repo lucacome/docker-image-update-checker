@@ -1,8 +1,9 @@
+import {describe, it, expect} from '@jest/globals'
 import {findDiffImages, parseImageInput, ImageInput, getDiffs} from '../src/image-utils.js'
 import {ImageInfo, ImageMap} from '../src/registry.js'
 
 describe('findDiffImages', () => {
-  test('should return diff images when layers do not match', () => {
+  it('should return diff images when layers do not match', () => {
     const set1: ImageMap = new Map<string, ImageInfo>([
       [
         'linux/amd64',
@@ -48,7 +49,7 @@ describe('findDiffImages', () => {
     ])
   })
 
-  test('should not return diff images when all layers from obj1 are in obj2', () => {
+  it('should not return diff images when all layers from obj1 are in obj2', () => {
     const set1: ImageMap = new Map<string, ImageInfo>([
       [
         'linux/arm64/v8',
@@ -81,7 +82,7 @@ describe('findDiffImages', () => {
 })
 
 describe('parseImageInput', () => {
-  test('should parse image string with default registry and tag', () => {
+  it('should parse image string with default registry and tag', () => {
     const imageString = 'nginx'
     const expectedResult: ImageInput = {
       registry: 'docker.io',
@@ -93,7 +94,7 @@ describe('parseImageInput', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should parse image string with custom registry and default tag', () => {
+  it('should parse image string with custom registry and default tag', () => {
     const imageString = 'myregistry.example.com/nginx'
     const expectedResult: ImageInput = {
       registry: 'myregistry.example.com',
@@ -105,7 +106,7 @@ describe('parseImageInput', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should parse image string with custom registry, organization and default tag', () => {
+  it('should parse image string with custom registry, organization and default tag', () => {
     const imageString = 'myregistry.example.com/myorg/nginx'
     const expectedResult: ImageInput = {
       registry: 'myregistry.example.com',
@@ -117,7 +118,7 @@ describe('parseImageInput', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should parse image string with custom registry, organization, and tag', () => {
+  it('should parse image string with custom registry, organization, and tag', () => {
     const imageString = 'myregistry.example.com/myorg/nginx:1.0.0'
     const expectedResult: ImageInput = {
       registry: 'myregistry.example.com',
@@ -129,7 +130,7 @@ describe('parseImageInput', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should parse image string with default registry, organization, and custom tag', () => {
+  it('should parse image string with default registry, organization, and custom tag', () => {
     const imageString = 'myorg/nginx:1.0.0'
     const expectedResult: ImageInput = {
       registry: 'docker.io',
@@ -141,12 +142,60 @@ describe('parseImageInput', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should parse image string with default registry and custom tag', () => {
+  it('should parse image string with default registry and custom tag', () => {
     const imageString = 'nginx:1.0.0'
     const expectedResult: ImageInput = {
       registry: 'docker.io',
       image: 'library/nginx',
       tag: '1.0.0',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  it('should parse image string with host:port registry and no tag', () => {
+    const imageString = 'localhost:5000/myorg/myimage'
+    const expectedResult: ImageInput = {
+      registry: 'localhost:5000',
+      image: 'myorg/myimage',
+      tag: 'latest',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  it('should parse image string with host:port registry and tag', () => {
+    const imageString = 'localhost:5000/myorg/myimage:1.2.3'
+    const expectedResult: ImageInput = {
+      registry: 'localhost:5000',
+      image: 'myorg/myimage',
+      tag: '1.2.3',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  it('should parse image string with host:port registry, single-component image, and tag', () => {
+    const imageString = 'registry.example.com:5000/myimage:latest'
+    const expectedResult: ImageInput = {
+      registry: 'registry.example.com:5000',
+      image: 'myimage',
+      tag: 'latest',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  it('should parse three-component Docker Hub image as org/repo/subimage on docker.io', () => {
+    const imageString = 'myorg/myrepo/subimage:tag'
+    const expectedResult: ImageInput = {
+      registry: 'docker.io',
+      image: 'myorg/myrepo/subimage',
+      tag: 'tag',
     }
 
     const result = parseImageInput(imageString)
@@ -199,7 +248,7 @@ const image2: ImageMap = new Map([
 ])
 
 describe('getDiffs', () => {
-  test('should return all diff images when platforms is "all"', () => {
+  it('should return all diff images when platforms is "all"', () => {
     const expectedResult: ImageInfo[] = [
       {
         os: 'linux',
@@ -220,7 +269,7 @@ describe('getDiffs', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should return diff images for specified platform', () => {
+  it('should return diff images for specified platform', () => {
     const expectedResult: ImageInfo[] = [
       {
         os: 'linux',
@@ -234,7 +283,7 @@ describe('getDiffs', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should return diff images for multiple specified platforms', () => {
+  it('should return diff images for multiple specified platforms', () => {
     const expectedResult: ImageInfo[] = [
       {
         os: 'linux',
@@ -255,7 +304,7 @@ describe('getDiffs', () => {
     expect(result).toEqual(expectedResult)
   })
 
-  test('should return empty array when there are no diff images for specified platform', () => {
+  it('should return empty array when there are no diff images for specified platform', () => {
     const expectedResult: ImageInfo[] = []
 
     const result = getDiffs(['windows/amd64'], image1, image2)

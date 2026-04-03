@@ -33994,7 +33994,7 @@ class ContainerRegistry {
         const url = `https://${this.baseUrl}${repo}/manifests/${digest}`;
         const headers = {
             Accept: 'application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         const fetchResult = await this.fetch(url, headers);
         const parsed = parseOrThrow(LayersManifestSchema, fetchResult.data, url);
@@ -34048,7 +34048,7 @@ class ContainerRegistry {
         const url = `https://${this.baseUrl}${image.repository}/manifests/${image.tag}`;
         const headers = {
             Accept: 'application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         debug(`Fetching manifest for image: ${image.repository}:${image.tag}`);
         const fetchResult = await this.fetch(url, headers);
@@ -34092,7 +34092,7 @@ class ContainerRegistry {
             const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${singleManifest.config.digest}`;
             const blobHeaders = {
                 Accept: 'application/vnd.docker.container.image.v1+json,application/vnd.oci.image.config.v1+json',
-                Authorization: `Bearer ${token}`,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             };
             const blobFetchResult = await this.fetch(blobUrl, blobHeaders);
             const blobConfig = parseOrThrow(BlobConfigSchema, blobFetchResult.data, blobUrl);
@@ -83774,51 +83774,86 @@ class Docker {
 }
 
 /**
+ * Runs a Docker credential helper binary and returns the parsed credentials,
+ * or undefined if the helper reports no credentials for the registry.
+ * Throws on execution failure or unparsable output.
+ */
+function runCredentialHelper(helperName, registry) {
+    const binary = `docker-credential-${helperName}`;
+    debug(`Trying credential helper "${binary}" for ${registry}`);
+    const child = spawnSync(binary, ['get'], { input: `${registry}\n`, encoding: 'utf-8' });
+    if (child.error) {
+        throw new Error(`Credential helper ${binary} failed to execute: ${child.error.message}`);
+    }
+    if (!child.stdout || child.status !== 0) {
+        return undefined;
+    }
+    try {
+        const parsed = JSON.parse(child.stdout);
+        if (typeof parsed !== 'object' || parsed === null) {
+            throw new Error(`expected object, got ${typeof parsed}`);
+        }
+        const raw = parsed;
+        const username = raw['Username'];
+        const password = raw['Secret'];
+        if (typeof username !== 'string' || typeof password !== 'string') {
+            throw new Error(`missing or non-string Username/Secret fields`);
+        }
+        debug(`Using credentials for ${registry} from credential helper "${binary}"`);
+        return { username, password };
+    }
+    catch (e) {
+        throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
+    }
+}
+/**
  * Resolves Docker credentials for the given registry from the local Docker config file.
- * Tries direct username/password fields first, then a base64-encoded auth field,
- * then the configured credential store helper. Returns undefined if no credentials are found.
+ *
+ * Resolution order:
+ *   1. Direct `username` + `password` fields in `auths[registry]`
+ *   2. Base64-encoded `auth` field in `auths[registry]`
+ *   3. Per-registry credential helper from `credHelpers[registry]`
+ *   4. Global credential store from `credsStore`
+ *
+ * Returns undefined if no credentials are found by any method.
  */
 function getRegistryAuth(registry) {
     const config = Docker.configFile();
     if (!config) {
         warning('No Docker config found');
     }
-    const auths = config?.auths || {};
-    const registryAuth = auths[registry];
+    const registryAuth = config?.auths?.[registry];
+    if (registryAuth?.username && registryAuth?.password) {
+        debug(`Using username/password credentials for ${registry}`);
+        return { username: registryAuth.username, password: registryAuth.password };
+    }
+    if (registryAuth?.auth) {
+        debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`);
+        const decoded = Buffer.from(registryAuth.auth, 'base64').toString('utf8');
+        const colonIdx = decoded.indexOf(':');
+        const user = colonIdx !== -1 ? decoded.slice(0, colonIdx) : decoded;
+        const pass = colonIdx !== -1 ? decoded.slice(colonIdx + 1) : '';
+        debug(`Using base64-encoded auth field credentials for ${registry}`);
+        return { username: user, password: pass };
+    }
     if (!registryAuth) {
-        warning(`No credentials found for ${registry}`);
-        return undefined;
+        debug(`No auth entry found for ${registry} in Docker config`);
     }
-    if (!registryAuth.username || !registryAuth.password) {
-        debug(`No username or password found for ${registry}, trying auth field`);
-        if (registryAuth.auth) {
-            const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':');
-            return { username: user, password: pass };
-        }
-        if (config?.credsStore) {
-            debug('No auth field, using credential store to get credentials');
-            const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
-                input: `${registry}\n`,
-                encoding: 'utf-8',
-            });
-            if (child.error) {
-                throw new Error(`Credential helper docker-credential-${config.credsStore} failed to execute: ${child.error.message}`);
-            }
-            const creds = child.stdout;
-            if (creds && child.status === 0) {
-                try {
-                    const { Username, Secret } = JSON.parse(creds);
-                    return { username: Username, password: Secret };
-                }
-                catch (e) {
-                    throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
-                }
-            }
-        }
-        debug('No credentials found, returning undefined');
-        return undefined;
+    // Per-registry credential helper (e.g. set by `gcloud auth configure-docker`)
+    const credHelper = config?.credHelpers?.[registry];
+    if (credHelper) {
+        const result = runCredentialHelper(credHelper, registry);
+        if (result)
+            return result;
     }
-    return { username: registryAuth.username, password: registryAuth.password };
+    // Global credential store (e.g. osxkeychain, secretservice, pass)
+    if (config?.credsStore) {
+        const result = runCredentialHelper(config.credsStore, registry);
+        if (result)
+            return result;
+    }
+    debug(`No credentials resolved for ${registry} — tried all available methods`);
+    return undefined;
 }
 
 const MAX_ERROR_BODY_LENGTH = 1000;
@@ -83886,50 +83921,297 @@ async function fetchToken(url, headers, errorPrefix) {
     return token;
 }
 
-/** Registry client for Docker Hub (`index.docker.io`). */
-class DockerHub extends ContainerRegistry {
-    constructor() {
-        super('index.docker.io/v2/');
+/**
+ * Parses the `WWW-Authenticate` header value for a `Bearer` challenge.
+ * Returns `null` if the scheme is not `Bearer` or the `realm` parameter is absent.
+ * Accepts both quoted-string and unquoted token forms for each parameter per RFC 7235.
+ *
+ * Example header values:
+ *   Bearer realm="https://auth.example.com/token",service="registry.example.com"
+ *   Bearer realm=https://auth.example.com/token,service=registry.example.com
+ */
+function parseBearerChallenge(header) {
+    if (!header.toLowerCase().startsWith('bearer '))
+        return null;
+    const params = header.slice('bearer '.length);
+    const realmMatch = params.match(/realm="([^"]+)"|realm=([^",\s]+)/i);
+    const realm = (realmMatch?.[1] ?? realmMatch?.[2])?.trim();
+    if (!realm)
+        return null;
+    const serviceMatch = params.match(/service="([^"]+)"|service=([^",\s]+)/i);
+    const service = (serviceMatch?.[1] ?? serviceMatch?.[2])?.trim();
+    return { realm, service };
+}
+/**
+ * Registry client that works for any OCI/Docker-compliant registry.
+ *
+ * **Static mode** — pass a {@link StaticBearerConfig} as the second argument.
+ * The token endpoint is used directly with no `/v2/` probe. Use this for registries
+ * whose endpoints are well-known (Docker Hub, GHCR, Quay, ACR, GAR, ECR …).
+ *
+ * **Discovery mode** — omit the second argument.
+ * On the first `getToken()` call the class probes `https://<hostname>/v2/` and reads the
+ * `WWW-Authenticate` header from the 401 response to discover the token endpoint and
+ * optional `service` parameter. The result is cached so the probe fires at most once per
+ * instance, even under concurrent calls. If the registry returns 200 (truly open), issues
+ * a non-Bearer challenge, or the probe fails, `getToken()` returns `''` so the base class
+ * sends unauthenticated requests — correct for fully open registries.
+ *
+ * In both modes credentials are looked up from the Docker config via `credentialKey`
+ * (defaults to `hostname`) and sent as HTTP Basic auth to the token endpoint when present.
+ */
+class GenericRegistry extends ContainerRegistry {
+    hostname;
+    credentialKey;
+    displayName;
+    // Discovery state — only used when no staticConfig is provided
+    discoveryPromise;
+    challenge = null;
+    constructor(hostname, staticConfig) {
+        super(`${hostname}/v2/`);
+        this.hostname = hostname;
+        this.credentialKey = staticConfig?.credentialKey ?? hostname;
+        this.displayName = staticConfig?.name ?? hostname;
+        if (staticConfig) {
+            this.challenge = { realm: staticConfig.realm, service: staticConfig.service };
+            // Mark discovery as already complete so doDiscover() is never called
+            this.discoveryPromise = Promise.resolve();
+        }
+    }
+    /** Ensures the `/v2/` probe has run exactly once. No-op in static mode. */
+    discover() {
+        if (!this.discoveryPromise) {
+            this.discoveryPromise = this.doDiscover();
+        }
+        return this.discoveryPromise;
+    }
+    async doDiscover() {
+        const url = `https://${this.hostname}/v2/`;
+        debug(`GenericRegistry: probing ${url} for WWW-Authenticate header`);
+        let response;
+        try {
+            // Call globalThis.fetch directly (not this.fetch()) so a 401 does not throw —
+            // we need to read the WWW-Authenticate header from the error response.
+            response = await globalThis.fetch(url, { signal: AbortSignal.timeout(10_000) });
+        }
+        catch (e) {
+            if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+                warning(`GenericRegistry: timed out probing ${url} after 10s`);
+            }
+            else {
+                warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`);
+            }
+            return;
+        }
+        try {
+            if (response.status === 200) {
+                debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`);
+                return;
+            }
+            const wwwAuth = response.headers.get('www-authenticate');
+            if (!wwwAuth) {
+                debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`);
+                return;
+            }
+            const parsed = parseBearerChallenge(wwwAuth);
+            if (!parsed) {
+                debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`);
+                return;
+            }
+            debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`);
+            this.challenge = parsed;
+        }
+        finally {
+            await response.body?.cancel();
+        }
     }
     async getToken(repository) {
-        const auth = this.getCredentials();
-        if (!auth) {
-            info('No credentials found for Docker, using anonymous pull');
+        await this.discover();
+        if (!this.challenge) {
+            // No Bearer challenge found — return empty string for anonymous / open access
+            return '';
         }
-        const params = new URLSearchParams({
-            service: 'registry.docker.io',
-            scope: `repository:${repository}:pull`,
-        });
+        const auth = this.getCredentials();
+        if (auth) {
+            debug(`Fetching token for ${this.displayName} with HTTP Basic auth`);
+        }
+        else {
+            info(`No credentials found for ${this.displayName}, using anonymous pull`);
+        }
+        const tokenUrlObj = new URL(this.challenge.realm);
+        if (this.challenge.service) {
+            tokenUrlObj.searchParams.set('service', this.challenge.service);
+        }
+        tokenUrlObj.searchParams.set('scope', `repository:${repository}:pull`);
+        const tokenUrl = tokenUrlObj.toString();
         const headers = {};
         if (auth) {
             headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        return fetchToken(`https://auth.docker.io/token?${params}`, headers, 'Failed to fetch Docker Hub token');
+        return fetchToken(tokenUrl, headers, `Failed to fetch token for ${this.displayName} from ${tokenUrl}`);
     }
     getCredentials() {
-        return getRegistryAuth('https://index.docker.io/v1/');
+        return getRegistryAuth(this.credentialKey);
+    }
+}
+
+/** Registry client for Docker Hub (`registry-1.docker.io`). */
+class DockerHub extends GenericRegistry {
+    constructor() {
+        super('registry-1.docker.io', {
+            realm: 'https://auth.docker.io/token',
+            service: 'registry.docker.io',
+            credentialKey: 'https://index.docker.io/v1/',
+            name: 'Docker Hub',
+        });
     }
 }
 
 /** Registry client for GitHub Container Registry (`ghcr.io`). */
-class GitHubContainerRegistry extends ContainerRegistry {
+class GitHubContainerRegistry extends GenericRegistry {
     constructor() {
-        super('ghcr.io/v2/');
+        super('ghcr.io', {
+            realm: 'https://ghcr.io/token',
+            credentialKey: 'ghcr.io',
+            name: 'GitHub Container Registry',
+        });
     }
-    async getToken(repository) {
-        const auth = this.getCredentials();
-        if (!auth) {
-            info('No credentials found for GitHub, using anonymous pull');
-        }
-        const params = new URLSearchParams({ scope: `repository:${repository}:pull` });
-        const headers = {};
-        if (auth) {
-            headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
-        }
-        return fetchToken(`https://ghcr.io/token?${params}`, headers, 'Failed to get token from GitHub Container Registry');
+}
+
+/**
+ * Registry client for Google Container Registry (`gcr.io` and regional variants
+ * such as `us.gcr.io`, `eu.gcr.io`, `asia.gcr.io`).
+ * Credentials are stored in the Docker config under the bare hostname
+ * (as written by `docker login gcr.io` or `docker/login-action`).
+ */
+class GoogleContainerRegistry extends GenericRegistry {
+    constructor(hostname = 'gcr.io') {
+        super(hostname, {
+            realm: `https://${hostname}/v2/token`,
+            service: hostname,
+            credentialKey: hostname,
+            name: 'Google Container Registry',
+        });
     }
-    getCredentials() {
-        return getRegistryAuth('ghcr.io');
+}
+
+/**
+ * Registry client for Quay.io (`quay.io`).
+ * Public repositories can be pulled anonymously; robot accounts
+ * (username format `namespace+robotname`) are used for private repos.
+ */
+class QuayRegistry extends GenericRegistry {
+    constructor() {
+        super('quay.io', {
+            realm: 'https://quay.io/v2/auth',
+            service: 'quay.io',
+            credentialKey: 'quay.io',
+            name: 'Quay',
+        });
+    }
+}
+
+/**
+ * Registry client for Azure Container Registry (`<name>.azurecr.io`).
+ * Accepts service principal credentials, admin account credentials, or
+ * scoped repository tokens — all stored in the Docker config under the
+ * registry hostname (as written by `docker login <name>.azurecr.io`).
+ */
+class AzureContainerRegistry extends GenericRegistry {
+    constructor(hostname) {
+        super(hostname, {
+            realm: `https://${hostname}/oauth2/token`,
+            service: hostname,
+            credentialKey: hostname,
+            name: 'Azure Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for Google Artifact Registry (`<region>-docker.pkg.dev`).
+ * Credentials are stored in the Docker config under the registry hostname
+ * (as written by `gcloud auth configure-docker <region>-docker.pkg.dev`).
+ * The username is typically `oauth2accesstoken` with a short-lived GCP access
+ * token, or `_json_key` / `_json_key_base64` with a service account key.
+ */
+class GoogleArtifactRegistry extends GenericRegistry {
+    constructor(hostname) {
+        super(hostname, {
+            realm: `https://${hostname}/v2/token`,
+            service: hostname,
+            credentialKey: hostname,
+            name: 'Google Artifact Registry',
+        });
+    }
+}
+
+/** Registry client for Amazon ECR Public (`public.ecr.aws`). */
+class ECRPublicRegistry extends GenericRegistry {
+    constructor() {
+        super('public.ecr.aws', {
+            realm: 'https://public.ecr.aws/token/',
+            service: 'public.ecr.aws',
+            credentialKey: 'public.ecr.aws',
+            name: 'Amazon ECR Public',
+        });
+    }
+}
+/**
+ * Registry client for Amazon ECR Private.
+ * @param hostname - e.g. `123456789.dkr.ecr.us-east-1.amazonaws.com`
+ */
+class ECRPrivateRegistry extends GenericRegistry {
+    constructor(hostname) {
+        super(hostname, {
+            realm: `https://${hostname}/`,
+            service: 'ecr.amazonaws.com',
+            credentialKey: hostname,
+            name: 'Amazon ECR',
+        });
+    }
+}
+
+/**
+ * Registry client for GitLab Container Registry (`registry.gitlab.com`).
+ * Token endpoint: https://gitlab.com/jwt/auth
+ */
+class GitLabContainerRegistry extends GenericRegistry {
+    constructor() {
+        super('registry.gitlab.com', {
+            realm: 'https://gitlab.com/jwt/auth',
+            service: 'container_registry',
+            name: 'GitLab Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for DigitalOcean Container Registry (`registry.digitalocean.com`).
+ * Token endpoint: https://api.digitalocean.com/v2/registry/auth
+ */
+class DigitalOceanContainerRegistry extends GenericRegistry {
+    constructor() {
+        super('registry.digitalocean.com', {
+            realm: 'https://api.digitalocean.com/v2/registry/auth',
+            service: 'registry.digitalocean.com',
+            name: 'DigitalOcean Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for Oracle Cloud Infrastructure Registry (OCIR).
+ * Hostname pattern: `<region>.ocir.io` (e.g. `iad.ocir.io`, `fra.ocir.io`).
+ * Token endpoint is region-specific: `https://<hostname>/20180419/docker/token`
+ */
+class OracleContainerRegistry extends GenericRegistry {
+    constructor(hostname) {
+        super(hostname, {
+            realm: `https://${hostname}/20180419/docker/token`,
+            service: hostname,
+            name: 'Oracle Cloud Infrastructure Registry',
+        });
     }
 }
 
@@ -83962,15 +84244,29 @@ function findDiffImages(set1, set2) {
  */
 function parseImageInput(imageString) {
     const defaultRegistry = 'docker.io';
-    const [registryAndImage, tag] = imageString.split(':');
-    const parts = registryAndImage.split('/');
-    const registry = (parts.length > 2 || parts[0].includes('.') ? parts.shift() : defaultRegistry) ?? defaultRegistry;
+    // Find the tag colon: the first ':' that appears after the last '/'
+    // This correctly handles host:port registries like localhost:5000/repo/image:tag
+    const lastSlash = imageString.lastIndexOf('/');
+    const tagColon = imageString.indexOf(':', lastSlash + 1);
+    let reference, tag;
+    if (tagColon !== -1) {
+        reference = imageString.slice(0, tagColon);
+        tag = imageString.slice(tagColon + 1);
+    }
+    else {
+        reference = imageString;
+        tag = 'latest';
+    }
+    const parts = reference.split('/');
+    const firstPart = parts[0];
+    const isExplicitRegistry = firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost';
+    const registry = (isExplicitRegistry ? parts.shift() : defaultRegistry) ?? defaultRegistry;
     const isOfficialImage = registry === defaultRegistry && parts.length === 1;
     const image = isOfficialImage ? `library/${parts.join('/')}` : parts.join('/');
     return {
         registry,
         image,
-        tag: tag ?? 'latest',
+        tag,
     };
 }
 /**
@@ -83995,16 +84291,38 @@ function getDiffs(platforms, image1, image2) {
 
 /**
  * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
- * @throws {Error} if the registry is not supported
+ * Falls back to {@link GenericRegistry} (Bearer auto-discovery) for unknown registries.
  */
 function getRegistryInstance(registry) {
-    switch (registry.toLowerCase()) {
+    const r = registry.toLowerCase();
+    // Pattern-based checks before the switch so they take priority over the generic fallback
+    if (r.endsWith('.azurecr.io'))
+        return new AzureContainerRegistry(r);
+    if (r.endsWith('.pkg.dev'))
+        return new GoogleArtifactRegistry(r);
+    if (r === 'gcr.io' || r.endsWith('.gcr.io'))
+        return new GoogleContainerRegistry(r);
+    if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
+        return new ECRPrivateRegistry(r);
+    if (r.endsWith('.ocir.io'))
+        return new OracleContainerRegistry(r);
+    switch (r) {
         case 'docker.io':
+        case 'index.docker.io':
+        case 'registry-1.docker.io':
             return new DockerHub();
         case 'ghcr.io':
             return new GitHubContainerRegistry();
+        case 'quay.io':
+            return new QuayRegistry();
+        case 'public.ecr.aws':
+            return new ECRPublicRegistry();
+        case 'registry.gitlab.com':
+            return new GitLabContainerRegistry();
+        case 'registry.digitalocean.com':
+            return new DigitalOceanContainerRegistry();
         default:
-            throw new Error(`Invalid registry specified: ${registry}`);
+            return new GenericRegistry(r);
     }
 }
 /**

@@ -1,28 +1,18 @@
-import {ContainerRegistry} from './registry.js'
-import {DockerAuth, getRegistryAuth} from './auth.js'
-import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
-import * as core from '@actions/core'
+import {GenericRegistry} from './generic-registry.js'
 
-/** Registry client for Google Container Registry (`gcr.io`). */
-export class GoogleContainerRegistry extends ContainerRegistry {
-  constructor() {
-    super('gcr.io/v2/')
-  }
-
-  protected async getToken(repository: string): Promise<string> {
-    const auth = this.getCredentials()
-    if (!auth) {
-      core.info('No credentials found for GCR, using anonymous pull')
-    }
-    const params = new URLSearchParams({scope: `repository:${repository}:pull`})
-    const headers: Record<string, string> = {}
-    if (auth) {
-      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
-    }
-    return fetchToken(`https://gcr.io/token?${params}`, headers, 'Failed to obtain GCR token')
-  }
-
-  protected getCredentials(): DockerAuth | undefined {
-    return getRegistryAuth('https://gcr.io/v2/')
+/**
+ * Registry client for Google Container Registry (`gcr.io` and regional variants
+ * such as `us.gcr.io`, `eu.gcr.io`, `asia.gcr.io`).
+ * Credentials are stored in the Docker config under the bare hostname
+ * (as written by `docker login gcr.io` or `docker/login-action`).
+ */
+export class GoogleContainerRegistry extends GenericRegistry {
+  constructor(hostname: string = 'gcr.io') {
+    super(hostname, {
+      realm: `https://${hostname}/v2/token`,
+      service: hostname,
+      credentialKey: hostname,
+      name: 'Google Container Registry',
+    })
   }
 }

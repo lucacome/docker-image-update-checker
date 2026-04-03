@@ -1,30 +1,13 @@
-import {ContainerRegistry} from './registry.js'
-import {DockerAuth, getRegistryAuth} from './auth.js'
-import {buildBasicAuthHeader, fetchToken} from './token-utils.js'
-import * as core from '@actions/core'
+import {GenericRegistry} from './generic-registry.js'
 
-/** Registry client for Docker Hub (`index.docker.io`). */
-export class DockerHub extends ContainerRegistry {
+/** Registry client for Docker Hub (`registry-1.docker.io`). */
+export class DockerHub extends GenericRegistry {
   constructor() {
-    super('index.docker.io/v2/')
-  }
-  protected async getToken(repository: string): Promise<string> {
-    const auth = this.getCredentials()
-    if (!auth) {
-      core.info('No credentials found for Docker, using anonymous pull')
-    }
-    const params = new URLSearchParams({
+    super('registry-1.docker.io', {
+      realm: 'https://auth.docker.io/token',
       service: 'registry.docker.io',
-      scope: `repository:${repository}:pull`,
+      credentialKey: 'https://index.docker.io/v1/',
+      name: 'Docker Hub',
     })
-    const headers: Record<string, string> = {}
-    if (auth) {
-      headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
-    }
-    return fetchToken(`https://auth.docker.io/token?${params}`, headers, 'Failed to fetch Docker Hub token')
-  }
-
-  protected getCredentials(): DockerAuth | undefined {
-    return getRegistryAuth('https://index.docker.io/v1/')
   }
 }

@@ -109,7 +109,7 @@ export abstract class ContainerRegistry {
     const url = `https://${this.baseUrl}${repo}/manifests/${digest}`
     const headers = {
       Accept: 'application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-      Authorization: `Bearer ${token}`,
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
     }
 
     const fetchResult = await this.fetch(url, headers)
@@ -168,7 +168,7 @@ export abstract class ContainerRegistry {
     const headers = {
       Accept:
         'application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-      Authorization: `Bearer ${token}`,
+      ...(token ? {Authorization: `Bearer ${token}`} : {}),
     }
 
     core.debug(`Fetching manifest for image: ${image.repository}:${image.tag}`)
@@ -219,7 +219,7 @@ export abstract class ContainerRegistry {
       const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${singleManifest.config.digest}`
       const blobHeaders = {
         Accept: 'application/vnd.docker.container.image.v1+json,application/vnd.oci.image.config.v1+json',
-        Authorization: `Bearer ${token}`,
+        ...(token ? {Authorization: `Bearer ${token}`} : {}),
       }
       const blobFetchResult = await this.fetch(blobUrl, blobHeaders)
       const blobConfig: BlobConfig = parseOrThrow(BlobConfigSchema, blobFetchResult.data, blobUrl)
