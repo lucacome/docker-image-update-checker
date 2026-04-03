@@ -189,7 +189,9 @@ jobs:
 
 ### Build image for the first time
 
-Use `needs-building` to detect when the image does not exist yet. `needs-updating` is `true` in both the first-build and update cases, so use it to gate the build step. Use `needs-building` only for steps that should run exclusively on the first build:
+`needs-updating` is `true` whenever a build is needed — including when an `image` does not exist.
+
+`needs-building` is `true` **only** when the `image` does not exist yet, so use it for steps that should run exclusively then.
 
 ```yaml
 name: Check and build docker image
@@ -212,6 +214,10 @@ jobs:
           base-image: debian:13.1
           image: user/app:latest
 
+      - name: Do something on first build
+        run: echo "Image did not exist — built for the first time"
+        if: steps.check.outputs.needs-building == 'true'
+
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
@@ -219,10 +225,6 @@ jobs:
           push: true
           tags: user/app:latest
         if: steps.check.outputs.needs-updating == 'true'
-
-      - name: Notify first build
-        run: echo "Image did not exist — built for the first time"
-        if: steps.check.outputs.needs-building == 'true'
 ```
 
 ## Debugging
