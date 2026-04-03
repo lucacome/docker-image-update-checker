@@ -152,6 +152,42 @@ describe('parseImageInput', () => {
     const result = parseImageInput(imageString)
     expect(result).toEqual(expectedResult)
   })
+
+  test('should parse image string with host:port registry and no tag', () => {
+    const imageString = 'localhost:5000/myorg/myimage'
+    const expectedResult: ImageInput = {
+      registry: 'localhost:5000',
+      image: 'myorg/myimage',
+      tag: 'latest',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  test('should parse image string with host:port registry and tag', () => {
+    const imageString = 'localhost:5000/myorg/myimage:1.2.3'
+    const expectedResult: ImageInput = {
+      registry: 'localhost:5000',
+      image: 'myorg/myimage',
+      tag: '1.2.3',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  test('should parse image string with host:port registry, single-component image, and tag', () => {
+    const imageString = 'registry.example.com:5000/myimage:latest'
+    const expectedResult: ImageInput = {
+      registry: 'registry.example.com:5000',
+      image: 'myimage',
+      tag: 'latest',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
 })
 
 const image1: ImageMap = new Map([

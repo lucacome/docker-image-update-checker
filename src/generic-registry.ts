@@ -104,25 +104,29 @@ export class GenericRegistry extends ContainerRegistry {
       return
     }
 
-    if (response.status === 200) {
-      core.debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`)
-      return
-    }
+    try {
+      if (response.status === 200) {
+        core.debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`)
+        return
+      }
 
-    const wwwAuth = response.headers.get('www-authenticate')
-    if (!wwwAuth) {
-      core.debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`)
-      return
-    }
+      const wwwAuth = response.headers.get('www-authenticate')
+      if (!wwwAuth) {
+        core.debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`)
+        return
+      }
 
-    const parsed = parseBearerChallenge(wwwAuth)
-    if (!parsed) {
-      core.debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`)
-      return
-    }
+      const parsed = parseBearerChallenge(wwwAuth)
+      if (!parsed) {
+        core.debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`)
+        return
+      }
 
-    core.debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`)
-    this.challenge = parsed
+      core.debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`)
+      this.challenge = parsed
+    } finally {
+      await response.body?.cancel()
+    }
   }
 
   protected async getToken(repository: string): Promise<string> {
@@ -134,22 +138,24 @@ export class GenericRegistry extends ContainerRegistry {
     }
 
     const auth = this.getCredentials()
-    if (!auth) {
+    if (auth) {
+      core.debug(`Fetching token for ${this.displayName} with HTTP Basic auth (user: ${auth.username})`)
+    } else {
       core.info(`No credentials found for ${this.displayName}, using anonymous pull`)
     }
 
-    const params = new URLSearchParams()
+    const tokenUrlObj = new URL(this.challenge.realm)
     if (this.challenge.service) {
-      params.set('service', this.challenge.service)
+      tokenUrlObj.searchParams.set('service', this.challenge.service)
     }
-    params.set('scope', `repository:${repository}:pull`)
+    tokenUrlObj.searchParams.set('scope', `repository:${repository}:pull`)
+    const tokenUrl = tokenUrlObj.toString()
 
     const headers: Record<string, string> = {}
     if (auth) {
       headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password)
     }
 
-    const tokenUrl = `${this.challenge.realm}?${params}`
     return fetchToken(tokenUrl, headers, `Failed to fetch token for ${this.displayName} from ${tokenUrl}`)
   }
 

@@ -74,4 +74,10 @@ describe('getRegistryInstance', () => {
   it('should route unknown hostname to GenericRegistry', () => {
     expect(getRegistryInstance('registry.example.com')).toBeInstanceOf(GenericRegistry)
   })
+
+  it('should route mixed-case input case-insensitively to the correct registry', () => {
+    expect(getRegistryInstance('Docker.IO')).toBeInstanceOf(DockerHub)
+    expect(getRegistryInstance('GHCR.IO')).toBeInstanceOf(GitHubContainerRegistry)
+    expect(getRegistryInstance('Quay.IO')).toBeInstanceOf(QuayRegistry)
+  })
 })

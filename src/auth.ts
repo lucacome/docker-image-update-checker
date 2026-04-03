@@ -22,18 +22,19 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
   const registryAuth = auths[registry]
 
   if (!registryAuth) {
-    core.warning(`No credentials found for ${registry}`)
+    core.debug(`No auth entry found for ${registry} in Docker config`)
     return undefined
   }
 
   if (!registryAuth.username || !registryAuth.password) {
-    core.debug(`No username or password found for ${registry}, trying auth field`)
+    core.debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`)
     if (registryAuth.auth) {
       const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':')
+      core.debug(`Using base64-encoded auth field credentials for ${registry}`)
       return {username: user, password: pass}
     }
     if (config?.credsStore) {
-      core.debug('No auth field, using credential store to get credentials')
+      core.debug(`No auth field for ${registry} — trying credential store "docker-credential-${config.credsStore}"`)
       const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
         input: `${registry}\n`,
         encoding: 'utf-8',
@@ -47,15 +48,17 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
       if (creds && child.status === 0) {
         try {
           const {Username, Secret} = JSON.parse(creds)
+          core.debug(`Using credentials for ${registry} from credential store "docker-credential-${config.credsStore}"`)
           return {username: Username, password: Secret}
         } catch (e) {
           throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
         }
       }
     }
-    core.debug('No credentials found, returning undefined')
+    core.debug(`No credentials resolved for ${registry} — no auth field and no usable credential store`)
     return undefined
   }
 
+  core.debug(`Using username/password credentials for ${registry}`)
   return {username: registryAuth.username, password: registryAuth.password}
 }

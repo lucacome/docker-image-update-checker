@@ -41,9 +41,23 @@ export function findDiffImages(set1: ImageMap, set2: ImageMap): ImageInfo[] {
 export function parseImageInput(imageString: string): ImageInput {
   const defaultRegistry = 'docker.io'
 
-  const [registryAndImage, tag] = imageString.split(':')
-  const parts = registryAndImage.split('/')
-  const registry = (parts.length > 2 || parts[0].includes('.') ? parts.shift() : defaultRegistry) ?? defaultRegistry
+  // Find the tag colon: the first ':' that appears after the last '/'
+  // This correctly handles host:port registries like localhost:5000/repo/image:tag
+  const lastSlash = imageString.lastIndexOf('/')
+  const tagColon = imageString.indexOf(':', lastSlash + 1)
+  let reference: string, tag: string
+  if (tagColon !== -1) {
+    reference = imageString.slice(0, tagColon)
+    tag = imageString.slice(tagColon + 1)
+  } else {
+    reference = imageString
+    tag = 'latest'
+  }
+
+  const parts = reference.split('/')
+  const firstPart = parts[0]
+  const isExplicitRegistry = parts.length > 2 || firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost'
+  const registry = (isExplicitRegistry ? parts.shift() : defaultRegistry) ?? defaultRegistry
 
   const isOfficialImage = registry === defaultRegistry && parts.length === 1
   const image = isOfficialImage ? `library/${parts.join('/')}` : parts.join('/')
@@ -51,7 +65,7 @@ export function parseImageInput(imageString: string): ImageInput {
   return {
     registry,
     image,
-    tag: tag ?? 'latest',
+    tag,
   }
 }
 

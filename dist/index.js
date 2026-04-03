@@ -83786,17 +83786,18 @@ function getRegistryAuth(registry) {
     const auths = config?.auths || {};
     const registryAuth = auths[registry];
     if (!registryAuth) {
-        warning(`No credentials found for ${registry}`);
+        debug(`No auth entry found for ${registry} in Docker config`);
         return undefined;
     }
     if (!registryAuth.username || !registryAuth.password) {
-        debug(`No username or password found for ${registry}, trying auth field`);
+        debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`);
         if (registryAuth.auth) {
             const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':');
+            debug(`Using base64-encoded auth field credentials for ${registry}`);
             return { username: user, password: pass };
         }
         if (config?.credsStore) {
-            debug('No auth field, using credential store to get credentials');
+            debug(`No auth field for ${registry} — trying credential store "docker-credential-${config.credsStore}"`);
             const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
                 input: `${registry}\n`,
                 encoding: 'utf-8',
@@ -83808,6 +83809,7 @@ function getRegistryAuth(registry) {
             if (creds && child.status === 0) {
                 try {
                     const { Username, Secret } = JSON.parse(creds);
+                    debug(`Using credentials for ${registry} from credential store "docker-credential-${config.credsStore}"`);
                     return { username: Username, password: Secret };
                 }
                 catch (e) {
@@ -83815,9 +83817,10 @@ function getRegistryAuth(registry) {
                 }
             }
         }
-        debug('No credentials found, returning undefined');
+        debug(`No credentials resolved for ${registry} — no auth field and no usable credential store`);
         return undefined;
     }
+    debug(`Using username/password credentials for ${registry}`);
     return { username: registryAuth.username, password: registryAuth.password };
 }
 
@@ -83959,22 +83962,27 @@ class GenericRegistry extends ContainerRegistry {
             warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`);
             return;
         }
-        if (response.status === 200) {
-            debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`);
-            return;
+        try {
+            if (response.status === 200) {
+                debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`);
+                return;
+            }
+            const wwwAuth = response.headers.get('www-authenticate');
+            if (!wwwAuth) {
+                debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`);
+                return;
+            }
+            const parsed = parseBearerChallenge(wwwAuth);
+            if (!parsed) {
+                debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`);
+                return;
+            }
+            debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`);
+            this.challenge = parsed;
         }
-        const wwwAuth = response.headers.get('www-authenticate');
-        if (!wwwAuth) {
-            debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`);
-            return;
+        finally {
+            await response.body?.cancel();
         }
-        const parsed = parseBearerChallenge(wwwAuth);
-        if (!parsed) {
-            debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`);
-            return;
-        }
-        debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`);
-        this.challenge = parsed;
     }
     async getToken(repository) {
         await this.discover();
@@ -83983,19 +83991,22 @@ class GenericRegistry extends ContainerRegistry {
             return '';
         }
         const auth = this.getCredentials();
-        if (!auth) {
+        if (auth) {
+            debug(`Fetching token for ${this.displayName} with HTTP Basic auth (user: ${auth.username})`);
+        }
+        else {
             info(`No credentials found for ${this.displayName}, using anonymous pull`);
         }
-        const params = new URLSearchParams();
+        const tokenUrlObj = new URL(this.challenge.realm);
         if (this.challenge.service) {
-            params.set('service', this.challenge.service);
+            tokenUrlObj.searchParams.set('service', this.challenge.service);
         }
-        params.set('scope', `repository:${repository}:pull`);
+        tokenUrlObj.searchParams.set('scope', `repository:${repository}:pull`);
+        const tokenUrl = tokenUrlObj.toString();
         const headers = {};
         if (auth) {
             headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        const tokenUrl = `${this.challenge.realm}?${params}`;
         return fetchToken(tokenUrl, headers, `Failed to fetch token for ${this.displayName} from ${tokenUrl}`);
     }
     getCredentials() {
@@ -84192,15 +84203,29 @@ function findDiffImages(set1, set2) {
  */
 function parseImageInput(imageString) {
     const defaultRegistry = 'docker.io';
-    const [registryAndImage, tag] = imageString.split(':');
-    const parts = registryAndImage.split('/');
-    const registry = (parts.length > 2 || parts[0].includes('.') ? parts.shift() : defaultRegistry) ?? defaultRegistry;
+    // Find the tag colon: the first ':' that appears after the last '/'
+    // This correctly handles host:port registries like localhost:5000/repo/image:tag
+    const lastSlash = imageString.lastIndexOf('/');
+    const tagColon = imageString.indexOf(':', lastSlash + 1);
+    let reference, tag;
+    if (tagColon !== -1) {
+        reference = imageString.slice(0, tagColon);
+        tag = imageString.slice(tagColon + 1);
+    }
+    else {
+        reference = imageString;
+        tag = 'latest';
+    }
+    const parts = reference.split('/');
+    const firstPart = parts[0];
+    const isExplicitRegistry = parts.length > 2 || firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost';
+    const registry = (isExplicitRegistry ? parts.shift() : defaultRegistry) ?? defaultRegistry;
     const isOfficialImage = registry === defaultRegistry && parts.length === 1;
     const image = isOfficialImage ? `library/${parts.join('/')}` : parts.join('/');
     return {
         registry,
         image,
-        tag: tag ?? 'latest',
+        tag,
     };
 }
 /**
