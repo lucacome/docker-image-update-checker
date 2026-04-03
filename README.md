@@ -65,7 +65,7 @@ To authenticate with a Docker registry, add a [`docker/login-action`](https://gi
 
 ### Minimal
 
-Check if the image `user/app:latest`, that has `nginx` as a base image, needs to be updated:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated:
 
 ```yaml
 name: Check docker image
@@ -92,7 +92,7 @@ jobs:
 
 ### Single platform
 
-Check if the image `user/app:latest`, that has `nginx` as a base image, needs to be updated and build and push the image if needed:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated and build and push the image if needed:
 
 ```yaml
 name: Check docker image
@@ -127,7 +127,7 @@ jobs:
 
 ### Multiple platforms
 
-Check if the image `user/app:latest`, that has `nginx` as a base image, needs to be updated for `linux/amd64` and `linux/arm64`:
+Check if the image `user/app:latest`, that has `debian` as a base image, needs to be updated for `linux/amd64` and `linux/arm64`:
 
 ```yaml
 name: Check docker image for multiple platforms
