@@ -1,4 +1,4 @@
-import {GenericBearerRegistry} from './generic-bearer-registry.js'
+import {GenericRegistry} from './generic-registry.js'
 
 /**
  * Registry client for Azure Container Registry (`<name>.azurecr.io`).
@@ -6,11 +6,10 @@ import {GenericBearerRegistry} from './generic-bearer-registry.js'
  * scoped repository tokens — all stored in the Docker config under the
  * registry hostname (as written by `docker login <name>.azurecr.io`).
  */
-export class AzureContainerRegistry extends GenericBearerRegistry {
+export class AzureContainerRegistry extends GenericRegistry {
   constructor(hostname: string) {
-    super({
-      baseUrl: `${hostname}/v2/`,
-      tokenUrl: `https://${hostname}/oauth2/token`,
+    super(hostname, {
+      realm: `https://${hostname}/oauth2/token`,
       service: hostname,
       credentialKey: hostname,
       name: 'Azure Container Registry',

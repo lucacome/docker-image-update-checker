@@ -5,34 +5,36 @@ import {GitHubContainerRegistry} from './github.js'
 import {GoogleContainerRegistry} from './gcr.js'
 import {QuayRegistry} from './quay.js'
 import {AzureContainerRegistry} from './acr.js'
-import {GoogleArtifactRegistry} from './artifact-registry.js'
+import {GoogleArtifactRegistry} from './gar.js'
 import {ECRPublicRegistry, ECRPrivateRegistry} from './ecr.js'
+import {GenericRegistry} from './generic-registry.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 
 /**
  * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
- * @throws {Error} if the registry is not supported
+ * Falls back to {@link GenericRegistry} (Bearer auto-discovery) for unknown registries.
  */
 function getRegistryInstance(registry: string): ContainerRegistry {
   const r = registry.toLowerCase()
+
+  // Pattern-based checks before the switch so they take priority over the generic fallback
+  if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
+  if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
+  if (r.endsWith('gcr.io')) return new GoogleContainerRegistry(r)
+  if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
+
   switch (r) {
     case 'docker.io':
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()
-    case 'gcr.io':
-      return new GoogleContainerRegistry(r)
     case 'quay.io':
       return new QuayRegistry()
     case 'public.ecr.aws':
       return new ECRPublicRegistry()
     default:
-      if (r.endsWith('.azurecr.io')) return new AzureContainerRegistry(r)
-      if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
-      if (r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
-      if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
-      throw new Error(`Unsupported registry: ${registry}`)
+      return new GenericRegistry(r)
   }
 }
 

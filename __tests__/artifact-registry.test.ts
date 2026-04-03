@@ -1,5 +1,5 @@
 import {jest, describe, it, expect, beforeEach} from '@jest/globals'
-import {GoogleArtifactRegistry} from '../src/artifact-registry.js'
+import {GoogleArtifactRegistry} from '../src/gar.js'
 import {mockResponse} from './registry-test-utils.js'
 
 const TOKEN_RESPONSE = {access_token: 'ar-token'}

@@ -83887,47 +83887,127 @@ async function fetchToken(url, headers, errorPrefix) {
 }
 
 /**
- * Registry client for any registry that follows the standard Docker/OCI Bearer token flow:
- * an optional Basic-auth request to a token endpoint that returns `{"token": "..."}` or
- * `{"access_token": "..."}`, followed by Bearer-authenticated manifest and layer fetches.
+ * Parses the `WWW-Authenticate` header value for a `Bearer` challenge.
+ * Returns `null` if the scheme is not `Bearer` or the `realm` parameter is absent.
  *
- * Subclass this and pass a {@link BearerRegistryConfig} to support a concrete registry.
- * Can also be instantiated directly when no subclass-specific behaviour is needed.
+ * Example header value:
+ *   Bearer realm="https://auth.example.com/token",service="registry.example.com"
  */
-class GenericBearerRegistry extends ContainerRegistry {
-    config;
-    constructor(config) {
-        super(config.baseUrl);
-        this.config = config;
+function parseBearerChallenge(header) {
+    if (!header.toLowerCase().startsWith('bearer '))
+        return null;
+    const params = header.slice('bearer '.length);
+    const realm = params.match(/realm="([^"]+)"/i)?.[1];
+    if (!realm)
+        return null;
+    const service = params.match(/service="([^"]+)"/i)?.[1];
+    return { realm, service };
+}
+/**
+ * Registry client that works for any OCI/Docker-compliant registry.
+ *
+ * **Static mode** — pass a {@link StaticBearerConfig} as the second argument.
+ * The token endpoint is used directly with no `/v2/` probe. Use this for registries
+ * whose endpoints are well-known (Docker Hub, GHCR, Quay, ACR, GAR, ECR …).
+ *
+ * **Discovery mode** — omit the second argument.
+ * On the first `getToken()` call the class probes `https://<hostname>/v2/` and reads the
+ * `WWW-Authenticate` header from the 401 response to discover the token endpoint and
+ * optional `service` parameter. The result is cached so the probe fires at most once per
+ * instance, even under concurrent calls. If the registry returns 200 (truly open), issues
+ * a non-Bearer challenge, or the probe fails, `getToken()` returns `''` so the base class
+ * sends unauthenticated requests — correct for fully open registries.
+ *
+ * In both modes credentials are looked up from the Docker config via `credentialKey`
+ * (defaults to `hostname`) and sent as HTTP Basic auth to the token endpoint when present.
+ */
+class GenericRegistry extends ContainerRegistry {
+    hostname;
+    credentialKey;
+    displayName;
+    // Discovery state — only used when no staticConfig is provided
+    discoveryPromise;
+    challenge = null;
+    constructor(hostname, staticConfig) {
+        super(`${hostname}/v2/`);
+        this.hostname = hostname;
+        this.credentialKey = staticConfig?.credentialKey ?? hostname;
+        this.displayName = staticConfig?.name ?? hostname;
+        if (staticConfig) {
+            this.challenge = { realm: staticConfig.realm, service: staticConfig.service };
+            // Mark discovery as already complete so doDiscover() is never called
+            this.discoveryPromise = Promise.resolve();
+        }
+    }
+    /** Ensures the `/v2/` probe has run exactly once. No-op in static mode. */
+    discover() {
+        if (!this.discoveryPromise) {
+            this.discoveryPromise = this.doDiscover();
+        }
+        return this.discoveryPromise;
+    }
+    async doDiscover() {
+        const url = `https://${this.hostname}/v2/`;
+        debug(`GenericRegistry: probing ${url} for WWW-Authenticate header`);
+        let response;
+        try {
+            // Call globalThis.fetch directly (not this.fetch()) so a 401 does not throw —
+            // we need to read the WWW-Authenticate header from the error response.
+            response = await globalThis.fetch(url);
+        }
+        catch (e) {
+            warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`);
+            return;
+        }
+        if (response.status === 200) {
+            debug(`GenericRegistry: ${url} returned 200 — treating as fully open (no token needed)`);
+            return;
+        }
+        const wwwAuth = response.headers.get('www-authenticate');
+        if (!wwwAuth) {
+            debug(`GenericRegistry: no WWW-Authenticate header from ${url} (status ${response.status})`);
+            return;
+        }
+        const parsed = parseBearerChallenge(wwwAuth);
+        if (!parsed) {
+            debug(`GenericRegistry: non-Bearer WWW-Authenticate from ${url}: ${wwwAuth}`);
+            return;
+        }
+        debug(`GenericRegistry: discovered Bearer realm="${parsed.realm}" service="${parsed.service ?? '(none)'}"`);
+        this.challenge = parsed;
     }
     async getToken(repository) {
+        await this.discover();
+        if (!this.challenge) {
+            // No Bearer challenge found — return empty string for anonymous / open access
+            return '';
+        }
         const auth = this.getCredentials();
         if (!auth) {
-            info(`No credentials found for ${this.config.name}, using anonymous pull`);
+            info(`No credentials found for ${this.displayName}, using anonymous pull`);
         }
         const params = new URLSearchParams();
-        if (this.config.service) {
-            params.set('service', this.config.service);
+        if (this.challenge.service) {
+            params.set('service', this.challenge.service);
         }
         params.set('scope', `repository:${repository}:pull`);
         const headers = {};
         if (auth) {
             headers['Authorization'] = buildBasicAuthHeader(auth.username, auth.password);
         }
-        const tokenUrl = `${this.config.tokenUrl}?${params}`;
-        return fetchToken(tokenUrl, headers, `Failed to fetch ${this.config.name} token from ${tokenUrl}`);
+        const tokenUrl = `${this.challenge.realm}?${params}`;
+        return fetchToken(tokenUrl, headers, `Failed to fetch token for ${this.displayName} from ${tokenUrl}`);
     }
     getCredentials() {
-        return getRegistryAuth(this.config.credentialKey);
+        return getRegistryAuth(this.credentialKey);
     }
 }
 
 /** Registry client for Docker Hub (`registry-1.docker.io`). */
-class DockerHub extends GenericBearerRegistry {
+class DockerHub extends GenericRegistry {
     constructor() {
-        super({
-            baseUrl: 'registry-1.docker.io/v2/',
-            tokenUrl: 'https://auth.docker.io/token',
+        super('registry-1.docker.io', {
+            realm: 'https://auth.docker.io/token',
             service: 'registry.docker.io',
             credentialKey: 'https://index.docker.io/v1/',
             name: 'Docker Hub',
@@ -83936,11 +84016,10 @@ class DockerHub extends GenericBearerRegistry {
 }
 
 /** Registry client for GitHub Container Registry (`ghcr.io`). */
-class GitHubContainerRegistry extends GenericBearerRegistry {
+class GitHubContainerRegistry extends GenericRegistry {
     constructor() {
-        super({
-            baseUrl: 'ghcr.io/v2/',
-            tokenUrl: 'https://ghcr.io/token',
+        super('ghcr.io', {
+            realm: 'https://ghcr.io/token',
             credentialKey: 'ghcr.io',
             name: 'GitHub Container Registry',
         });
@@ -83953,11 +84032,10 @@ class GitHubContainerRegistry extends GenericBearerRegistry {
  * Credentials are stored in the Docker config under `https://<hostname>`
  * (as written by `gcloud auth configure-docker <hostname>`).
  */
-class GoogleContainerRegistry extends GenericBearerRegistry {
+class GoogleContainerRegistry extends GenericRegistry {
     constructor(hostname = 'gcr.io') {
-        super({
-            baseUrl: `${hostname}/v2/`,
-            tokenUrl: `https://${hostname}/v2/token`,
+        super(hostname, {
+            realm: `https://${hostname}/v2/token`,
             service: hostname,
             credentialKey: `https://${hostname}`,
             name: 'Google Container Registry',
@@ -83970,11 +84048,10 @@ class GoogleContainerRegistry extends GenericBearerRegistry {
  * Public repositories can be pulled anonymously; robot accounts
  * (username format `namespace+robotname`) are used for private repos.
  */
-class QuayRegistry extends GenericBearerRegistry {
+class QuayRegistry extends GenericRegistry {
     constructor() {
-        super({
-            baseUrl: 'quay.io/v2/',
-            tokenUrl: 'https://quay.io/v2/auth',
+        super('quay.io', {
+            realm: 'https://quay.io/v2/auth',
             service: 'quay.io',
             credentialKey: 'quay.io',
             name: 'Quay',
@@ -83988,11 +84065,10 @@ class QuayRegistry extends GenericBearerRegistry {
  * scoped repository tokens — all stored in the Docker config under the
  * registry hostname (as written by `docker login <name>.azurecr.io`).
  */
-class AzureContainerRegistry extends GenericBearerRegistry {
+class AzureContainerRegistry extends GenericRegistry {
     constructor(hostname) {
-        super({
-            baseUrl: `${hostname}/v2/`,
-            tokenUrl: `https://${hostname}/oauth2/token`,
+        super(hostname, {
+            realm: `https://${hostname}/oauth2/token`,
             service: hostname,
             credentialKey: hostname,
             name: 'Azure Container Registry',
@@ -84007,11 +84083,10 @@ class AzureContainerRegistry extends GenericBearerRegistry {
  * The username is typically `oauth2accesstoken` with a short-lived GCP access
  * token, or `_json_key` / `_json_key_base64` with a service account key.
  */
-class GoogleArtifactRegistry extends GenericBearerRegistry {
+class GoogleArtifactRegistry extends GenericRegistry {
     constructor(hostname) {
-        super({
-            baseUrl: `${hostname}/v2/`,
-            tokenUrl: `https://${hostname}/v2/token`,
+        super(hostname, {
+            realm: `https://${hostname}/v2/token`,
             service: hostname,
             credentialKey: hostname,
             name: 'Google Artifact Registry',
@@ -84020,11 +84095,10 @@ class GoogleArtifactRegistry extends GenericBearerRegistry {
 }
 
 /** Registry client for Amazon ECR Public (`public.ecr.aws`). */
-class ECRPublicRegistry extends GenericBearerRegistry {
+class ECRPublicRegistry extends GenericRegistry {
     constructor() {
-        super({
-            baseUrl: 'public.ecr.aws/v2/',
-            tokenUrl: 'https://public.ecr.aws/token/',
+        super('public.ecr.aws', {
+            realm: 'https://public.ecr.aws/token/',
             service: 'public.ecr.aws',
             credentialKey: 'public.ecr.aws',
             name: 'Amazon ECR Public',
@@ -84035,11 +84109,10 @@ class ECRPublicRegistry extends GenericBearerRegistry {
  * Registry client for Amazon ECR Private.
  * @param hostname - e.g. `123456789.dkr.ecr.us-east-1.amazonaws.com`
  */
-class ECRPrivateRegistry extends GenericBearerRegistry {
+class ECRPrivateRegistry extends GenericRegistry {
     constructor(hostname) {
-        super({
-            baseUrl: `${hostname}/v2/`,
-            tokenUrl: `https://${hostname}/`,
+        super(hostname, {
+            realm: `https://${hostname}/`,
             service: 'ecr.amazonaws.com',
             credentialKey: hostname,
             name: 'Amazon ECR',
@@ -84109,31 +84182,30 @@ function getDiffs(platforms, image1, image2) {
 
 /**
  * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
- * @throws {Error} if the registry is not supported
+ * Falls back to {@link GenericRegistry} (Bearer auto-discovery) for unknown registries.
  */
 function getRegistryInstance(registry) {
     const r = registry.toLowerCase();
+    // Pattern-based checks before the switch so they take priority over the generic fallback
+    if (r.endsWith('.azurecr.io'))
+        return new AzureContainerRegistry(r);
+    if (r.endsWith('.pkg.dev'))
+        return new GoogleArtifactRegistry(r);
+    if (r.endsWith('gcr.io'))
+        return new GoogleContainerRegistry(r);
+    if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
+        return new ECRPrivateRegistry(r);
     switch (r) {
         case 'docker.io':
             return new DockerHub();
         case 'ghcr.io':
             return new GitHubContainerRegistry();
-        case 'gcr.io':
-            return new GoogleContainerRegistry(r);
         case 'quay.io':
             return new QuayRegistry();
         case 'public.ecr.aws':
             return new ECRPublicRegistry();
         default:
-            if (r.endsWith('.azurecr.io'))
-                return new AzureContainerRegistry(r);
-            if (r.endsWith('.pkg.dev'))
-                return new GoogleArtifactRegistry(r);
-            if (r.endsWith('.gcr.io'))
-                return new GoogleContainerRegistry(r);
-            if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
-                return new ECRPrivateRegistry(r);
-            throw new Error(`Unsupported registry: ${registry}`);
+            return new GenericRegistry(r);
     }
 }
 /**

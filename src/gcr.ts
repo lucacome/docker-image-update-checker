@@ -1,4 +1,4 @@
-import {GenericBearerRegistry} from './generic-bearer-registry.js'
+import {GenericRegistry} from './generic-registry.js'
 
 /**
  * Registry client for Google Container Registry (`gcr.io` and regional variants
@@ -6,11 +6,10 @@ import {GenericBearerRegistry} from './generic-bearer-registry.js'
  * Credentials are stored in the Docker config under `https://<hostname>`
  * (as written by `gcloud auth configure-docker <hostname>`).
  */
-export class GoogleContainerRegistry extends GenericBearerRegistry {
+export class GoogleContainerRegistry extends GenericRegistry {
   constructor(hostname: string = 'gcr.io') {
-    super({
-      baseUrl: `${hostname}/v2/`,
-      tokenUrl: `https://${hostname}/v2/token`,
+    super(hostname, {
+      realm: `https://${hostname}/v2/token`,
       service: hostname,
       credentialKey: `https://${hostname}`,
       name: 'Google Container Registry',

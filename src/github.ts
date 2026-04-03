@@ -1,11 +1,10 @@
-import {GenericBearerRegistry} from './generic-bearer-registry.js'
+import {GenericRegistry} from './generic-registry.js'
 
 /** Registry client for GitHub Container Registry (`ghcr.io`). */
-export class GitHubContainerRegistry extends GenericBearerRegistry {
+export class GitHubContainerRegistry extends GenericRegistry {
   constructor() {
-    super({
-      baseUrl: 'ghcr.io/v2/',
-      tokenUrl: 'https://ghcr.io/token',
+    super('ghcr.io', {
+      realm: 'https://ghcr.io/token',
       credentialKey: 'ghcr.io',
       name: 'GitHub Container Registry',
     })
