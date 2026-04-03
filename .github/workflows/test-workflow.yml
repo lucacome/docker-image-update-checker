@@ -434,70 +434,72 @@ jobs:
   #####################################
   # Amazon ECR tests
 
-  ecr-public-image-up-to-date:
-    name: ECR Public image — up to date
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  # ECR public registry has a very low rate limit for unauthenticated requests.
 
-      - name: Test Action
-        id: test
-        uses: ./
-        with:
-          base-image: public.ecr.aws/nginx/nginx:1.21.6
-          image: public.ecr.aws/nginx/nginx-ingress:2.2.2
-          platforms: linux/amd64
+  # ecr-public-image-up-to-date:
+  #   name: ECR Public image — up to date
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
-        run: |
-          echo "Images: ${{ steps.test.outputs.diff-images }}"
+  #     - name: Test Action
+  #       id: test
+  #       uses: ./
+  #       with:
+  #         base-image: public.ecr.aws/nginx/nginx:1.21.6
+  #         image: public.ecr.aws/nginx/nginx-ingress:2.2.2
+  #         platforms: linux/amd64
 
-      - name: Check value
-        run: |
-          if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
-            exit 1
-          fi
+  #     - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+  #       run: |
+  #         echo "Images: ${{ steps.test.outputs.diff-images }}"
 
-  ecr-public-image-update-needed:
-    name: ECR Public image — update needed
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - name: Check value
+  #       run: |
+  #         if [[ "${{ steps.test.outputs.needs-updating }}" != "false" ]]; then
+  #           exit 1
+  #         fi
 
-      - name: Test Action
-        id: test
-        uses: ./
-        with:
-          base-image: public.ecr.aws/nginx/nginx:1.21.6
-          image: public.ecr.aws/nginx/nginx-ingress:2.1.2
-          platforms: linux/amd64
+  # ecr-public-image-update-needed:
+  #   name: ECR Public image — update needed
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
-        run: |
-          echo "Images: ${{ steps.test.outputs.diff-images }}"
+  #     - name: Test Action
+  #       id: test
+  #       uses: ./
+  #       with:
+  #         base-image: public.ecr.aws/nginx/nginx:1.21.6
+  #         image: public.ecr.aws/nginx/nginx-ingress:2.1.2
+  #         platforms: linux/amd64
 
-      - name: Check value
-        run: |
-          if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
-            exit 1
-          fi
+  #     - name: Get Test Output (needs-updating=${{ steps.test.outputs.needs-updating }})
+  #       run: |
+  #         echo "Images: ${{ steps.test.outputs.diff-images }}"
 
-      - name: Check diff-images
-        run: |
-          if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
-            exit 1
-          fi
+  #     - name: Check value
+  #       run: |
+  #         if [[ "${{ steps.test.outputs.needs-updating }}" != "true" ]]; then
+  #           exit 1
+  #         fi
 
-      - name: Check diff-json
-        env:
-          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
-        run: |
-          count=$(echo "$DIFF_JSON" | jq '. | length')
-          if [[ "$count" != "1" ]]; then
-            exit 1
-          fi
+  #     - name: Check diff-images
+  #       run: |
+  #         if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+  #           exit 1
+  #         fi
+
+  #     - name: Check diff-json
+  #       env:
+  #         DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+  #       run: |
+  #         count=$(echo "$DIFF_JSON" | jq '. | length')
+  #         if [[ "$count" != "1" ]]; then
+  #           exit 1
+  #         fi
 
   ecr-public-image-with-login-up-to-date:
     name: ECR Public image with login — up to date
