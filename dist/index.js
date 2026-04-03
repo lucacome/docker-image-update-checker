@@ -84121,6 +84121,49 @@ class ECRPrivateRegistry extends GenericRegistry {
 }
 
 /**
+ * Registry client for GitLab Container Registry (`registry.gitlab.com`).
+ * Token endpoint: https://gitlab.com/jwt/auth
+ */
+class GitLabContainerRegistry extends GenericRegistry {
+    constructor() {
+        super('registry.gitlab.com', {
+            realm: 'https://gitlab.com/jwt/auth',
+            service: 'container_registry',
+            name: 'GitLab Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for DigitalOcean Container Registry (`registry.digitalocean.com`).
+ * Token endpoint: https://api.digitalocean.com/v2/registry/auth
+ */
+class DigitalOceanContainerRegistry extends GenericRegistry {
+    constructor() {
+        super('registry.digitalocean.com', {
+            realm: 'https://api.digitalocean.com/v2/registry/auth',
+            service: 'registry.digitalocean.com',
+            name: 'DigitalOcean Container Registry',
+        });
+    }
+}
+
+/**
+ * Registry client for Oracle Cloud Infrastructure Registry (OCIR).
+ * Hostname pattern: `<region>.ocir.io` (e.g. `iad.ocir.io`, `fra.ocir.io`).
+ * Token endpoint is region-specific: `https://<hostname>/20180419/docker/token`
+ */
+class OCIRegistry extends GenericRegistry {
+    constructor(hostname) {
+        super(hostname, {
+            realm: `https://${hostname}/20180419/docker/token`,
+            service: hostname,
+            name: 'Oracle Cloud Infrastructure Registry',
+        });
+    }
+}
+
+/**
  * Compares two ImageMaps and returns the entries from `set2` where not all layers of the
  * corresponding `set1` entry are present. A non-empty result means the image needs rebuilding.
  */
@@ -84195,6 +84238,8 @@ function getRegistryInstance(registry) {
         return new GoogleContainerRegistry(r);
     if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
         return new ECRPrivateRegistry(r);
+    if (r.endsWith('.ocir.io'))
+        return new OCIRegistry(r);
     switch (r) {
         case 'docker.io':
             return new DockerHub();
@@ -84204,6 +84249,10 @@ function getRegistryInstance(registry) {
             return new QuayRegistry();
         case 'public.ecr.aws':
             return new ECRPublicRegistry();
+        case 'registry.gitlab.com':
+            return new GitLabContainerRegistry();
+        case 'registry.digitalocean.com':
+            return new DigitalOceanContainerRegistry();
         default:
             return new GenericRegistry(r);
     }

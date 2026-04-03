@@ -48,17 +48,7 @@ export default [
       sourceType: 'module',
 
       parserOptions: {
-        projectService: {
-          allowDefaultProject: [
-            '__fixtures__/*.ts',
-            '__mocks__/@actions/*.ts',
-            '__tests__/*.ts',
-            'eslint.config.mjs',
-            'jest.config.js',
-            'rollup.config.ts',
-          ],
-          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 15,
-        },
+        project: './tsconfig.eslint.json',
         tsconfigRootDir: import.meta.dirname,
       },
     },

@@ -6,15 +6,18 @@ These rules are **mandatory** and apply to every task in this repository.
 
 ### After every change
 
-1. Run `yarn build` — the build must pass with no errors before considering the task done.
-2. Run `yarn test` — all tests must pass. Fix any failures before finishing.
-3. Run `yarn lint` — must pass with zero errors. Fix any lint or formatting issues before finishing.
-4. If any command fails, fix the problem and re-run until all three pass cleanly.
+1. Run `mise run fmt` — auto-fixes formatting (prettier, trailing whitespace, end-of-file). Run first so subsequent checks are clean.
+2. Run `yarn build` — the build must pass with no errors before considering the task done.
+3. Run `yarn test` — all tests must pass. Fix any failures before finishing.
+4. Run `yarn lint` — must pass with zero errors. Fix any lint or formatting issues before finishing.
+5. If any command fails, fix the problem and re-run until all four pass cleanly.
 
 ### Keeping docs in sync
 
 - **`README.md`** — update whenever you change user-facing behaviour: inputs, outputs,
   supported registries, usage examples, or action semantics.
+  - All markdown tables must use padded, aligned columns: each column padded to the width of
+    the widest cell in that column, separator row using `| --- |` style (spaces inside dashes).
 - **`AGENTS.md`** — update whenever you change commands, project structure, code style
   conventions, architecture patterns, or testing rules.
 
@@ -33,11 +36,14 @@ src/registry.ts           → abstract ContainerRegistry base class + shared typ
 src/generic-registry.ts   → GenericRegistry: unified Bearer base (static config or auto-discovery)
 src/docker-hub.ts         → DockerHub (extends GenericRegistry)
 src/github.ts             → GitHubContainerRegistry (extends GenericRegistry)
+src/gitlab.ts             → GitLabContainerRegistry (extends GenericRegistry; registry.gitlab.com)
 src/gcr.ts                → GoogleContainerRegistry (extends GenericRegistry; gcr.io + *.gcr.io)
 src/quay.ts               → QuayRegistry (extends GenericRegistry)
 src/acr.ts                → AzureContainerRegistry (extends GenericRegistry; *.azurecr.io)
 src/gar.ts                → GoogleArtifactRegistry (extends GenericRegistry; *.pkg.dev)
 src/ecr.ts                → ECRPublicRegistry + ECRPrivateRegistry (extends GenericRegistry)
+src/digitalocean.ts       → DigitalOceanContainerRegistry (extends GenericRegistry; registry.digitalocean.com)
+src/ocir.ts               → OCIRegistry (extends GenericRegistry; *.ocir.io)
 src/auth.ts               → Docker credential resolution
 src/image-utils.ts        → image string parsing and layer diff logic
 src/token-utils.ts        → HTTP token fetch helpers
@@ -60,12 +66,14 @@ yarn test -- --testPathPattern=docker-hub -t "getToken"  # file + name filter co
 ### Lint / Format
 
 ```bash
-yarn lint            # prettier --check + eslint (no auto-fix)
-yarn format          # prettier --write + eslint --fix (auto-fix)
-yarn prettier        # check formatting only
-yarn prettier:fix    # fix formatting only
-yarn eslint          # lint only (0 warnings allowed)
-yarn eslint:fix      # lint + auto-fix
+mise run fmt       # hk fix --all — auto-fix formatting (prettier, trailing whitespace, end-of-file)
+mise run lint      # hk check --all — full lint suite (markdownlint, actionlint, codespell, etc.)
+yarn lint          # prettier --check + eslint (no auto-fix)
+yarn format        # prettier --write + eslint --fix (auto-fix)
+yarn prettier      # check formatting only
+yarn prettier:fix  # fix formatting only
+yarn eslint        # lint only (0 warnings allowed)
+yarn eslint:fix    # lint + auto-fix
 ```
 
 ### Build
@@ -206,11 +214,14 @@ __tests__/
   token-utils.test.ts          ← unit tests, global.fetch mocked via jest.fn()
   docker-hub.test.ts           ← unit tests, global.fetch + @actions/core mocked
   github.test.ts               ← unit tests, global.fetch + @actions/core mocked
+  gitlab.test.ts               ← unit tests, global.fetch + @actions/core mocked
   gcr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
   quay.test.ts                 ← unit tests, global.fetch + @actions/core mocked
   acr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
   artifact-registry.test.ts    ← unit tests, global.fetch + @actions/core mocked
   ecr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
+  digitalocean.test.ts         ← unit tests, global.fetch + @actions/core mocked
+  ocir.test.ts                 ← unit tests, global.fetch + @actions/core mocked
   generic-registry.test.ts     ← unit tests for static config + auto-discovery modes
 
 __mocks__/

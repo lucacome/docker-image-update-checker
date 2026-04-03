@@ -7,6 +7,9 @@ import {QuayRegistry} from './quay.js'
 import {AzureContainerRegistry} from './acr.js'
 import {GoogleArtifactRegistry} from './gar.js'
 import {ECRPublicRegistry, ECRPrivateRegistry} from './ecr.js'
+import {GitLabContainerRegistry} from './gitlab.js'
+import {DigitalOceanContainerRegistry} from './digitalocean.js'
+import {OCIRegistry} from './ocir.js'
 import {GenericRegistry} from './generic-registry.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
@@ -23,6 +26,7 @@ function getRegistryInstance(registry: string): ContainerRegistry {
   if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
   if (r === 'gcr.io' || r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
   if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
+  if (r.endsWith('.ocir.io')) return new OCIRegistry(r)
 
   switch (r) {
     case 'docker.io':
@@ -33,6 +37,10 @@ function getRegistryInstance(registry: string): ContainerRegistry {
       return new QuayRegistry()
     case 'public.ecr.aws':
       return new ECRPublicRegistry()
+    case 'registry.gitlab.com':
+      return new GitLabContainerRegistry()
+    case 'registry.digitalocean.com':
+      return new DigitalOceanContainerRegistry()
     default:
       return new GenericRegistry(r)
   }

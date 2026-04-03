@@ -10,22 +10,25 @@ This action checks if a Docker image needs to be updated based on the base image
 
 ## Supported Registries
 
-| Registry                   | Hostname pattern                       |
-|----------------------------|----------------------------------------|
-| Docker Hub                 | `docker.io`                            |
-| GitHub Container Registry  | `ghcr.io`                              |
-| Google Container Registry  | `gcr.io`, `*.gcr.io`                   |
-| Google Artifact Registry   | `*.pkg.dev`                            |
-| Amazon ECR Public          | `public.ecr.aws`                       |
-| Amazon ECR Private         | `*.dkr.ecr.*.amazonaws.com`            |
-| Azure Container Registry   | `*.azurecr.io`                         |
-| Quay.io                    | `quay.io`                              |
-| Any OCI-compliant registry | auto-discovered via `WWW-Authenticate` |
+| Registry                             | Hostname pattern                       |
+| ------------------------------------ | -------------------------------------- |
+| Docker Hub                           | `docker.io`                            |
+| GitHub Container Registry            | `ghcr.io`                              |
+| GitLab Container Registry            | `registry.gitlab.com`                  |
+| Google Container Registry            | `gcr.io`, `*.gcr.io`                   |
+| Google Artifact Registry             | `*.pkg.dev`                            |
+| Amazon ECR Public                    | `public.ecr.aws`                       |
+| Amazon ECR Private                   | `*.dkr.ecr.*.amazonaws.com`            |
+| Azure Container Registry             | `*.azurecr.io`                         |
+| DigitalOcean Container Registry      | `registry.digitalocean.com`            |
+| Oracle Cloud Infrastructure Registry | `*.ocir.io`                            |
+| Quay.io                              | `quay.io`                              |
+| Any OCI-compliant registry           | auto-discovered via `WWW-Authenticate` |
 
 ## Inputs
 
 | Name         | Type   | Description                                                                |
-|--------------|--------|----------------------------------------------------------------------------|
+| ------------ | ------ | -------------------------------------------------------------------------- |
 | `base-image` | String | Base Docker Image. This is the image you have as `FROM` in your Dockerfile |
 | `image`      | String | Your image based on `base-image`                                           |
 | `platforms`  | String | Platforms to check (default `all`), e.g. `linux/amd64,linux/arm64`         |
@@ -33,7 +36,7 @@ This action checks if a Docker image needs to be updated based on the base image
 ## Output
 
 | Name             | Type   | Description                                                                           |
-|------------------|--------|---------------------------------------------------------------------------------------|
+| ---------------- | ------ | ------------------------------------------------------------------------------------- |
 | `needs-updating` | String | 'true' or 'false' if the image needs to be updated or not                             |
 | `diff-images`    | String | List of images (platforms) that need to be updated                                    |
 | `diff-json`      | String | JSON output of the images (platforms) that need to be updated with the list of layers |

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "noUnusedLocals": false,
+    "rootDir": "."
+  },
+  "include": [
+    "src",
+    "__fixtures__",
+    "__mocks__",
+    "__tests__",
+    "eslint.config.mjs",
+    "jest.config.js",
+    "rollup.config.ts"
+  ],
+  "exclude": [
+    "coverage",
+    "dist",
+    "node_modules"
+  ]
+}
