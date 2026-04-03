@@ -90,6 +90,16 @@ function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, url: string): T {
   return result.data
 }
 
+// ─── Custom errors ─────────────────────────────────────────────────────────────
+
+/** Thrown when a registry responds with HTTP 404 (image or tag not found). */
+export class NotFoundError extends Error {
+  constructor(url: string) {
+    super(`Image not found: ${url}`)
+    this.name = 'NotFoundError'
+  }
+}
+
 // ─── Abstract base class ────────────────────────────────────────────────────────
 
 /** Abstract base class for container registry clients. */
@@ -127,6 +137,9 @@ export abstract class ContainerRegistry {
       response = await globalThis.fetch(url, {headers})
     } catch (e) {
       throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
+    }
+    if (response.status === 404) {
+      throw new NotFoundError(url)
     }
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)

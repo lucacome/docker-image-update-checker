@@ -16,6 +16,8 @@ inputs:
 outputs:
   needs-updating:
     description: "Whether the image needs updating"
+  needs-building:
+    description: "Whether the image needs to be built for the first time (image does not exist)"
   diff-images:
     description: "The diff of the images"
   diff-json:

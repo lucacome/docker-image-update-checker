@@ -33980,6 +33980,14 @@ function parseOrThrow(schema, data, url) {
     }
     return result.data;
 }
+// ─── Custom errors ─────────────────────────────────────────────────────────────
+/** Thrown when a registry responds with HTTP 404 (image or tag not found). */
+class NotFoundError extends Error {
+    constructor(url) {
+        super(`Image not found: ${url}`);
+        this.name = 'NotFoundError';
+    }
+}
 // ─── Abstract base class ────────────────────────────────────────────────────────
 /** Abstract base class for container registry clients. */
 class ContainerRegistry {
@@ -34011,6 +34019,9 @@ class ContainerRegistry {
         }
         catch (e) {
             throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
+        }
+        if (response.status === 404) {
+            throw new NotFoundError(url);
         }
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
@@ -84347,10 +84358,24 @@ async function run() {
             repository: base.image,
             tag: base.tag,
         });
-        const image2 = await registryImage.getImageInfo({
-            repository: image.image,
-            tag: image.tag,
-        });
+        let image2;
+        try {
+            image2 = await registryImage.getImageInfo({
+                repository: image.image,
+                tag: image.tag,
+            });
+        }
+        catch (e) {
+            if (e instanceof NotFoundError) {
+                info(`Image ${imageInput} does not exist and needs to be built`);
+                setOutput('needs-updating', true);
+                setOutput('needs-building', true);
+                setOutput('diff-images', '');
+                setOutput('diff-json', '[]');
+                return;
+            }
+            throw e;
+        }
         const diffs = getDiffs(platformsInput, image1, image2);
         startGroup(`Found ${diffs.length} differences`);
         debug(`Differences: ${JSON.stringify(diffs, null, 2)}`);
@@ -84364,6 +84389,7 @@ async function run() {
         endGroup();
         setOutput('diff-json', JSON.stringify(diffs));
         setOutput('needs-updating', diffs.length > 0);
+        setOutput('needs-building', false);
     }
     catch (error) {
         setFailed(`Action failed with error: ${error instanceof Error ? error.message || String(error) : String(error)}`);
