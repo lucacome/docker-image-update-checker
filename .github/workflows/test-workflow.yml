@@ -24,7 +24,7 @@ jobs:
   # Single platform tests
 
   single-amd64-update-needed:
-    name: Single platform (amd64) — update needed
+    name: Single platform (amd64) — update needed (ubuntu runner)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
@@ -64,7 +64,7 @@ jobs:
           fi
 
   single-amd64-up-to-date:
-    name: Single platform (amd64) — up to date
+    name: Single platform (amd64) — up to date (macOS runner)
     runs-on: macos-15
     steps:
       - name: Checkout Repository
@@ -89,7 +89,7 @@ jobs:
           fi
 
   single-arch-image-up-to-date:
-    name: Single-arch image — up to date
+    name: Single-arch image — up to date (Windows runner)
     runs-on: windows-2025
     steps:
       - name: Checkout Repository
