@@ -26,9 +26,18 @@ function runCredentialHelper(helperName: string, registry: string): DockerAuth |
   }
 
   try {
-    const {Username, Secret} = JSON.parse(child.stdout)
+    const parsed: unknown = JSON.parse(child.stdout)
+    if (typeof parsed !== 'object' || parsed === null) {
+      throw new Error(`expected object, got ${typeof parsed}`)
+    }
+    const raw = parsed as Record<string, unknown>
+    const username = raw['Username']
+    const password = raw['Secret']
+    if (typeof username !== 'string' || typeof password !== 'string') {
+      throw new Error(`missing or non-string Username/Secret fields`)
+    }
     core.debug(`Using credentials for ${registry} from credential helper "${binary}"`)
-    return {username: Username, password: Secret}
+    return {username, password}
   } catch (e) {
     throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
   }

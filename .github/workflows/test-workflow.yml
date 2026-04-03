@@ -14,6 +14,7 @@ concurrency:
 
 permissions:
   contents: read
+  packages: read
 
 defaults:
   run:
@@ -143,6 +144,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   #####################################
   # GitLab Container Registry tests
 
@@ -202,6 +212,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   #####################################
   # Quay.io tests
 
@@ -258,6 +277,15 @@ jobs:
       - name: Check diff-images
         run: |
           if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
             exit 1
           fi
 
@@ -330,6 +358,15 @@ jobs:
       - name: Check diff-images
         run: |
           if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
             exit 1
           fi
 
@@ -453,6 +490,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   ecr-public-image-with-login-up-to-date:
     name: ECR Public image with login — up to date
     runs-on: ubuntu-24.04
@@ -527,6 +573,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   #####################################
   # Google Artifact Registry tests
 
@@ -586,6 +641,15 @@ jobs:
             exit 1
           fi
 
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
+            exit 1
+          fi
+
   single-386-update-needed:
     name: Single platform (386) — update needed
     runs-on: ubuntu-24.04
@@ -614,6 +678,15 @@ jobs:
       - name: Check diff-images
         run: |
           if [[ "${{ steps.test.outputs.diff-images }}" != "linux/386" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
             exit 1
           fi
 
@@ -828,7 +901,7 @@ jobs:
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test Action
@@ -902,5 +975,14 @@ jobs:
       - name: Check diff-images
         run: |
           if [[ "${{ steps.test.outputs.diff-images }}" != "linux/amd64" ]]; then
+            exit 1
+          fi
+
+      - name: Check diff-json
+        env:
+          DIFF_JSON: ${{ steps.test.outputs.diff-json }}
+        run: |
+          count=$(echo "$DIFF_JSON" | jq '. | length')
+          if [[ "$count" != "1" ]]; then
             exit 1
           fi
