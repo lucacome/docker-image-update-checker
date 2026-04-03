@@ -44,7 +44,7 @@ By default this action checks differences across all platforms (e.g. `linux/amd6
 | Name             | Type   | Description                                                                                                               |
 | ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `needs-updating` | String | `true` if any platform needs updating, `false` otherwise                                                                  |
-| `needs-building` | String | `true` or `false` if the image doesn't exist and needs to be built for the first time                                     |
+| `needs-building` | String | `true` if the image does not exist and must be built for the first time, `false` otherwise                                |
 | `diff-images`    | String | Comma-separated list of platforms that need updating, e.g. `linux/amd64,linux/arm64`                                      |
 | `diff-json`      | String | JSON array of objects — one per platform — each with `os`, `architecture`, `variant`, `digest`, and `layers` fields       |
 
