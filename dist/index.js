@@ -83774,54 +83774,74 @@ class Docker {
 }
 
 /**
+ * Runs a Docker credential helper binary and returns the parsed credentials,
+ * or undefined if the helper reports no credentials for the registry.
+ * Throws on execution failure or unparsable output.
+ */
+function runCredentialHelper(helperName, registry) {
+    const binary = `docker-credential-${helperName}`;
+    debug(`Trying credential helper "${binary}" for ${registry}`);
+    const child = spawnSync(binary, ['get'], { input: `${registry}\n`, encoding: 'utf-8' });
+    if (child.error) {
+        throw new Error(`Credential helper ${binary} failed to execute: ${child.error.message}`);
+    }
+    if (!child.stdout || child.status !== 0) {
+        return undefined;
+    }
+    try {
+        const { Username, Secret } = JSON.parse(child.stdout);
+        debug(`Using credentials for ${registry} from credential helper "${binary}"`);
+        return { username: Username, password: Secret };
+    }
+    catch (e) {
+        throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
+    }
+}
+/**
  * Resolves Docker credentials for the given registry from the local Docker config file.
- * Tries direct username/password fields first, then a base64-encoded auth field,
- * then the configured credential store helper. Returns undefined if no credentials are found.
+ *
+ * Resolution order:
+ *   1. Direct `username` + `password` fields in `auths[registry]`
+ *   2. Base64-encoded `auth` field in `auths[registry]`
+ *   3. Per-registry credential helper from `credHelpers[registry]`
+ *   4. Global credential store from `credsStore`
+ *
+ * Returns undefined if no credentials are found by any method.
  */
 function getRegistryAuth(registry) {
     const config = Docker.configFile();
     if (!config) {
         warning('No Docker config found');
     }
-    const auths = config?.auths || {};
-    const registryAuth = auths[registry];
+    const registryAuth = config?.auths?.[registry];
+    if (registryAuth?.username && registryAuth?.password) {
+        debug(`Using username/password credentials for ${registry}`);
+        return { username: registryAuth.username, password: registryAuth.password };
+    }
+    if (registryAuth?.auth) {
+        debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`);
+        const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':');
+        debug(`Using base64-encoded auth field credentials for ${registry}`);
+        return { username: user, password: pass };
+    }
     if (!registryAuth) {
         debug(`No auth entry found for ${registry} in Docker config`);
-        return undefined;
     }
-    if (!registryAuth.username || !registryAuth.password) {
-        debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`);
-        if (registryAuth.auth) {
-            const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':');
-            debug(`Using base64-encoded auth field credentials for ${registry}`);
-            return { username: user, password: pass };
-        }
-        if (config?.credsStore) {
-            debug(`No auth field for ${registry} — trying credential store "docker-credential-${config.credsStore}"`);
-            const child = spawnSync(`docker-credential-${config.credsStore}`, ['get'], {
-                input: `${registry}\n`,
-                encoding: 'utf-8',
-            });
-            if (child.error) {
-                throw new Error(`Credential helper docker-credential-${config.credsStore} failed to execute: ${child.error.message}`);
-            }
-            const creds = child.stdout;
-            if (creds && child.status === 0) {
-                try {
-                    const { Username, Secret } = JSON.parse(creds);
-                    debug(`Using credentials for ${registry} from credential store "docker-credential-${config.credsStore}"`);
-                    return { username: Username, password: Secret };
-                }
-                catch (e) {
-                    throw new Error(`Failed to parse credential helper output: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
-                }
-            }
-        }
-        debug(`No credentials resolved for ${registry} — no auth field and no usable credential store`);
-        return undefined;
+    // Per-registry credential helper (e.g. set by `gcloud auth configure-docker`)
+    const credHelper = config?.credHelpers?.[registry];
+    if (credHelper) {
+        const result = runCredentialHelper(credHelper, registry);
+        if (result)
+            return result;
     }
-    debug(`Using username/password credentials for ${registry}`);
-    return { username: registryAuth.username, password: registryAuth.password };
+    // Global credential store (e.g. osxkeychain, secretservice, pass)
+    if (config?.credsStore) {
+        const result = runCredentialHelper(config.credsStore, registry);
+        if (result)
+            return result;
+    }
+    debug(`No credentials resolved for ${registry} — tried all available methods`);
+    return undefined;
 }
 
 const MAX_ERROR_BODY_LENGTH = 1000;
@@ -83892,18 +83912,22 @@ async function fetchToken(url, headers, errorPrefix) {
 /**
  * Parses the `WWW-Authenticate` header value for a `Bearer` challenge.
  * Returns `null` if the scheme is not `Bearer` or the `realm` parameter is absent.
+ * Accepts both quoted-string and unquoted token forms for each parameter per RFC 7235.
  *
- * Example header value:
+ * Example header values:
  *   Bearer realm="https://auth.example.com/token",service="registry.example.com"
+ *   Bearer realm=https://auth.example.com/token,service=registry.example.com
  */
 function parseBearerChallenge(header) {
     if (!header.toLowerCase().startsWith('bearer '))
         return null;
     const params = header.slice('bearer '.length);
-    const realm = params.match(/realm="([^"]+)"/i)?.[1];
+    const realmMatch = params.match(/realm="([^"]+)"|realm=([^",\s]+)/i);
+    const realm = (realmMatch?.[1] ?? realmMatch?.[2])?.trim();
     if (!realm)
         return null;
-    const service = params.match(/service="([^"]+)"/i)?.[1];
+    const serviceMatch = params.match(/service="([^"]+)"|service=([^",\s]+)/i);
+    const service = (serviceMatch?.[1] ?? serviceMatch?.[2])?.trim();
     return { realm, service };
 }
 /**
@@ -83956,10 +83980,15 @@ class GenericRegistry extends ContainerRegistry {
         try {
             // Call globalThis.fetch directly (not this.fetch()) so a 401 does not throw —
             // we need to read the WWW-Authenticate header from the error response.
-            response = await globalThis.fetch(url);
+            response = await globalThis.fetch(url, { signal: AbortSignal.timeout(10_000) });
         }
         catch (e) {
-            warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`);
+            if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+                warning(`GenericRegistry: timed out probing ${url} after 10s`);
+            }
+            else {
+                warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`);
+            }
             return;
         }
         try {
@@ -83992,7 +84021,7 @@ class GenericRegistry extends ContainerRegistry {
         }
         const auth = this.getCredentials();
         if (auth) {
-            debug(`Fetching token for ${this.displayName} with HTTP Basic auth (user: ${auth.username})`);
+            debug(`Fetching token for ${this.displayName} with HTTP Basic auth`);
         }
         else {
             info(`No credentials found for ${this.displayName}, using anonymous pull`);
@@ -84040,15 +84069,15 @@ class GitHubContainerRegistry extends GenericRegistry {
 /**
  * Registry client for Google Container Registry (`gcr.io` and regional variants
  * such as `us.gcr.io`, `eu.gcr.io`, `asia.gcr.io`).
- * Credentials are stored in the Docker config under `https://<hostname>`
- * (as written by `gcloud auth configure-docker <hostname>`).
+ * Credentials are stored in the Docker config under the bare hostname
+ * (as written by `docker login gcr.io` or `docker/login-action`).
  */
 class GoogleContainerRegistry extends GenericRegistry {
     constructor(hostname = 'gcr.io') {
         super(hostname, {
             realm: `https://${hostname}/v2/token`,
             service: hostname,
-            credentialKey: `https://${hostname}`,
+            credentialKey: hostname,
             name: 'Google Container Registry',
         });
     }

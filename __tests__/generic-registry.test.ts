@@ -204,6 +204,29 @@ describe('GenericRegistry — discovery mode', () => {
       expect(token).toBe('')
     })
 
+    it('should parse unquoted token-style WWW-Authenticate params', async () => {
+      const wwwAuth = `Bearer realm=https://auth.example.com/token,service=${HOSTNAME}`
+      const unquotedChallenge = {
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: {
+          get: (name: string) => (name.toLowerCase() === 'www-authenticate' ? wwwAuth : null),
+          entries: () => Object.entries({'www-authenticate': wwwAuth})[Symbol.iterator](),
+        },
+        json: jest.fn() as jest.MockedFunction<() => Promise<unknown>>,
+        text: jest.fn() as jest.MockedFunction<() => Promise<string>>,
+      } as unknown as Response
+      jest.mocked(fetch).mockResolvedValueOnce(unquotedChallenge)
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
+
+      const token = await (registry as unknown as {getToken: (r: string) => Promise<string>}).getToken('myorg/myrepo')
+
+      expect(token).toBe('generic-token')
+      const calls = jest.mocked(fetch).mock.calls
+      expect(calls[1][0]).toBe(`https://auth.example.com/token?service=${HOSTNAME}&scope=repository%3Amyorg%2Fmyrepo%3Apull`)
+    })
+
     it('should return empty string when WWW-Authenticate is Basic (not Bearer)', async () => {
       const basicResponse = {
         ok: false,

@@ -30,16 +30,20 @@ export interface StaticBearerConfig {
 /**
  * Parses the `WWW-Authenticate` header value for a `Bearer` challenge.
  * Returns `null` if the scheme is not `Bearer` or the `realm` parameter is absent.
+ * Accepts both quoted-string and unquoted token forms for each parameter per RFC 7235.
  *
- * Example header value:
+ * Example header values:
  *   Bearer realm="https://auth.example.com/token",service="registry.example.com"
+ *   Bearer realm=https://auth.example.com/token,service=registry.example.com
  */
 function parseBearerChallenge(header: string): {realm: string; service?: string} | null {
   if (!header.toLowerCase().startsWith('bearer ')) return null
   const params = header.slice('bearer '.length)
-  const realm = params.match(/realm="([^"]+)"/i)?.[1]
+  const realmMatch = params.match(/realm="([^"]+)"|realm=([^",\s]+)/i)
+  const realm = (realmMatch?.[1] ?? realmMatch?.[2])?.trim()
   if (!realm) return null
-  const service = params.match(/service="([^"]+)"/i)?.[1]
+  const serviceMatch = params.match(/service="([^"]+)"|service=([^",\s]+)/i)
+  const service = (serviceMatch?.[1] ?? serviceMatch?.[2])?.trim()
   return {realm, service}
 }
 
@@ -98,9 +102,13 @@ export class GenericRegistry extends ContainerRegistry {
     try {
       // Call globalThis.fetch directly (not this.fetch()) so a 401 does not throw —
       // we need to read the WWW-Authenticate header from the error response.
-      response = await globalThis.fetch(url)
+      response = await globalThis.fetch(url, {signal: AbortSignal.timeout(10_000)})
     } catch (e) {
-      core.warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`)
+      if (e instanceof Error && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
+        core.warning(`GenericRegistry: timed out probing ${url} after 10s`)
+      } else {
+        core.warning(`GenericRegistry: failed to probe ${url}: ${e instanceof Error ? e.message : String(e)}`)
+      }
       return
     }
 
@@ -139,7 +147,7 @@ export class GenericRegistry extends ContainerRegistry {
 
     const auth = this.getCredentials()
     if (auth) {
-      core.debug(`Fetching token for ${this.displayName} with HTTP Basic auth (user: ${auth.username})`)
+      core.debug(`Fetching token for ${this.displayName} with HTTP Basic auth`)
     } else {
       core.info(`No credentials found for ${this.displayName}, using anonymous pull`)
     }
