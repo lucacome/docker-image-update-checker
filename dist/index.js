@@ -33984,7 +33984,7 @@ function parseOrThrow(schema, data, url) {
 /** Thrown when a registry responds with HTTP 404 (image or tag not found). */
 class NotFoundError extends Error {
     constructor(url) {
-        super(`Image not found: ${url}`);
+        super(`Image not found: ${url} (status: 404)`);
         this.name = 'NotFoundError';
     }
 }

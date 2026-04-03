@@ -95,7 +95,7 @@ function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, url: string): T {
 /** Thrown when a registry responds with HTTP 404 (image or tag not found). */
 export class NotFoundError extends Error {
   constructor(url: string) {
-    super(`Image not found: ${url}`)
+    super(`Image not found: ${url} (status: 404)`)
     this.name = 'NotFoundError'
   }
 }
