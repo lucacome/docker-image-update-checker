@@ -34010,9 +34010,14 @@ class ContainerRegistry {
     }
     /**
      * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+     * @param throwNotFound When true, an HTTP 404 response throws {@link NotFoundError} instead of a
+     *   plain Error. Only the initial tag-manifest fetch should pass `true`; blob and per-digest
+     *   fetches should leave this as the default `false` so a 404 there fails the action rather than
+     *   being misclassified as "image does not exist".
+     * @throws {NotFoundError} on HTTP 404 when `throwNotFound` is true
      * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
      */
-    async fetch(url, headers) {
+    async fetch(url, headers, throwNotFound = false) {
         let response;
         try {
             response = await globalThis.fetch(url, { headers });
@@ -34020,7 +34025,7 @@ class ContainerRegistry {
         catch (e) {
             throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
         }
-        if (response.status === 404) {
+        if (response.status === 404 && throwNotFound) {
             throw new NotFoundError(url);
         }
         if (!response.ok) {
@@ -34062,7 +34067,7 @@ class ContainerRegistry {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         debug(`Fetching manifest for image: ${image.repository}:${image.tag}`);
-        const fetchResult = await this.fetch(url, headers);
+        const fetchResult = await this.fetch(url, headers, true);
         const contentType = fetchResult.headers['content-type'];
         const dockerContentDigest = fetchResult.headers['docker-content-digest'];
         debug(`Content type: ${contentType}`);

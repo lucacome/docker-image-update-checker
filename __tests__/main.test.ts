@@ -1,4 +1,4 @@
-import {jest, describe, it, expect, beforeEach} from '@jest/globals'
+import {jest, describe, it, expect, beforeEach, afterEach} from '@jest/globals'
 import * as core from '@actions/core'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
 import {getRegistryInstance, run} from '../src/main.js'
@@ -173,6 +173,10 @@ describe('run', () => {
     })
     jest.spyOn(Util, 'getInputList').mockReturnValue(['all'])
     jest.spyOn(GenericRegistry.prototype as unknown as {getCredentials: () => undefined}, 'getCredentials').mockReturnValue(undefined)
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   it('should set needs-building=true and needs-updating=true when image does not exist', async () => {
