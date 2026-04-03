@@ -16,7 +16,7 @@ These rules are **mandatory** and apply to every task in this repository.
 
 - **`README.md`** — update whenever you change user-facing behaviour: inputs, outputs,
   supported registries, usage examples, or action semantics.
-  - All markdown tables must use padded, aligned columns: each column padded to the width of
+  - All Markdown tables must use padded, aligned columns: each column padded to the width of
     the widest cell in that column, separator row using `| --- |` style (spaces inside dashes).
 - **`AGENTS.md`** — update whenever you change commands, project structure, code style
   conventions, architecture patterns, or testing rules.
@@ -43,7 +43,7 @@ src/acr.ts                → AzureContainerRegistry (extends GenericRegistry; *
 src/gar.ts                → GoogleArtifactRegistry (extends GenericRegistry; *.pkg.dev)
 src/ecr.ts                → ECRPublicRegistry + ECRPrivateRegistry (extends GenericRegistry)
 src/digitalocean.ts       → DigitalOceanContainerRegistry (extends GenericRegistry; registry.digitalocean.com)
-src/ocir.ts               → OCIRegistry (extends GenericRegistry; *.ocir.io)
+src/ocir.ts               → OracleContainerRegistry (extends GenericRegistry; *.ocir.io)
 src/auth.ts               → Docker credential resolution
 src/image-utils.ts        → image string parsing and layer diff logic
 src/token-utils.ts        → HTTP token fetch helpers

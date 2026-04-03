@@ -83820,7 +83820,10 @@ function getRegistryAuth(registry) {
     }
     if (registryAuth?.auth) {
         debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`);
-        const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':');
+        const decoded = Buffer.from(registryAuth.auth, 'base64').toString('utf8');
+        const colonIdx = decoded.indexOf(':');
+        const user = colonIdx !== -1 ? decoded.slice(0, colonIdx) : decoded;
+        const pass = colonIdx !== -1 ? decoded.slice(colonIdx + 1) : '';
         debug(`Using base64-encoded auth field credentials for ${registry}`);
         return { username: user, password: pass };
     }
@@ -84193,7 +84196,7 @@ class DigitalOceanContainerRegistry extends GenericRegistry {
  * Hostname pattern: `<region>.ocir.io` (e.g. `iad.ocir.io`, `fra.ocir.io`).
  * Token endpoint is region-specific: `https://<hostname>/20180419/docker/token`
  */
-class OCIRegistry extends GenericRegistry {
+class OracleContainerRegistry extends GenericRegistry {
     constructor(hostname) {
         super(hostname, {
             realm: `https://${hostname}/20180419/docker/token`,
@@ -84247,7 +84250,7 @@ function parseImageInput(imageString) {
     }
     const parts = reference.split('/');
     const firstPart = parts[0];
-    const isExplicitRegistry = parts.length > 2 || firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost';
+    const isExplicitRegistry = firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost';
     const registry = (isExplicitRegistry ? parts.shift() : defaultRegistry) ?? defaultRegistry;
     const isOfficialImage = registry === defaultRegistry && parts.length === 1;
     const image = isOfficialImage ? `library/${parts.join('/')}` : parts.join('/');
@@ -84293,7 +84296,7 @@ function getRegistryInstance(registry) {
     if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.'))
         return new ECRPrivateRegistry(r);
     if (r.endsWith('.ocir.io'))
-        return new OCIRegistry(r);
+        return new OracleContainerRegistry(r);
     switch (r) {
         case 'docker.io':
         case 'index.docker.io':

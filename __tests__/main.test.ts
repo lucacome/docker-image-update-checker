@@ -9,7 +9,7 @@ import {DigitalOceanContainerRegistry} from '../src/digitalocean.js'
 import {GoogleContainerRegistry} from '../src/gcr.js'
 import {AzureContainerRegistry} from '../src/acr.js'
 import {GoogleArtifactRegistry} from '../src/gar.js'
-import {OCIRegistry} from '../src/ocir.js'
+import {OracleContainerRegistry} from '../src/ocir.js'
 import {GenericRegistry} from '../src/generic-registry.js'
 
 describe('getRegistryInstance', () => {
@@ -67,8 +67,8 @@ describe('getRegistryInstance', () => {
     expect(getRegistryInstance('us-docker.pkg.dev')).toBeInstanceOf(GoogleArtifactRegistry)
   })
 
-  it('should route *.ocir.io to OCIRegistry', () => {
-    expect(getRegistryInstance('iad.ocir.io')).toBeInstanceOf(OCIRegistry)
+  it('should route *.ocir.io to OracleContainerRegistry', () => {
+    expect(getRegistryInstance('iad.ocir.io')).toBeInstanceOf(OracleContainerRegistry)
   })
 
   it('should route unknown hostname to GenericRegistry', () => {

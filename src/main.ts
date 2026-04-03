@@ -9,7 +9,7 @@ import {GoogleArtifactRegistry} from './gar.js'
 import {ECRPublicRegistry, ECRPrivateRegistry} from './ecr.js'
 import {GitLabContainerRegistry} from './gitlab.js'
 import {DigitalOceanContainerRegistry} from './digitalocean.js'
-import {OCIRegistry} from './ocir.js'
+import {OracleContainerRegistry} from './ocir.js'
 import {GenericRegistry} from './generic-registry.js'
 import {getDiffs, parseImageInput} from './image-utils.js'
 import {Util} from '@docker/actions-toolkit/lib/util.js'
@@ -26,7 +26,7 @@ export function getRegistryInstance(registry: string): ContainerRegistry {
   if (r.endsWith('.pkg.dev')) return new GoogleArtifactRegistry(r)
   if (r === 'gcr.io' || r.endsWith('.gcr.io')) return new GoogleContainerRegistry(r)
   if (r.endsWith('.amazonaws.com') && r.includes('.dkr.ecr.')) return new ECRPrivateRegistry(r)
-  if (r.endsWith('.ocir.io')) return new OCIRegistry(r)
+  if (r.endsWith('.ocir.io')) return new OracleContainerRegistry(r)
 
   switch (r) {
     case 'docker.io':

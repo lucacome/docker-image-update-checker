@@ -56,7 +56,7 @@ export function parseImageInput(imageString: string): ImageInput {
 
   const parts = reference.split('/')
   const firstPart = parts[0]
-  const isExplicitRegistry = parts.length > 2 || firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost'
+  const isExplicitRegistry = firstPart.includes('.') || firstPart.includes(':') || firstPart === 'localhost'
   const registry = (isExplicitRegistry ? parts.shift() : defaultRegistry) ?? defaultRegistry
 
   const isOfficialImage = registry === defaultRegistry && parts.length === 1

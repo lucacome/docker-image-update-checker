@@ -60,7 +60,10 @@ export function getRegistryAuth(registry: string): DockerAuth | undefined {
 
   if (registryAuth?.auth) {
     core.debug(`No username/password fields for ${registry} — falling back to base64-encoded auth field`)
-    const [user, pass] = Buffer.from(registryAuth.auth, 'base64').toString('utf8').split(':')
+    const decoded = Buffer.from(registryAuth.auth, 'base64').toString('utf8')
+    const colonIdx = decoded.indexOf(':')
+    const user = colonIdx !== -1 ? decoded.slice(0, colonIdx) : decoded
+    const pass = colonIdx !== -1 ? decoded.slice(colonIdx + 1) : ''
     core.debug(`Using base64-encoded auth field credentials for ${registry}`)
     return {username: user, password: pass}
   }

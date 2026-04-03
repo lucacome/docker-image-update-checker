@@ -1,3 +1,4 @@
+import {describe, it, expect} from '@jest/globals'
 import {findDiffImages, parseImageInput, ImageInput, getDiffs} from '../src/image-utils.js'
 import {ImageInfo, ImageMap} from '../src/registry.js'
 
@@ -183,6 +184,18 @@ describe('parseImageInput', () => {
       registry: 'registry.example.com:5000',
       image: 'myimage',
       tag: 'latest',
+    }
+
+    const result = parseImageInput(imageString)
+    expect(result).toEqual(expectedResult)
+  })
+
+  it('should parse three-component Docker Hub image as org/repo/subimage on docker.io', () => {
+    const imageString = 'myorg/myrepo/subimage:tag'
+    const expectedResult: ImageInput = {
+      registry: 'docker.io',
+      image: 'myorg/myrepo/subimage',
+      tag: 'tag',
     }
 
     const result = parseImageInput(imageString)

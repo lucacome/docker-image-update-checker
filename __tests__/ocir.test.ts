@@ -1,5 +1,5 @@
 import {jest, describe, it, expect, beforeEach} from '@jest/globals'
-import {OCIRegistry} from '../src/ocir.js'
+import {OracleContainerRegistry} from '../src/ocir.js'
 import {mockResponse} from './registry-test-utils.js'
 
 const TOKEN_RESPONSE = {token: 'ocir-token'}
@@ -22,12 +22,12 @@ const AMD64_LAYERS_MANIFEST = {
   layers: [{digest: 'sha256:amd64layer1'}],
 }
 
-describe('OCIRegistry', () => {
-  let ocir: OCIRegistry
+describe('OracleContainerRegistry', () => {
+  let ocir: OracleContainerRegistry
 
   beforeEach(() => {
     global.fetch = jest.fn() as jest.MockedFunction<typeof fetch>
-    ocir = new OCIRegistry('iad.ocir.io')
+    ocir = new OracleContainerRegistry('iad.ocir.io')
     jest.spyOn(ocir as unknown as {getCredentials: () => undefined}, 'getCredentials').mockReturnValue(undefined)
   })
 
@@ -59,7 +59,7 @@ describe('OCIRegistry', () => {
     })
 
     it('should use the correct region-specific token endpoint for a different region', async () => {
-      const fraOcir = new OCIRegistry('fra.ocir.io')
+      const fraOcir = new OracleContainerRegistry('fra.ocir.io')
       jest.spyOn(fraOcir as unknown as {getCredentials: () => undefined}, 'getCredentials').mockReturnValue(undefined)
       jest.mocked(fetch).mockResolvedValueOnce(mockResponse(TOKEN_RESPONSE))
 

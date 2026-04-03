@@ -8,7 +8,6 @@
   },
   "include": [
     "src",
-    "__fixtures__",
     "__mocks__",
     "__tests__",
     "eslint.config.mjs",
