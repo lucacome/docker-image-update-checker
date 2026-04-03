@@ -18,7 +18,7 @@ import {Util} from '@docker/actions-toolkit/lib/util.js'
  * Returns the appropriate {@link ContainerRegistry} instance for the given registry hostname.
  * Falls back to {@link GenericRegistry} (Bearer auto-discovery) for unknown registries.
  */
-function getRegistryInstance(registry: string): ContainerRegistry {
+export function getRegistryInstance(registry: string): ContainerRegistry {
   const r = registry.toLowerCase()
 
   // Pattern-based checks before the switch so they take priority over the generic fallback
@@ -30,6 +30,8 @@ function getRegistryInstance(registry: string): ContainerRegistry {
 
   switch (r) {
     case 'docker.io':
+    case 'index.docker.io':
+    case 'registry-1.docker.io':
       return new DockerHub()
     case 'ghcr.io':
       return new GitHubContainerRegistry()

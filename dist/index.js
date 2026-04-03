@@ -33994,7 +33994,7 @@ class ContainerRegistry {
         const url = `https://${this.baseUrl}${repo}/manifests/${digest}`;
         const headers = {
             Accept: 'application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         const fetchResult = await this.fetch(url, headers);
         const parsed = parseOrThrow(LayersManifestSchema, fetchResult.data, url);
@@ -34048,7 +34048,7 @@ class ContainerRegistry {
         const url = `https://${this.baseUrl}${image.repository}/manifests/${image.tag}`;
         const headers = {
             Accept: 'application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json',
-            Authorization: `Bearer ${token}`,
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         debug(`Fetching manifest for image: ${image.repository}:${image.tag}`);
         const fetchResult = await this.fetch(url, headers);
@@ -34092,7 +34092,7 @@ class ContainerRegistry {
             const blobUrl = `https://${this.baseUrl}${image.repository}/blobs/${singleManifest.config.digest}`;
             const blobHeaders = {
                 Accept: 'application/vnd.docker.container.image.v1+json,application/vnd.oci.image.config.v1+json',
-                Authorization: `Bearer ${token}`,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             };
             const blobFetchResult = await this.fetch(blobUrl, blobHeaders);
             const blobConfig = parseOrThrow(BlobConfigSchema, blobFetchResult.data, blobUrl);
@@ -84242,6 +84242,8 @@ function getRegistryInstance(registry) {
         return new OCIRegistry(r);
     switch (r) {
         case 'docker.io':
+        case 'index.docker.io':
+        case 'registry-1.docker.io':
             return new DockerHub();
         case 'ghcr.io':
             return new GitHubContainerRegistry();

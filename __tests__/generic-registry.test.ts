@@ -243,5 +243,26 @@ describe('GenericRegistry — discovery mode', () => {
       // The manifest fetch is the third call (index 2)
       expect(calls[2][0]).toBe(`https://${HOSTNAME}/v2/myorg/myrepo/manifests/latest`)
     })
+
+    it('should omit Authorization header on manifest and layer fetches when token is empty (open registry)', async () => {
+      // discovery probe → open registry (no Bearer challenge)
+      jest.mocked(fetch).mockResolvedValueOnce(mockOpenRegistry())
+      // manifest list fetch (no token → no Authorization header)
+      jest
+        .mocked(fetch)
+        .mockResolvedValueOnce(mockResponse(MANIFEST_LIST, {'content-type': 'application/vnd.docker.distribution.manifest.list.v2+json'}))
+      // layers fetch
+      jest.mocked(fetch).mockResolvedValueOnce(mockResponse(AMD64_LAYERS_MANIFEST))
+
+      await registry.getImageInfo({repository: 'myorg/myrepo', tag: 'latest'})
+
+      const calls = jest.mocked(fetch).mock.calls
+      // call index 1 is the manifest fetch; its headers must NOT contain Authorization
+      const manifestHeaders = calls[1][1]?.headers as Record<string, string> | undefined
+      expect(manifestHeaders).not.toHaveProperty('Authorization')
+      // call index 2 is the layers fetch; same expectation
+      const layersHeaders = calls[2][1]?.headers as Record<string, string> | undefined
+      expect(layersHeaders).not.toHaveProperty('Authorization')
+    })
   })
 })
