@@ -90,6 +90,16 @@ function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown, url: string): T {
   return result.data
 }
 
+// ─── Custom errors ─────────────────────────────────────────────────────────────
+
+/** Thrown when a registry responds with HTTP 404 (image or tag not found). */
+export class NotFoundError extends Error {
+  constructor(url: string) {
+    super(`Image not found: ${url} (status: 404)`)
+    this.name = 'NotFoundError'
+  }
+}
+
 // ─── Abstract base class ────────────────────────────────────────────────────────
 
 /** Abstract base class for container registry clients. */
@@ -119,14 +129,22 @@ export abstract class ContainerRegistry {
 
   /**
    * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+   * @param throwNotFound When true, an HTTP 404 response throws {@link NotFoundError} instead of a
+   *   plain Error. Only the initial tag-manifest fetch should pass `true`; blob and per-digest
+   *   fetches should leave this as the default `false` so a 404 there fails the action rather than
+   *   being misclassified as "image does not exist".
+   * @throws {NotFoundError} on HTTP 404 when `throwNotFound` is true
    * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
    */
-  protected async fetch(url: string, headers?: Record<string, string>): Promise<FetchResult> {
+  protected async fetch(url: string, headers?: Record<string, string>, throwNotFound = false): Promise<FetchResult> {
     let response: Response
     try {
       response = await globalThis.fetch(url, {headers})
     } catch (e) {
       throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, {cause: e})
+    }
+    if (response.status === 404 && throwNotFound) {
+      throw new NotFoundError(url)
     }
     if (!response.ok) {
       throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`)
@@ -172,7 +190,7 @@ export abstract class ContainerRegistry {
     }
 
     core.debug(`Fetching manifest for image: ${image.repository}:${image.tag}`)
-    const fetchResult = await this.fetch(url, headers)
+    const fetchResult = await this.fetch(url, headers, true)
     const contentType = fetchResult.headers['content-type']
     const dockerContentDigest = fetchResult.headers['docker-content-digest']
 

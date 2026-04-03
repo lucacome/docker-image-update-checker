@@ -33980,6 +33980,14 @@ function parseOrThrow(schema, data, url) {
     }
     return result.data;
 }
+// ─── Custom errors ─────────────────────────────────────────────────────────────
+/** Thrown when a registry responds with HTTP 404 (image or tag not found). */
+class NotFoundError extends Error {
+    constructor(url) {
+        super(`Image not found: ${url} (status: 404)`);
+        this.name = 'NotFoundError';
+    }
+}
 // ─── Abstract base class ────────────────────────────────────────────────────────
 /** Abstract base class for container registry clients. */
 class ContainerRegistry {
@@ -34002,15 +34010,23 @@ class ContainerRegistry {
     }
     /**
      * Performs a fetch against the registry API and returns parsed JSON along with response headers.
+     * @param throwNotFound When true, an HTTP 404 response throws {@link NotFoundError} instead of a
+     *   plain Error. Only the initial tag-manifest fetch should pass `true`; blob and per-digest
+     *   fetches should leave this as the default `false` so a 404 there fails the action rather than
+     *   being misclassified as "image does not exist".
+     * @throws {NotFoundError} on HTTP 404 when `throwNotFound` is true
      * @throws {Error} on network failure, non-2xx status, or unparsable JSON response
      */
-    async fetch(url, headers) {
+    async fetch(url, headers, throwNotFound = false) {
         let response;
         try {
             response = await globalThis.fetch(url, { headers });
         }
         catch (e) {
             throw new Error(`Failed to fetch ${url}: ${e instanceof Error ? e.message : String(e)}`, { cause: e });
+        }
+        if (response.status === 404 && throwNotFound) {
+            throw new NotFoundError(url);
         }
         if (!response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
@@ -34051,7 +34067,7 @@ class ContainerRegistry {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         };
         debug(`Fetching manifest for image: ${image.repository}:${image.tag}`);
-        const fetchResult = await this.fetch(url, headers);
+        const fetchResult = await this.fetch(url, headers, true);
         const contentType = fetchResult.headers['content-type'];
         const dockerContentDigest = fetchResult.headers['docker-content-digest'];
         debug(`Content type: ${contentType}`);
@@ -84347,10 +84363,24 @@ async function run() {
             repository: base.image,
             tag: base.tag,
         });
-        const image2 = await registryImage.getImageInfo({
-            repository: image.image,
-            tag: image.tag,
-        });
+        let image2;
+        try {
+            image2 = await registryImage.getImageInfo({
+                repository: image.image,
+                tag: image.tag,
+            });
+        }
+        catch (e) {
+            if (e instanceof NotFoundError) {
+                info(`Image ${imageInput} does not exist and needs to be built`);
+                setOutput('needs-updating', true);
+                setOutput('needs-building', true);
+                setOutput('diff-images', '');
+                setOutput('diff-json', '[]');
+                return;
+            }
+            throw e;
+        }
         const diffs = getDiffs(platformsInput, image1, image2);
         startGroup(`Found ${diffs.length} differences`);
         debug(`Differences: ${JSON.stringify(diffs, null, 2)}`);
@@ -84364,6 +84394,7 @@ async function run() {
         endGroup();
         setOutput('diff-json', JSON.stringify(diffs));
         setOutput('needs-updating', diffs.length > 0);
+        setOutput('needs-building', false);
     }
     catch (error) {
         setFailed(`Action failed with error: ${error instanceof Error ? error.message || String(error) : String(error)}`);

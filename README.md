@@ -44,6 +44,7 @@ By default this action checks differences across all platforms (e.g. `linux/amd6
 | Name             | Type   | Description                                                                                                               |
 | ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
 | `needs-updating` | String | `true` if any platform needs updating, `false` otherwise                                                                  |
+| `needs-building` | String | `true` if the image does not exist and must be built for the first time, `false` otherwise                                |
 | `diff-images`    | String | Comma-separated list of platforms that need updating, e.g. `linux/amd64,linux/arm64`                                      |
 | `diff-json`      | String | JSON array of objects — one per platform — each with `os`, `architecture`, `variant`, `digest`, and `layers` fields       |
 
@@ -62,6 +63,7 @@ To authenticate with a Docker registry, add a [`docker/login-action`](https://gi
 - [Minimal](#minimal)
 - [Single platform](#single-platform)
 - [Multiple platforms](#multiple-platforms)
+- [Build image for the first time](#build-image-for-the-first-time)
 
 ### Minimal
 
@@ -184,6 +186,46 @@ jobs:
 > [!NOTE]
 >
 > The `platforms` input is optional and defaults to `all`.
+
+### Build image for the first time
+
+`needs-updating` is `true` whenever a build is needed — including when an `image` does not exist.
+
+`needs-building` is `true` **only** when the `image` does not exist yet, so use it for steps that should run exclusively then.
+
+```yaml
+name: Check and build docker image
+
+on:
+  schedule:
+    - cron:  '0 4 * * *'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check if update available
+        id: check
+        uses: lucacome/docker-image-update-checker@v3.0.1
+        with:
+          base-image: debian:13.1
+          image: user/app:latest
+
+      - name: Do something on first build
+        run: echo "Image did not exist — built for the first time"
+        if: steps.check.outputs.needs-building == 'true'
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: user/app:latest
+        if: steps.check.outputs.needs-updating == 'true'
+```
 
 ## Debugging
 

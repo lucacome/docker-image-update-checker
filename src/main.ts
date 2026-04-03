@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {ContainerRegistry} from './registry.js'
+import {ContainerRegistry, NotFoundError} from './registry.js'
 import {DockerHub} from './docker-hub.js'
 import {GitHubContainerRegistry} from './github.js'
 import {GoogleContainerRegistry} from './gcr.js'
@@ -74,10 +74,24 @@ export async function run(): Promise<void> {
       repository: base.image,
       tag: base.tag,
     })
-    const image2 = await registryImage.getImageInfo({
-      repository: image.image,
-      tag: image.tag,
-    })
+
+    let image2: Awaited<ReturnType<typeof registryImage.getImageInfo>>
+    try {
+      image2 = await registryImage.getImageInfo({
+        repository: image.image,
+        tag: image.tag,
+      })
+    } catch (e) {
+      if (e instanceof NotFoundError) {
+        core.info(`Image ${imageInput} does not exist and needs to be built`)
+        core.setOutput('needs-updating', true)
+        core.setOutput('needs-building', true)
+        core.setOutput('diff-images', '')
+        core.setOutput('diff-json', '[]')
+        return
+      }
+      throw e
+    }
 
     const diffs = getDiffs(platformsInput, image1, image2)
     core.startGroup(`Found ${diffs.length} differences`)
@@ -94,6 +108,7 @@ export async function run(): Promise<void> {
 
     core.setOutput('diff-json', JSON.stringify(diffs))
     core.setOutput('needs-updating', diffs.length > 0)
+    core.setOutput('needs-building', false)
   } catch (error) {
     core.setFailed(`Action failed with error: ${error instanceof Error ? error.message || String(error) : String(error)}`)
   }
