@@ -82,7 +82,7 @@ jobs:
     steps:
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v3.0.1
+        uses: lucacome/docker-image-update-checker@v3.1.0
         with:
           base-image: debian:13.1
           image: user/app:latest
@@ -112,7 +112,7 @@ jobs:
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v3.0.1
+        uses: lucacome/docker-image-update-checker@v3.1.0
         with:
           base-image: debian:13.1
           image: user/app:latest
@@ -152,7 +152,7 @@ jobs:
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v3.0.1
+        uses: lucacome/docker-image-update-checker@v3.1.0
         with:
           base-image: debian:13.1
           image: user/app:latest
@@ -209,7 +209,7 @@ jobs:
 
       - name: Check if update available
         id: check
-        uses: lucacome/docker-image-update-checker@v3.0.1
+        uses: lucacome/docker-image-update-checker@v3.1.0
         with:
           base-image: debian:13.1
           image: user/app:latest
