@@ -52,7 +52,7 @@
   "license": "MIT",
   "main": "src/main.ts",
   "name": "lucacome-docker-image-update-checker",
-  "packageManager": "yarn@4.13.0",
+  "packageManager": "yarn@4.14.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lucacome/docker-image-update-checker.git"
