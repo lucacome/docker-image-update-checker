@@ -38,5 +38,5 @@ run = "git diff --exit-code"
 idiomatic_version_file_enable_tools = ["node", "yarn"]
 experimental = true
 
-[prepare.yarn]
+[deps.yarn]
 auto = true

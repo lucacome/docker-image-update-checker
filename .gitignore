@@ -105,5 +105,5 @@ lib/**/*
 .yarn/install-state.gz
 .pnp.*
 
-# mise prepare state file
-.mise/prepare-state.toml
+# mise deps state file
+.mise/deps-state.toml
