@@ -5619,7 +5619,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^4.1.1":
+"js-yaml@npm:^4.1.1, js-yaml@npm:^4.2.0":
   version: 4.2.0
   resolution: "js-yaml@npm:4.2.0"
   dependencies:
@@ -5825,7 +5825,7 @@ __metadata:
     eslint-plugin-jest: "npm:^29.15.2"
     eslint-plugin-prettier: "npm:^5.5.6"
     jest: "npm:^30.4.2"
-    js-yaml: "npm:^4.1.1"
+    js-yaml: "npm:^4.2.0"
     prettier: "npm:^3.8.4"
     rollup: "npm:^4.62.0"
     ts-jest: "npm:^29.4.11"
