@@ -37182,6 +37182,10 @@ function requireRange () {
 
 	const replaceTilde = (comp, options) => {
 	  const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+	  // if we're including prereleases in the match, then the lower bound is
+	  // -0, the lowest possible prerelease value, just like x-ranges and carets.
+	  // this keeps `~1.2` equivalent to the `1.2.x` x-range it's documented as.
+	  const z = options.includePrerelease ? '-0' : '';
 	  return comp.replace(r, (_, M, m, p, pr) => {
 	    debug('tilde', comp, _, M, m, p, pr);
 	    let ret;
@@ -37189,10 +37193,10 @@ function requireRange () {
 	    if (isX(M)) {
 	      ret = '';
 	    } else if (isX(m)) {
-	      ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
+	      ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
 	    } else if (isX(p)) {
 	      // ~1.2 == >=1.2.0 <1.3.0-0
-	      ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
+	      ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
 	    } else if (pr) {
 	      debug('replaceTilde pr', pr);
 	      ret = `>=${M}.${m}.${p}-${pr
@@ -40741,6 +40745,10 @@ const GnuTarPathOnWindows = `${process.env['PROGRAMFILES']}\\Git\\usr\\bin\\tar.
 const SystemTarPathOnWindows = `${process.env['SYSTEMDRIVE']}\\Windows\\System32\\tar.exe`;
 const TarFilename = 'cache.tar';
 const ManifestFilename = 'manifest.txt';
+// Prefix the cache backend embeds in a read-denial message (v2 twirp
+// GetCacheEntryDownloadURL error or the GHES v1 `_apis/artifactcache` 403 body).
+// Shared so cache.ts and cacheHttpClient.ts match the same contract value.
+const CacheReadDeniedMessagePrefix = 'cache read denied:';
 
 var __awaiter$7 = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -83178,6 +83186,24 @@ function getCacheServiceVersion() {
         return 'v1';
     return process.env['ACTIONS_CACHE_SERVICE_V2'] ? 'v2' : 'v1';
 }
+// The cache-mode lattice: readable = {read, write}, writable = {write,
+// write-only}, none = neither.
+const KNOWN_CACHE_MODES = ['none', 'read', 'write', 'write-only'];
+// The effective cache-mode exported by the runner, or '' when not set.
+function getCacheMode() {
+    return (process.env['ACTIONS_CACHE_MODE'] || '').trim().toLowerCase();
+}
+// Unset or unrecognized modes are permissive so behavior matches today.
+function isCacheReadable(mode) {
+    if (!KNOWN_CACHE_MODES.includes(mode))
+        return true;
+    return mode === 'read' || mode === 'write';
+}
+function isCacheWritable(mode) {
+    if (!KNOWN_CACHE_MODES.includes(mode))
+        return true;
+    return mode === 'write' || mode === 'write-only';
+}
 function getCacheServiceURL() {
     const version = getCacheServiceVersion();
     // Based on the version of the cache service, we will determine which
@@ -83194,7 +83220,7 @@ function getCacheServiceURL() {
     }
 }
 
-var version = "6.0.1";
+var version = "6.2.0";
 var require$$0 = {
 	version: version};
 
@@ -83259,6 +83285,7 @@ function createHttpClient() {
 }
 function getCacheEntry(keys, paths, options) {
     return __awaiter$3(this, void 0, void 0, function* () {
+        var _a;
         const httpClient = createHttpClient();
         const version = getCacheVersion(paths, options === null || options === void 0 ? void 0 : options.compressionMethod, options === null || options === void 0 ? void 0 : options.enableCrossOsArchive);
         const resource = `cache?keys=${encodeURIComponent(keys.join(','))}&version=${version}`;
@@ -83272,6 +83299,12 @@ function getCacheEntry(keys, paths, options) {
             return null;
         }
         if (!isSuccessStatusCode(response.statusCode)) {
+            // Only surface the receiver's body for a `cache read denied:` policy denial
+            // so callers can dispatch on it; keep the generic message otherwise.
+            const errorMessage = (_a = response.error) === null || _a === void 0 ? void 0 : _a.message;
+            if (errorMessage === null || errorMessage === void 0 ? void 0 : errorMessage.includes(CacheReadDeniedMessagePrefix)) {
+                throw new Error(errorMessage);
+            }
             throw new Error(`Cache service responded with ${response.statusCode}`);
         }
         const cacheResult = response.result;
@@ -87444,6 +87477,49 @@ class ReserveCacheError extends Error {
         Object.setPrototypeOf(this, ReserveCacheError.prototype);
     }
 }
+/**
+ * Stable prefix the cache service writes into the cache reservation response
+ * when the issuer downgraded the cache token to read-only (for example, because
+ * the run was triggered by an untrusted event). saveCacheV1 / saveCacheV2
+ * dispatch on this prefix to re-classify the failure as a CacheWriteDeniedError
+ * so consumers and tests can distinguish a policy denial from other reservation
+ * failures. Internally it is logged as a non-fatal warning like other
+ * best-effort save failures.
+ */
+const CACHE_WRITE_DENIED_PREFIX = 'cache write denied:';
+/**
+ * Raised when the cache backend refuses to reserve a writable cache entry
+ * because the JWT issued for this run was scoped read-only (for example, the
+ * run was triggered by an event the repository administrator classified as
+ * untrusted). The service-supplied detail message always begins with
+ * `cache write denied:` (the full error message includes additional context
+ * like the cache key).
+ *
+ * Extends ReserveCacheError for source-compatibility: existing
+ * `instanceof ReserveCacheError` checks and `typedError.name ===
+ * ReserveCacheError.name` paths keep working, while consumers that want to
+ * distinguish the policy case can match on this subclass.
+ */
+class CacheWriteDeniedError extends ReserveCacheError {
+    constructor(message) {
+        super(message);
+        this.name = 'CacheWriteDeniedError';
+        Object.setPrototypeOf(this, CacheWriteDeniedError.prototype);
+    }
+}
+// Re-exported from constants so consumers keep referencing it here; the shared
+// value also drives detection in cacheHttpClient without duplicating the string.
+const CACHE_READ_DENIED_PREFIX = CacheReadDeniedMessagePrefix;
+// Raised when the cache backend denies a download URL because the run's token
+// has no readable cache scopes. Caching is best-effort, so restoreCache logs a
+// warning and reports a cache miss rather than rethrowing this.
+class CacheReadDeniedError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'CacheReadDeniedError';
+        Object.setPrototypeOf(this, CacheReadDeniedError.prototype);
+    }
+}
 class FinalizeCacheError extends Error {
     constructor(message) {
         super(message);
@@ -87498,6 +87574,12 @@ function restoreCache(paths_1, primaryKey_1, restoreKeys_1, options_1) {
         const cacheServiceVersion = getCacheServiceVersion();
         debug(`Cache service version: ${cacheServiceVersion}`);
         checkPaths(paths);
+        const cacheMode = getCacheMode();
+        if (!isCacheReadable(cacheMode)) {
+            info(`Cache restore skipped: the effective cache-mode '${cacheMode}' does not permit reads.`);
+            debug(`Skipped restore for paths [${paths.join(', ')}] with primary key '${primaryKey}'.`);
+            return undefined;
+        }
         switch (cacheServiceVersion) {
             case 'v2':
                 return yield restoreCacheV2(paths, primaryKey, restoreKeys, options, enableCrossOsArchive);
@@ -87519,6 +87601,7 @@ function restoreCache(paths_1, primaryKey_1, restoreKeys_1, options_1) {
  */
 function restoreCacheV1(paths_1, primaryKey_1, restoreKeys_1, options_1) {
     return __awaiter(this, arguments, void 0, function* (paths, primaryKey, restoreKeys, options, enableCrossOsArchive = false) {
+        var _a;
         restoreKeys = restoreKeys || [];
         const keys = [primaryKey, ...restoreKeys];
         debug('Resolved Keys:');
@@ -87533,10 +87616,26 @@ function restoreCacheV1(paths_1, primaryKey_1, restoreKeys_1, options_1) {
         let archivePath = '';
         try {
             // path are needed to compute version
-            const cacheEntry = yield getCacheEntry(keys, paths, {
-                compressionMethod,
-                enableCrossOsArchive
-            });
+            let cacheEntry;
+            try {
+                cacheEntry = yield getCacheEntry(keys, paths, {
+                    compressionMethod,
+                    enableCrossOsArchive
+                });
+            }
+            catch (error) {
+                // The v1 artifact cache service returns HTTP 403 with a
+                // `cache read denied:` body when the run's token has no readable cache
+                // scopes. getCacheEntry lives in a dependency-free internal module and
+                // cannot import CacheReadDeniedError without a circular dependency, so it
+                // only surfaces the raw denial message; we classify it into the typed
+                // error here so the outer catch and consumers can dispatch on it.
+                const errorMessage = (_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : '';
+                if (errorMessage.includes(CACHE_READ_DENIED_PREFIX)) {
+                    throw new CacheReadDeniedError(errorMessage);
+                }
+                throw error;
+            }
             if (!(cacheEntry === null || cacheEntry === void 0 ? void 0 : cacheEntry.archiveLocation)) {
                 // Cache not found
                 return undefined;
@@ -87565,7 +87664,9 @@ function restoreCacheV1(paths_1, primaryKey_1, restoreKeys_1, options_1) {
             }
             else {
                 // warn on cache restore failure and continue build
-                // Log server errors (5xx) as errors, all other errors as warnings
+                // Log server errors (5xx) as errors, all other errors as warnings.
+                // A read denied by policy (CacheReadDeniedError) is not an HttpClientError
+                // so it falls here and is warned, treated as a cache miss.
                 if (typedError instanceof HttpClientError &&
                     typeof typedError.statusCode === 'number' &&
                     typedError.statusCode >= 500) {
@@ -87600,6 +87701,7 @@ function restoreCacheV1(paths_1, primaryKey_1, restoreKeys_1, options_1) {
  */
 function restoreCacheV2(paths_1, primaryKey_1, restoreKeys_1, options_1) {
     return __awaiter(this, arguments, void 0, function* (paths, primaryKey, restoreKeys, options, enableCrossOsArchive = false) {
+        var _a;
         // Override UploadOptions to force the use of Azure
         options = Object.assign(Object.assign({}, options), { useAzureSdk: true });
         restoreKeys = restoreKeys || [];
@@ -87621,7 +87723,20 @@ function restoreCacheV2(paths_1, primaryKey_1, restoreKeys_1, options_1) {
                 restoreKeys,
                 version: getCacheVersion(paths, compressionMethod, enableCrossOsArchive)
             };
-            const response = yield twirpClient.GetCacheEntryDownloadURL(request);
+            let response;
+            try {
+                response = yield twirpClient.GetCacheEntryDownloadURL(request);
+            }
+            catch (error) {
+                // The receiver returns twirp PermissionDenied (403) when the run's token
+                // has no readable cache scopes. The client wraps that 403, so the stable
+                // prefix is embedded in the message rather than leading it.
+                const errorMessage = (_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : '';
+                if (errorMessage.includes(CACHE_READ_DENIED_PREFIX)) {
+                    throw new CacheReadDeniedError(errorMessage);
+                }
+                throw error;
+            }
             if (!response.ok) {
                 debug(`Cache not found for version ${request.version} of keys: ${keys.join(', ')}`);
                 return undefined;
@@ -87656,8 +87771,10 @@ function restoreCacheV2(paths_1, primaryKey_1, restoreKeys_1, options_1) {
                 throw error$1;
             }
             else {
-                // Supress all non-validation cache related errors because caching should be optional
-                // Log server errors (5xx) as errors, all other errors as warnings
+                // Suppress all non-validation cache related errors because caching should be optional
+                // Log server errors (5xx) as errors, all other errors as warnings.
+                // A read denied by policy (CacheReadDeniedError) is not an HttpClientError
+                // so it falls here and is warned, treated as a cache miss.
                 if (typedError instanceof HttpClientError &&
                     typeof typedError.statusCode === 'number' &&
                     typedError.statusCode >= 500) {
@@ -87696,6 +87813,12 @@ function saveCache(paths_1, key_1, options_1) {
         debug(`Cache service version: ${cacheServiceVersion}`);
         checkPaths(paths);
         checkKey(key);
+        const cacheMode = getCacheMode();
+        if (!isCacheWritable(cacheMode)) {
+            info(`Cache save skipped: the effective cache-mode '${cacheMode}' does not permit writes.`);
+            debug(`Skipped save for paths [${paths.join(', ')}] with key '${key}'.`);
+            return -1;
+        }
         switch (cacheServiceVersion) {
             case 'v2':
                 return yield saveCacheV2(paths, key, options, enableCrossOsArchive);
@@ -87716,7 +87839,7 @@ function saveCache(paths_1, key_1, options_1) {
  */
 function saveCacheV1(paths_1, key_1, options_1) {
     return __awaiter(this, arguments, void 0, function* (paths, key, options, enableCrossOsArchive = false) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         const compressionMethod = yield getCompressionMethod();
         let cacheId = -1;
         const cachePaths = yield resolvePaths(paths);
@@ -87753,7 +87876,17 @@ function saveCacheV1(paths_1, key_1, options_1) {
                 throw new Error((_d = (_c = reserveCacheResponse === null || reserveCacheResponse === void 0 ? void 0 : reserveCacheResponse.error) === null || _c === void 0 ? void 0 : _c.message) !== null && _d !== void 0 ? _d : `Cache size of ~${Math.round(archiveFileSize / (1024 * 1024))} MB (${archiveFileSize} B) is over the data cap limit, not saving cache.`);
             }
             else {
-                throw new ReserveCacheError(`Unable to reserve cache with key ${key}, another job may be creating this cache. More details: ${(_e = reserveCacheResponse === null || reserveCacheResponse === void 0 ? void 0 : reserveCacheResponse.error) === null || _e === void 0 ? void 0 : _e.message}`);
+                // Inspect the receiver's error message before deciding which error to
+                // throw. A message starting with the stable `cache write denied:`
+                // prefix indicates the issuer downgraded the token to read-only
+                // (policy denial), not a contention case, so we surface it as a
+                // CacheWriteDeniedError which the outer catch arm logs at warning
+                // level.
+                const detailMessage = (_e = reserveCacheResponse === null || reserveCacheResponse === void 0 ? void 0 : reserveCacheResponse.error) === null || _e === void 0 ? void 0 : _e.message;
+                if (detailMessage === null || detailMessage === void 0 ? void 0 : detailMessage.startsWith(CACHE_WRITE_DENIED_PREFIX)) {
+                    throw new CacheWriteDeniedError(`Unable to reserve cache with key ${key}. More details: ${detailMessage}`);
+                }
+                throw new ReserveCacheError(`Unable to reserve cache with key ${key}, another job may be creating this cache. More details: ${(_f = reserveCacheResponse === null || reserveCacheResponse === void 0 ? void 0 : reserveCacheResponse.error) === null || _f === void 0 ? void 0 : _f.message}`);
             }
             debug(`Saving Cache (ID: ${cacheId})`);
             yield saveCache$1(cacheId, archivePath, '', options);
@@ -87767,7 +87900,10 @@ function saveCacheV1(paths_1, key_1, options_1) {
                 info(`Failed to save: ${typedError.message}`);
             }
             else {
-                // Log server errors (5xx) as errors, all other errors as warnings
+                // Log server errors (5xx) as errors, all other errors as warnings.
+                // A write denied by policy (CacheWriteDeniedError) is not an
+                // HttpClientError and its name does not match the ReserveCacheError arm,
+                // so it falls here and is warned without failing the run.
                 if (typedError instanceof HttpClientError &&
                     typeof typedError.statusCode === 'number' &&
                     typedError.statusCode >= 500) {
@@ -87801,6 +87937,7 @@ function saveCacheV1(paths_1, key_1, options_1) {
  */
 function saveCacheV2(paths_1, key_1, options_1) {
     return __awaiter(this, arguments, void 0, function* (paths, key, options, enableCrossOsArchive = false) {
+        var _a;
         // Override UploadOptions to force the use of Azure
         // ...options goes first because we want to override the default values
         // set in UploadOptions with these specific figures
@@ -87836,7 +87973,11 @@ function saveCacheV2(paths_1, key_1, options_1) {
             try {
                 const response = yield twirpClient.CreateCacheEntry(request);
                 if (!response.ok) {
-                    if (response.message) {
+                    // Skip the redundant inner warning when the receiver signalled a
+                    // policy denial: the outer catch arm below will log a single
+                    // customer-facing warning.
+                    if (response.message &&
+                        !response.message.startsWith(CACHE_WRITE_DENIED_PREFIX)) {
                         warning(`Cache reservation failed: ${response.message}`);
                     }
                     throw new Error(response.message || 'Response was not ok');
@@ -87845,6 +87986,10 @@ function saveCacheV2(paths_1, key_1, options_1) {
             }
             catch (error) {
                 debug(`Failed to reserve cache: ${error}`);
+                const errorMessage = (_a = error === null || error === void 0 ? void 0 : error.message) !== null && _a !== void 0 ? _a : '';
+                if (errorMessage.startsWith(CACHE_WRITE_DENIED_PREFIX)) {
+                    throw new CacheWriteDeniedError(`Unable to reserve cache with key ${key}. More details: ${errorMessage}`);
+                }
                 throw new ReserveCacheError(`Unable to reserve cache with key ${key}, another job may be creating this cache.`);
             }
             debug(`Attempting to upload cache located at: ${archivePath}`);
@@ -87876,7 +88021,10 @@ function saveCacheV2(paths_1, key_1, options_1) {
                 warning(typedError.message);
             }
             else {
-                // Log server errors (5xx) as errors, all other errors as warnings
+                // Log server errors (5xx) as errors, all other errors as warnings.
+                // A write denied by policy (CacheWriteDeniedError) is not an
+                // HttpClientError and its name does not match the ReserveCacheError arm,
+                // so it falls here and is warned without failing the run.
                 if (typedError instanceof HttpClientError &&
                     typeof typedError.statusCode === 'number' &&
                     typedError.statusCode >= 500) {
@@ -96660,22 +96808,67 @@ class ResizeableBuffer {
   }
 }
 
-// white space characters
-// https://en.wikipedia.org/wiki/Whitespace_character
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions/Character_Classes#Types
-// \f\n\r\t\v\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
-const np = 12;
-const cr$1 = 13; // `\r`, carriage return, 0x0D in hexadécimal, 13 in decimal
-const nl$1 = 10; // `\n`, newline, 0x0A in hexadecimal, 10 in decimal
-const space = 32;
-const tab = 9;
-
 const init_state = function (options) {
+  // ECMAScript WhiteSpace + LineTerminator codepoints, encoded under
+  // `options.encoding`. Aligns trimming with `String.prototype.trim()`.
+  // https://tc39.es/ecma262/#sec-white-space
+  // https://tc39.es/ecma262/#sec-line-terminators
+  //
+  // Codepoints unrepresentable in the target encoding are dropped: Node's
+  // Buffer substitutes them with `?` (0x3F), and including those would cause
+  // literal `?` bytes in the input to be trimmed under `latin1`/`ascii`.
+  const timchars = [
+    // Basic Latin
+    0x0020, // [Space](https://www.fileformat.info/info/unicode/char/0020/index.htm)
+    0x0009, // [CHARACTER TABULATION (HT)](https://www.fileformat.info/info/unicode/char/0009/index.htm)
+    0x000a, // [LINE FEED (LF)](https://www.fileformat.info/info/unicode/char/000a/index.htm)
+    0x000d, // [CARRIAGE RETURN (CR)](https://www.fileformat.info/info/unicode/char/000d/index.htm)
+    0x000c, // [FORM FEED (FF)](https://www.fileformat.info/info/unicode/char/000c/index.htm)
+    0x000b, // [LINE TABULATION (VT)](https://www.fileformat.info/info/unicode/char/000b/index.htm)
+    // Latin-1 Supplement
+    0x00a0, // [NO-BREAK SPACE (NBSP)](https://www.fileformat.info/info/unicode/char/00a0/index.htm)
+    // Ogham
+    0x1680, // [OGHAM SPACE MARK](https://www.fileformat.info/info/unicode/char/1680/index.htm)
+    // General Punctuation
+    0x2000, // [EN QUAD](https://www.fileformat.info/info/unicode/char/2000/index.htm)
+    0x2001, // [EM QUAD](https://www.fileformat.info/info/unicode/char/2001/index.htm)
+    0x2002, // [EN SPACE](https://www.fileformat.info/info/unicode/char/2002/index.htm)
+    0x2003, // [EM SPACE](https://www.fileformat.info/info/unicode/char/2003/index.htm)
+    0x2004, // [THREE-PER-EM SPACE](https://www.fileformat.info/info/unicode/char/2004/index.htm)
+    0x2005, // [FOUR-PER-EM SPACE](https://www.fileformat.info/info/unicode/char/2005/index.htm)
+    0x2006, // [SIX-PER-EM SPACE](https://www.fileformat.info/info/unicode/char/2006/index.htm)
+    0x2007, // [FIGURE SPACE](https://www.fileformat.info/info/unicode/char/2007/index.htm)
+    0x2008, // [PUNCTUATION SPACE](https://www.fileformat.info/info/unicode/char/2008/index.htm)
+    0x2009, // [THIN SPACE](https://www.fileformat.info/info/unicode/char/2009/index.htm)
+    0x200a, // [HAIR SPACE](https://www.fileformat.info/info/unicode/char/200a/index.htm)
+    0x2028, // [LINE SEPARATOR](https://www.fileformat.info/info/unicode/char/2028/index.htm)
+    0x2029, // [PARAGRAPH SEPARATOR](https://www.fileformat.info/info/unicode/char/2029/index.htm)
+    0x202f, // [NARROW NO-BREAK SPACE (NNBSP)](https://www.fileformat.info/info/unicode/char/202f/index.htm)
+    0x205f, // [MEDIUM MATHEMATICAL SPACE (MMSP)](https://www.fileformat.info/info/unicode/char/205f/index.htm)
+    0x3000, // [IDEOGRAPHIC SPACE](https://www.fileformat.info/info/unicode/char/3000/index.htm)
+    0xfeff, // [ZERO WIDTH NO-BREAK SPACE (BOM)](https://www.fileformat.info/info/unicode/char/feff/index.htm)
+  ].reduce((acc, codepoint) => {
+    const encoded = Buffer.from(
+      String.fromCharCode(codepoint),
+      options.encoding,
+    );
+    if (codepoint !== 0x3f && encoded.length === 1 && encoded[0] === 0x3f) {
+      return acc;
+    }
+    acc.push(encoded);
+    return acc;
+  }, []);
+  // First-byte lookup table for `__isCharTrimable`. Non-whitespace bytes
+  // (the common case) bail out in O(1) without scanning every timchar.
+  const timcharFirstBytes = new Uint8Array(256);
+  for (const t of timchars) timcharFirstBytes[t[0]] = 1;
   return {
     bomSkipped: false,
     bufBytesStart: 0,
     castField: options.cast_function,
     commenting: false,
+    delimiterBufPrevious: undefined,
+    delimiterDiscovered: false,
     // Current error encountered by a record
     error: undefined,
     enabled: options.from_line === 1,
@@ -96694,9 +96887,15 @@ const init_state = function (options) {
       // Skip if the remaining buffer smaller than comment
       options.comment !== null ? options.comment.length : 0,
       // Skip if the remaining buffer can be delimiter
-      ...options.delimiter.map((delimiter) => delimiter.length),
+      ...(options.delimiter
+        ? options.delimiter.map((delimiter) => delimiter.length)
+        : []),
+      // Auto discovery of delimiter is limited to 1 character
+      options.delimiter_auto ? 1 : 0,
       // Skip if the remaining buffer can be escape sequence
       options.quote !== null ? options.quote.length : 0,
+      // Skip if the remaining buffer can be a multi-byte trim character
+      ...timchars.map((t) => t.length),
     ),
     previousBuf: undefined,
     quoting: false,
@@ -96715,13 +96914,8 @@ const init_state = function (options) {
     ],
     wasQuoting: false,
     wasRowDelimiter: false,
-    timchars: [
-      Buffer.from(Buffer.from([cr$1], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([nl$1], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([np], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([space], "utf8").toString(), options.encoding),
-      Buffer.from(Buffer.from([tab], "utf8").toString(), options.encoding),
-    ],
+    timchars: timchars,
+    timcharFirstBytes: timcharFirstBytes,
   };
 };
 
@@ -96919,25 +97113,95 @@ const normalize_options = function (opts) {
       options,
     );
   }
-  // Normalize option `delimiter`
-  const delimiter_json = JSON.stringify(options.delimiter);
-  if (!Array.isArray(options.delimiter))
-    options.delimiter = [options.delimiter];
-  if (options.delimiter.length === 0) {
+  // Normalize option `delimiter_auto`
+  if (
+    options.delimiter_auto === undefined ||
+    options.delimiter_auto === null ||
+    options.delimiter_auto === false
+  ) {
+    options.delimiter_auto = false;
+  } else if (options.delimiter_auto === true) {
+    options.delimiter_auto = {};
+  } else if (!is_object(options.delimiter_auto)) {
     throw new CsvError(
-      "CSV_INVALID_OPTION_DELIMITER",
+      "CSV_INVALID_OPTION_DELIMITER_AUTO",
       [
-        "Invalid option delimiter:",
-        "delimiter must be a non empty string or buffer or array of string|buffer,",
-        `got ${delimiter_json}`,
+        "Invalid option delimiter_auto:",
+        "delimiter_auto must be a boolean or a configuration object,",
+        `got ${JSON.stringify(options.delimiter_auto)}`,
       ],
       options,
     );
   }
-  options.delimiter = options.delimiter.map(function (delimiter) {
-    if (delimiter === undefined || delimiter === null || delimiter === false) {
-      return Buffer.from(",", options.encoding);
+  if (options.delimiter_auto) {
+    if (options.delimiter_auto.preferred === undefined)
+      options.delimiter_auto.preferred = {
+        [",".charCodeAt(0)]: 1.8,
+        ["\t".charCodeAt(0)]: 1.8,
+        [";".charCodeAt(0)]: 1.6,
+        [" ".charCodeAt(0)]: 1.6,
+        [":".charCodeAt(0)]: 1.5,
+        [".".charCodeAt(0)]: 1.4,
+        ["/".charCodeAt(0)]: 1.4,
+      };
+    else if (!is_object(options.delimiter_auto.preferred)) {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_DELIMITER_AUTO",
+        [
+          "Invalid option delimiter_auto:",
+          "preferred must be an object,",
+          `got ${JSON.stringify(options.delimiter_auto.preferred)}`,
+        ],
+        options,
+      );
     }
+    if (options.delimiter_auto.score === undefined)
+      options.delimiter_auto.score = (info, options) => {
+        return (
+          (info.total - info.std) * (options.preferred[info.char_code] || 1)
+        );
+      };
+    else if (typeof options.delimiter_auto.score !== "function") {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_DELIMITER_AUTO",
+        [
+          "Invalid option delimiter_auto:",
+          "score must be a function,",
+          `got ${JSON.stringify(options.delimiter_auto.score)}`,
+        ],
+        options,
+      );
+    }
+    if (options.delimiter_auto.size === undefined)
+      options.delimiter_auto.size = 2048;
+    else if (typeof options.delimiter_auto.size !== "number") {
+      throw new CsvError(
+        "CSV_INVALID_OPTION_DELIMITER_AUTO",
+        [
+          "Invalid option delimiter_auto:",
+          "size must be a number,",
+          `got ${JSON.stringify(options.delimiter_auto.size)}`,
+        ],
+        options,
+      );
+    }
+  }
+  // Normalize option `delimiter`
+  const delimiter_json = JSON.stringify(options.delimiter);
+  if (options.delimiter_auto !== false) {
+    options.delimiter = [];
+  }
+  if (!Array.isArray(options.delimiter)) {
+    if (
+      options.delimiter === undefined ||
+      options.delimiter === null ||
+      options.delimiter === false
+    ) {
+      options.delimiter = Buffer.from(",", options.encoding);
+    }
+    options.delimiter = [options.delimiter];
+  }
+  options.delimiter = options.delimiter.map(function (delimiter) {
     if (typeof delimiter === "string") {
       delimiter = Buffer.from(delimiter, options.encoding);
     }
@@ -97394,6 +97658,67 @@ const normalize_options = function (opts) {
   return options;
 };
 
+// Discussed in [issue #400](https://github.com/adaltas/node-csv/issues/400)
+// See https://github.com/python/cpython/blob/ea1b1c579f600cc85d145c60862b2e6b98701b24/Lib/csv.py#L349
+const delimiter_discover = function (records, options) {
+  // Normalize the configuration
+  if (!options) {
+    ({ delimiter_auto: options } = normalize_options({ delimiter_auto: true }));
+  }
+  // Convert String to Buffer
+  if (typeof records === "string") {
+    records = Buffer.from(records);
+  }
+  // Convert Buffer to an array of records
+  if (Buffer.isBuffer(records)) {
+    records = ((data) => {
+      const records = [];
+      const parser = transform({ delimiter: [] });
+      const push = (record) => records.push(record);
+      const close = () => {};
+      const error = parser.parse(data, true, push, close);
+      if (error !== undefined) throw error;
+      return records;
+    })(records);
+  }
+  // Info array initialization, 127 entries, one per char code
+  const info = Array(127)
+    .fill()
+    .map(() => ({ lines: [] }));
+  // Traverse each records, count occurences per char code
+  records.map(([record], line) => {
+    for (let i = 0, l = record.length; i < l; i++) {
+      // Count the character frequency
+      const code = record.charCodeAt(i);
+      if (info[code].lines[line] === undefined) info[code].lines[line] = 0;
+      info[code].lines[line]++;
+    }
+  });
+  // Traverse each char code, compute the score
+  info.map((info, i) => {
+    info.char_code = i;
+    info.std = std(info.lines);
+    info.total = info.lines.reduce((acc, val) => acc + val, 0);
+    info.preferred = !!options.preferred[i];
+    info.score = options.score(info, options);
+  });
+  // Extract the dominant character
+  const result = info.reduce(
+    (acc, info) => (acc.score > info.score ? acc : info),
+    {},
+  );
+  return String.fromCharCode(result.char_code);
+};
+
+const std = function (array) {
+  const n = array.length;
+  if (n === 0) return 0;
+  const mean = array.reduce((a, b) => a + b) / n;
+  return Math.sqrt(
+    array.map((x) => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n,
+  );
+};
+
 const isRecordEmpty = function (record) {
   return record.every(
     (field) =>
@@ -97461,6 +97786,7 @@ const transform = function (original_options = {}) {
       const {
         bom,
         comment_no_infix,
+        delimiter_auto,
         encoding,
         from_line,
         ltrim,
@@ -97473,7 +97799,45 @@ const transform = function (original_options = {}) {
         to_line,
       } = this.options;
       let { comment, escape, quote, record_delimiter } = this.options;
-      const { bomSkipped, previousBuf, rawBuffer, escapeIsQuote } = this.state;
+      const {
+        bomSkipped,
+        delimiterDiscovered,
+        delimiterBufPrevious,
+        rawBuffer,
+        escapeIsQuote,
+      } = this.state;
+      // Automatic delimiter discovery
+      if (!delimiterDiscovered && delimiter_auto) {
+        let delimiterBuf;
+        if (delimiterBufPrevious === undefined) {
+          delimiterBuf = nextBuf;
+        } else if (
+          delimiterBufPrevious !== undefined &&
+          nextBuf === undefined
+        ) {
+          delimiterBuf = delimiterBufPrevious;
+        } else {
+          delimiterBuf = Buffer.concat([delimiterBufPrevious, nextBuf]);
+        }
+        // Ensure that nextBuf is not concatenated a second time during buffer reconciliation
+        nextBuf = undefined;
+        // this.delimiterBufPrevious = delimiterBuf;
+        if (end || delimiterBuf.length > delimiter_auto.size) {
+          this.options.delimiter = [
+            Buffer.from(
+              delimiter_discover(delimiterBuf, this.options.delimiter_auto),
+            ),
+          ];
+          this.state.previousBuf = delimiterBuf;
+          this.state.delimiterBufPrevious = undefined;
+          this.state.delimiterDiscovered = true;
+        } else {
+          this.state.delimiterBufPrevious = delimiterBuf;
+          return;
+        }
+      }
+      // Previous buffers reconciliation
+      const { previousBuf } = this.state;
       let buf;
       if (previousBuf === undefined) {
         if (nextBuf === undefined) {
@@ -98128,30 +98492,6 @@ const transform = function (original_options = {}) {
       }
       return [undefined, field];
     },
-    // Helper to test if a character is a space or a line delimiter
-    __isCharTrimable: function (buf, pos) {
-      const isTrim = (buf, pos) => {
-        const { timchars } = this.state;
-        loop1: for (let i = 0; i < timchars.length; i++) {
-          const timchar = timchars[i];
-          for (let j = 0; j < timchar.length; j++) {
-            if (timchar[j] !== buf[pos + j]) continue loop1;
-          }
-          return timchar.length;
-        }
-        return 0;
-      };
-      return isTrim(buf, pos);
-    },
-    // Keep it in case we implement the `cast_int` option
-    // __isInt(value){
-    //   // return Number.isInteger(parseInt(value))
-    //   // return !isNaN( parseInt( obj ) );
-    //   return /^(\-|\+)?[1-9][0-9]*$/.test(value)
-    // }
-    __isFloat: function (value) {
-      return value - parseFloat(value) + 1 >= 0; // Borrowed from jquery
-    },
     __compareBytes: function (sourceBuf, targetBuf, targetPos, firstByte) {
       if (sourceBuf[0] !== firstByte) return 0;
       const sourceLength = sourceBuf.length;
@@ -98159,6 +98499,22 @@ const transform = function (original_options = {}) {
         if (sourceBuf[i] !== targetBuf[targetPos + i]) return 0;
       }
       return sourceLength;
+    },
+    // Helper to test if a character is trimable
+    __isCharTrimable: function (buf, pos) {
+      const { timchars, timcharFirstBytes } = this.state;
+      // Fast bail-out: non-whitespace bytes (the common case) are rejected
+      // without scanning the full timchar list.
+      const first = buf[pos];
+      if (first === undefined || timcharFirstBytes[first] === 0) return 0;
+      loop1: for (let i = 0; i < timchars.length; i++) {
+        const timchar = timchars[i];
+        for (let j = 0; j < timchar.length; j++) {
+          if (timchar[j] !== buf[pos + j]) continue loop1;
+        }
+        return timchar.length;
+      }
+      return 0;
     },
     __isDelimiter: function (buf, pos, chr) {
       const { delimiter, ignore_last_delimiters } = this.options;
@@ -98185,6 +98541,40 @@ const transform = function (original_options = {}) {
       }
       return 0;
     },
+    __isEscape: function (buf, pos, chr) {
+      const { escape } = this.options;
+      if (escape === null) return false;
+      const l = escape.length;
+      if (escape[0] === chr) {
+        for (let i = 0; i < l; i++) {
+          if (escape[i] !== buf[pos + i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      return false;
+    },
+    __isFloat: function (value) {
+      return value - parseFloat(value) + 1 >= 0; // Borrowed from jquery
+    },
+    // Keep it in case we implement the `cast_int` option
+    // __isInt(value){
+    //   // return Number.isInteger(parseInt(value))
+    //   // return !isNaN( parseInt( obj ) );
+    //   return /^(\-|\+)?[1-9][0-9]*$/.test(value)
+    // }
+    __isQuote: function (buf, pos) {
+      const { quote } = this.options;
+      if (quote === null) return false;
+      const l = quote.length;
+      for (let i = 0; i < l; i++) {
+        if (quote[i] !== buf[pos + i]) {
+          return false;
+        }
+      }
+      return true;
+    },
     __isRecordDelimiter: function (chr, buf, pos) {
       const { record_delimiter } = this.options;
       const recordDelimiterLength = record_delimiter.length;
@@ -98202,31 +98592,6 @@ const transform = function (original_options = {}) {
         return rd.length;
       }
       return 0;
-    },
-    __isEscape: function (buf, pos, chr) {
-      const { escape } = this.options;
-      if (escape === null) return false;
-      const l = escape.length;
-      if (escape[0] === chr) {
-        for (let i = 0; i < l; i++) {
-          if (escape[i] !== buf[pos + i]) {
-            return false;
-          }
-        }
-        return true;
-      }
-      return false;
-    },
-    __isQuote: function (buf, pos) {
-      const { quote } = this.options;
-      if (quote === null) return false;
-      const l = quote.length;
-      for (let i = 0; i < l; i++) {
-        if (quote[i] !== buf[pos + i]) {
-          return false;
-        }
-      }
-      return true;
     },
     __autoDiscoverRecordDelimiter: function (buf, pos) {
       const { encoding } = this.options;
@@ -98314,7 +98679,7 @@ const parse = function (data, opts = {}) {
   if (typeof data === "string") {
     data = Buffer.from(data);
   }
-  const records = opts && opts.objname ? {} : [];
+  const records = opts && opts.objname ? Object.create(null) : [];
   const parser = transform(opts);
   const push = (record) => {
     if (parser.options.objname === undefined) records.push(record);
@@ -98325,11 +98690,6 @@ const parse = function (data, opts = {}) {
   const close = () => {};
   const error = parser.parse(data, true, push, close);
   if (error !== undefined) throw error;
-  // 250606: `parser.parse` was implemented as 2 calls:
-  // const err1 = parser.parse(data, false, push, close);
-  // if (err1 !== undefined) throw err1;
-  // const err2 = parser.parse(undefined, true, push, close);
-  // if (err2 !== undefined) throw err2;
   return records;
 };
 
