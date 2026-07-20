@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Draft Release Notes
-        uses: lucacome/draft-release@3c9a48ffbf0dfe983aea7e3cd8d524965f25e1a8 # v2.2.0
+        uses: lucacome/draft-release@79e6ec7db3f1de9d330fdc716e45841c99a78196 # v2.2.1
         with:
           minor-label: "enhancement"
           major-label: "change"
