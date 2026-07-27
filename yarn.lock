@@ -27,7 +27,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/cache@npm:^6.1.0":
+"@actions/cache@npm:^6.2.0":
   version: 6.2.0
   resolution: "@actions/cache@npm:6.2.0"
   dependencies:
@@ -693,12 +693,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.93.0":
-  version: 0.93.0
-  resolution: "@docker/actions-toolkit@npm:0.93.0"
+"@docker/actions-toolkit@npm:^0.94.0":
+  version: 0.94.0
+  resolution: "@docker/actions-toolkit@npm:0.94.0"
   dependencies:
     "@actions/artifact": "npm:^6.2.1"
-    "@actions/cache": "npm:^6.1.0"
+    "@actions/cache": "npm:^6.2.0"
     "@actions/core": "npm:^3.0.1"
     "@actions/exec": "npm:^3.0.0"
     "@actions/github": "npm:^9.1.1"
@@ -718,7 +718,7 @@ __metadata:
     semver: "npm:^7.8.5"
     tar-stream: "npm:^3.2.0"
     tmp: "npm:^0.2.7"
-  checksum: 10c0/b54c65094fa10d3aa6bc5892c1abd505816d42e1d2f65e35ae18fa34247d1f0b746c393c2d9030347252e524785fc55bbb091c79acc24d2d5b5e00e5e23571c2
+  checksum: 10c0/a77a958bad0bd72bbd63e2a922f304d46664cb1f1e3a434cf5d2f9eb58a59ca7bb1d82e8438f87030f64a645586c9c52b1a86324c64945de01b30bd5f4f24b41
   languageName: node
   linkType: hard
 
@@ -5694,7 +5694,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^3.0.1"
-    "@docker/actions-toolkit": "npm:^0.93.0"
+    "@docker/actions-toolkit": "npm:^0.94.0"
     "@eslint/compat": "npm:^2.1.0"
     "@eslint/eslintrc": "npm:^3.3.6"
     "@eslint/js": "npm:^10.0.1"
