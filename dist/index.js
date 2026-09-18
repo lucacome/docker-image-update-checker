@@ -16,7 +16,7 @@ import * as events$1 from 'events';
 import events__default, { EventEmitter } from 'events';
 import assert$1, { ok } from 'assert';
 import * as util$9 from 'util';
-import util__default from 'util';
+import util__default, { stripVTControlCharacters } from 'util';
 import require$$0$2 from 'node:assert';
 import require$$0$4 from 'node:net';
 import http$1 from 'node:http';
@@ -99962,6 +99962,16 @@ class Docker {
     static async getExecOutput(args, options) {
         return Exec.getExecOutput('docker', args, Docker.execOptions(options));
     }
+    static getErrorMessage(stderr) {
+        const lines = stripVTControlCharacters(stderr).split(/[\r\n]/);
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i].trim();
+            if (line) {
+                return line;
+            }
+        }
+        return 'unknown error';
+    }
     static execOptions(options) {
         if (!options) {
             options = {};
@@ -100060,7 +100070,7 @@ class Docker {
                     ignoreReturnCode: true
                 }).then(res => {
                     if (res.stderr.length > 0 && res.exitCode != 0) {
-                        warning(`Failed to load image from cache: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+                        warning(`Failed to load image from cache: ${Docker.getErrorMessage(res.stderr)}`);
                     }
                 });
             }
@@ -100084,7 +100094,7 @@ class Docker {
                 ignoreReturnCode: true
             }).then(async (res) => {
                 if (res.stderr.length > 0 && res.exitCode != 0) {
-                    warning(`Failed to save image: ${res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error'}`);
+                    warning(`Failed to save image: ${Docker.getErrorMessage(res.stderr)}`);
                 }
                 else {
                     const cachePath = await imageCache.save(imageTarPath);
@@ -100100,7 +100110,7 @@ class Docker {
                 ignoreReturnCode: true
             });
             if (res.stderr.length > 0 && res.exitCode != 0) {
-                const err = res.stderr.match(/(.*)\s*$/)?.[0]?.trim() ?? 'unknown error';
+                const err = Docker.getErrorMessage(res.stderr);
                 if (!Docker.isPullTransientError(err)) {
                     bail(new Error(err));
                     return;
