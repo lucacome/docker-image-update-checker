@@ -693,9 +693,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.99.0":
-  version: 0.99.0
-  resolution: "@docker/actions-toolkit@npm:0.99.0"
+"@docker/actions-toolkit@npm:^0.100.0":
+  version: 0.100.0
+  resolution: "@docker/actions-toolkit@npm:0.100.0"
   dependencies:
     "@actions/artifact": "npm:^6.2.1"
     "@actions/cache": "npm:^6.2.0"
@@ -718,7 +718,7 @@ __metadata:
     semver: "npm:^7.8.5"
     tar-stream: "npm:^3.2.1"
     tmp: "npm:^0.2.7"
-  checksum: 10c0/e754d4286f72d5a9049757dc56011c5c737ea0f7408c796d35f5bd4de8865551f193d477aefbfa2b034a56f053b957abefc994abde111dc4643bd451c54e0fc8
+  checksum: 10c0/0b70d8d1d89b1b4be63af21782bb18fc36eb6b3b9b4117a8676f3e1b1bbbdfbed16ab579d91720a46d9b8a6b2cd4ccc0750972bd42b9347aa0fc265e098d9ffc
   languageName: node
   linkType: hard
 
@@ -5865,7 +5865,7 @@ __metadata:
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
     "@actions/core": "npm:^3.0.1"
-    "@docker/actions-toolkit": "npm:^0.99.0"
+    "@docker/actions-toolkit": "npm:^0.100.0"
     "@eslint/compat": "npm:^2.1.1"
     "@eslint/eslintrc": "npm:^3.3.7"
     "@eslint/js": "npm:^10.0.1"
