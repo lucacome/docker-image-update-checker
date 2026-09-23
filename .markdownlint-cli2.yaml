@@ -14,7 +14,6 @@ config:
 ignores:
   - '.github/**'
   - '.agents/**'
-  - '.claude/**'
 
 # Fix any fixable errors
 fix: true
