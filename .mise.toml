@@ -1,14 +1,14 @@
 [tools]
-hk = "2.1.0"
-pkl = "0.32.1"
-actionlint = "1.7.12"
-yamllint = "1.38.0"
-markdownlint-cli2 = "0.23.3"
-gitleaks = "8.30.1"
-editorconfig-checker = "4.0.2"
-prettier = "3.9.8"
+"github:kjanat/actionlint" = "1.17.0"
 "npm:eslint" = "10.11.0"
 "pipx:codespell" = "2.4.3"
+editorconfig-checker = "4.0.2"
+gitleaks = "8.30.1"
+hk = "2.1.0"
+markdownlint-cli2 = "0.23.3"
+pkl = "0.32.1"
+prettier = "3.9.8"
+yamllint = "1.38.0"
 
 [tasks.install]
 alias = "i"
