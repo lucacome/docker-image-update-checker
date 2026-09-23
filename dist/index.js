@@ -101396,7 +101396,17 @@ class Docker {
             tag: 'latest'
         };
     }
-    static async pull(image, cache) {
+    static async pull(image, cache, endpoint) {
+        const args = [];
+        if (endpoint) {
+            try {
+                await Docker.contextInspect(endpoint);
+                args.push('--context', endpoint);
+            }
+            catch {
+                args.push('--host', endpoint);
+            }
+        }
         const parsedImage = Docker.parseRepoTag(image);
         const repoSanitized = parsedImage.repository.replace(/[^a-zA-Z0-9.]+/g, '--');
         const tagSanitized = parsedImage.tag.replace(/[^a-zA-Z0-9.]+/g, '--');
@@ -101411,7 +101421,7 @@ class Docker {
             cacheFoundPath = await imageCache.find();
             if (cacheFoundPath) {
                 info(`Image found from cache in ${cacheFoundPath}`);
-                await Docker.getExecOutput(['load', '-i', cacheFoundPath], {
+                await Docker.getExecOutput([...args, 'load', '-i', cacheFoundPath], {
                     ignoreReturnCode: true
                 }).then(res => {
                     if (res.stderr.length > 0 && res.exitCode != 0) {
@@ -101422,7 +101432,7 @@ class Docker {
         }
         let pulled = true;
         try {
-            await Docker.pullWithRetry(image);
+            await Docker.pullWithRetry(image, args);
         }
         catch (e) {
             pulled = false;
@@ -101435,7 +101445,7 @@ class Docker {
         }
         if (cache && pulled) {
             const imageTarPath = path__default.join(Context.tmpDir(), `${Util.hash(image)}.tar`);
-            await Docker.getExecOutput(['save', '-o', imageTarPath, image], {
+            await Docker.getExecOutput([...args, 'save', '-o', imageTarPath, image], {
                 ignoreReturnCode: true
             }).then(async (res) => {
                 if (res.stderr.length > 0 && res.exitCode != 0) {
@@ -101448,10 +101458,10 @@ class Docker {
             });
         }
     }
-    static async pullWithRetry(image) {
+    static async pullWithRetry(image, args) {
         const retries = 5;
         await retry$1(async (bail) => {
-            const res = await Docker.getExecOutput(['pull', image], {
+            const res = await Docker.getExecOutput([...args, 'pull', image], {
                 ignoreReturnCode: true
             });
             if (res.stderr.length > 0 && res.exitCode != 0) {
