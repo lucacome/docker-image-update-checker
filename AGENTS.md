@@ -10,7 +10,36 @@ These rules are **mandatory** and apply to every task in this repository.
 2. Run `yarn build` — the build must pass with no errors before considering the task done.
 3. Run `yarn test` — all tests must pass. Fix any failures before finishing.
 4. Run `yarn lint` — must pass with zero errors. Fix any lint or formatting issues before finishing.
-5. If any command fails, fix the problem and re-run until all four pass cleanly.
+5. If any command fails, fix the problem and re-run until all pass cleanly.
+
+> **Note:** `yarn lint` only covers `*.ts`. If you touched anything else (Markdown, YAML,
+> `hk.pkl`, `package.json`, workflows), also run `mise run lint` — the full hk suite
+> (markdownlint, actionlint, codespell, etc.).
+
+### Pre-commit hooks (hk)
+
+Git hooks are managed by [hk](https://hk.jdx.dev) via `hk.pkl`. Run `hk install` once per
+clone (hk is provided by mise) to install the `pre-commit` hook, which runs
+`hk run pre-commit` on every commit. It auto-fixes what it can (`fix = true`) and fails
+the commit otherwise, so run `mise run fmt` yourself before committing to keep it green.
+
+On each commit the hook runs, in order:
+
+1. **build** — `mise run build` when `src/`, packaging, or build config changed, so `dist/`
+  never drifts from the sources.
+2. **linters** — the full hk suite (prettier, eslint, markdownlint, actionlint, codespell,
+  typos, knip, etc.); most auto-fix, the rest fail the commit.
+3. **postlint** — `mise run postlint` (`git diff --exit-code`); fails if a fixer left the
+  tree dirty, so `git status` must be clean apart from your intended changes.
+4. **precommit** — secret and safety scans (leak detection, private keys, large files,
+  merge-conflict markers, no direct commit to branch).
+
+Useful equivalents outside the hook: `mise run fmt` (`hk fix --all`) to auto-fix,
+`mise run lint` (`hk check --all`) for the read-only full check. To bypass the hook in an
+To bypass the hook in an emergency: `HK=0 git commit ...` — but CI runs the lint checks and,
+for non-Markdown changes, the distribution build check; it does not run the hook's `build`,
+`postlint`, or `precommit` steps, so prefer fixing the failure.
+`.github/workflows/check-dist.yml`) enforces the same checks, so prefer fixing the failure.
 
 ### Keeping docs in sync
 
@@ -18,8 +47,36 @@ These rules are **mandatory** and apply to every task in this repository.
   supported registries, usage examples, or action semantics.
   - All Markdown tables must use padded, aligned columns: each column padded to the width of
     the widest cell in that column, separator row using `| --- |` style (spaces inside dashes).
-- **`AGENTS.md`** — update whenever you change commands, project structure, code style
-  conventions, architecture patterns, or testing rules.
+- **`action.yml`** — update whenever inputs or outputs change; keep in sync with `src/main.ts`
+  and `README.md`.
+- **`dist/`** — committed build output (`dist/index.js`); rebuild after any `src/` change so the
+  shipped action stays in sync.
+- **`AGENTS.md`** — this file is self-maintained; follow the self-maintenance rules below
+  whenever your change affects anything documented here.
+
+### Maintaining AGENTS.md (self-maintenance)
+
+AGENTS.md rots fast if it is only appended to. Apply these rules to keep it accurate:
+
+1. **Update triggers** — revise AGENTS.md in the same change when you add, rename, or remove
+  `src/` files, add a registry, change `package.json` scripts, `tsconfig`, lint/format config,
+  `hk.pkl` hooks, the test layout or mocking patterns, or architecture patterns (error handling,
+  logging, auth).
+2. **Verify against sources** — every claim must trace to a source of truth (`package.json`,
+  `tsconfig.json`, `hk.pkl`, `src/*.ts`, workflows). Read the file before documenting it;
+  never document from memory.
+3. **Durable over exhaustive** — state rules and patterns, not inventories that rot (e.g. "one
+  test per registry" instead of naming every file). Never hardcode versions here; point at
+  `.nvmrc` / `engines` / `package.json` instead.
+4. **One source per fact** — do not duplicate content between sections; cross-reference instead.
+  When adding a rule, check for contradictions with existing sections and fix them in the
+  same edit.
+5. **Examples must work** — every command and code snippet must be copy-paste correct. Prefer
+  running them over trusting memory.
+6. **Prune stale guidance** — a wrong rule is worse than no rule. If a convention changed,
+  update or delete the old text in the same change; never append a contradicting note.
+7. **Keep it lean** — prefer amending an existing bullet over adding a new section. If the file
+  keeps growing, consolidate instead of appending.
 
 ---
 
@@ -94,7 +151,7 @@ yarn all             # format + test + build in sequence
 - **Strict mode:** `strict`, `strictNullChecks`, `noImplicitAny`, `noUnusedLocals` all enabled
 - `isolatedModules: true` — each file must be independently compilable
 - `tsconfig.json` covers `src/` only; test files are excluded (ts-jest handles them separately)
-- Node ≥ 24.14.1 required (`.nvmrc` / `.mise.toml`)
+- Node version is pinned in `.nvmrc` (mirrored in `.mise.toml` / `engines`); never hardcode it here
 
 ---
 
@@ -184,6 +241,8 @@ export class MyRegistry extends GenericRegistry {
 
 - All action-level errors are caught in the `run()` try/catch and surfaced via `core.setFailed()`
 - Registry/network errors throw `Error` with descriptive messages including the URL and status
+- Registry JSON responses are validated with zod via `parseOrThrow` in `registry.ts` (turns
+  `ZodError` into a plain `Error` with URL context); follow that pattern for any new response parsing
 - `fetchToken` in `token-utils.ts` produces structured error messages with an `errorPrefix`
   for caller context; follow the same pattern in new token implementations
 - Never swallow errors silently; rethrow or log with `core.warning()` / `core.error()`
@@ -210,19 +269,14 @@ Real end-to-end testing runs exclusively in `.github/workflows/test-workflow.yml
 
 ```bash
 __tests__/
+  <registry>.test.ts         ← one test per registry in src/ (e.g. docker-hub.test.ts, gcr.test.ts;
+                              artifact-registry.test.ts covers gar.ts); global.fetch + @actions/core mocked
   image-utils.test.ts          ← pure unit tests, no network, no mocking needed
-  token-utils.test.ts          ← unit tests, global.fetch mocked via jest.fn()
-  docker-hub.test.ts           ← unit tests, global.fetch + @actions/core mocked
-  github.test.ts               ← unit tests, global.fetch + @actions/core mocked
-  gitlab.test.ts               ← unit tests, global.fetch + @actions/core mocked
-  gcr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
-  quay.test.ts                 ← unit tests, global.fetch + @actions/core mocked
-  acr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
-  artifact-registry.test.ts    ← unit tests, global.fetch + @actions/core mocked
-  ecr.test.ts                  ← unit tests, global.fetch + @actions/core mocked
-  digitalocean.test.ts         ← unit tests, global.fetch + @actions/core mocked
-  ocir.test.ts                 ← unit tests, global.fetch + @actions/core mocked
+  token-utils.test.ts          ← unit tests, global.fetch mocked via jest.fn() (own local mockResponse helper)
   generic-registry.test.ts     ← unit tests for static config + auto-discovery modes
+  main.test.ts                 ← unit tests for getRegistryInstance routing + run(), global.fetch + @actions/core mocked
+  auth.test.ts                 ← unit tests for getRegistryAuth, child_process + Docker config mocked
+  registry-test-utils.ts       ← shared mockResponse() factory (not a test file)
 
 __mocks__/
   @actions/core.ts       ← manual mock; wired via moduleNameMapper in jest.config.js
@@ -255,23 +309,15 @@ Both `registry.ts` and `token-utils.ts` call different `Response` methods:
 - `registry.ts` uses `response.json()` and `response.headers.entries()`
 - `token-utils.ts` uses `response.text()` and `response.headers.get()`
 
-The mock factory must implement all four:
+All registry tests (plus `main.test.ts`) import the shared factory from
+`__tests__/registry-test-utils.ts`, which implements all four:
 
 ```ts
-function mockResponse(body: unknown, headers: Record<string, string> = {}): Response {
-  const headersMap = {'content-type': 'application/json', ...headers}
-  const bodyStr = typeof body === 'string' ? body : JSON.stringify(body)
-  return {
-    ok: true, status: 200, statusText: 'OK',
-    headers: {
-      get: (name: string) => headersMap[name.toLowerCase()] ?? null,
-      entries: () => Object.entries(headersMap)[Symbol.iterator](),
-    },
-    json: (jest.fn() as jest.MockedFunction<() => Promise<unknown>>).mockResolvedValue(typeof body === 'string' ? JSON.parse(body) : body),
-    text: (jest.fn() as jest.MockedFunction<() => Promise<string>>).mockResolvedValue(bodyStr),
-  } as unknown as Response
-}
+import {mockResponse} from './registry-test-utils.js'
 ```
+
+(`token-utils.test.ts` is the exception — it defines its own local `mockResponse`
+because `fetchToken` needs control over `ok`/`status`/`statusText`, not just the body.)
 
 ### Test style
 
