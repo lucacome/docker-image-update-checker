@@ -36,7 +36,9 @@ On each commit the hook runs, in order:
 
 Useful equivalents outside the hook: `mise run fmt` (`hk fix --all`) to auto-fix,
 `mise run lint` (`hk check --all`) for the read-only full check. To bypass the hook in an
-emergency: `HK=0 git commit ...` — but CI (`.github/workflows/lint.yml`,
+To bypass the hook in an emergency: `HK=0 git commit ...` — but CI runs the lint checks and,
+for non-Markdown changes, the distribution build check; it does not run the hook's `build`,
+`postlint`, or `precommit` steps, so prefer fixing the failure.
 `.github/workflows/check-dist.yml`) enforces the same checks, so prefer fixing the failure.
 
 ### Keeping docs in sync
