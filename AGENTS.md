@@ -16,6 +16,29 @@ These rules are **mandatory** and apply to every task in this repository.
 > `hk.pkl`, `package.json`, workflows), also run `mise run lint` — the full hk suite
 > (markdownlint, actionlint, codespell, etc.).
 
+### Pre-commit hooks (hk)
+
+Git hooks are managed by [hk](https://hk.jdx.dev) via `hk.pkl`. Run `hk install` once per
+clone (hk is provided by mise) to install the `pre-commit` hook, which runs
+`hk run pre-commit` on every commit. It auto-fixes what it can (`fix = true`) and fails
+the commit otherwise, so run `mise run fmt` yourself before committing to keep it green.
+
+On each commit the hook runs, in order:
+
+1. **build** — `mise run build` when `src/`, packaging, or build config changed, so `dist/`
+  never drifts from the sources.
+2. **linters** — the full hk suite (prettier, eslint, markdownlint, actionlint, codespell,
+  typos, knip, etc.); most auto-fix, the rest fail the commit.
+3. **postlint** — `mise run postlint` (`git diff --exit-code`); fails if a fixer left the
+  tree dirty, so `git status` must be clean apart from your intended changes.
+4. **precommit** — secret and safety scans (leak detection, private keys, large files,
+  merge-conflict markers, no direct commit to branch).
+
+Useful equivalents outside the hook: `mise run fmt` (`hk fix --all`) to auto-fix,
+`mise run lint` (`hk check --all`) for the read-only full check. To bypass the hook in an
+emergency: `HK=0 git commit ...` — but CI (`.github/workflows/lint.yml`,
+`.github/workflows/check-dist.yml`) enforces the same checks, so prefer fixing the failure.
+
 ### Keeping docs in sync
 
 - **`README.md`** — update whenever you change user-facing behaviour: inputs, outputs,
@@ -26,9 +49,32 @@ These rules are **mandatory** and apply to every task in this repository.
   and `README.md`.
 - **`dist/`** — committed build output (`dist/index.js`); rebuild after any `src/` change so the
   shipped action stays in sync.
-- **`AGENTS.md`** — update whenever you change commands, project structure, code style
-  conventions, architecture patterns, or testing rules. Prefer durable rules over exhaustive
-  listings that rot (e.g. "one test per registry" instead of naming every file).
+- **`AGENTS.md`** — this file is self-maintained; follow the self-maintenance rules below
+  whenever your change affects anything documented here.
+
+### Maintaining AGENTS.md (self-maintenance)
+
+AGENTS.md rots fast if it is only appended to. Apply these rules to keep it accurate:
+
+1. **Update triggers** — revise AGENTS.md in the same change when you add, rename, or remove
+  `src/` files, add a registry, change `package.json` scripts, `tsconfig`, lint/format config,
+  `hk.pkl` hooks, the test layout or mocking patterns, or architecture patterns (error handling,
+  logging, auth).
+2. **Verify against sources** — every claim must trace to a source of truth (`package.json`,
+  `tsconfig.json`, `hk.pkl`, `src/*.ts`, workflows). Read the file before documenting it;
+  never document from memory.
+3. **Durable over exhaustive** — state rules and patterns, not inventories that rot (e.g. "one
+  test per registry" instead of naming every file). Never hardcode versions here; point at
+  `.nvmrc` / `engines` / `package.json` instead.
+4. **One source per fact** — do not duplicate content between sections; cross-reference instead.
+  When adding a rule, check for contradictions with existing sections and fix them in the
+  same edit.
+5. **Examples must work** — every command and code snippet must be copy-paste correct. Prefer
+  running them over trusting memory.
+6. **Prune stale guidance** — a wrong rule is worse than no rule. If a convention changed,
+  update or delete the old text in the same change; never append a contradicting note.
+7. **Keep it lean** — prefer amending an existing bullet over adding a new section. If the file
+  keeps growing, consolidate instead of appending.
 
 ---
 
