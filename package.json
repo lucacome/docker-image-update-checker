@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@actions/core": "^3.0.1",
-    "@docker/actions-toolkit": "^0.101.0",
+    "@docker/actions-toolkit": "^0.103.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
