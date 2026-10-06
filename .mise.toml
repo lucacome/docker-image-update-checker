@@ -7,7 +7,7 @@
 "pipx:codespell" = "2.4.3"
 betterleaks = "1.9.0"
 editorconfig-checker = "4.0.2"
-hk = "2.1.0"
+hk = "2.5.0"
 markdownlint-cli2 = "0.23.3"
 pkl = "0.32.1"
 prettier = "3.9.9"
