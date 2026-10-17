@@ -1,7 +1,7 @@
 [tools]
 "aqua:owenlamont/ryl" = "0.24.0"
 "github:kjanat/actionlint" = "1.17.0"
-"npm:eslint" = "10.11.0"
+"npm:eslint" = "10.12.0"
 "npm:knip" = "6.39.0"
 "npm:sort-package-json" = "4.0.0"
 "pipx:codespell" = "2.4.3"
