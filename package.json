@@ -31,7 +31,7 @@
   "dependencies": {
     "@actions/core": "3.0.1",
     "@docker/actions-toolkit": "0.101.0",
-    "zod": "4.6.5"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/compat": "2.1.1",
