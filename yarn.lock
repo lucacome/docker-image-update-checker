@@ -44,7 +44,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@actions/core@npm:^3.0.0, @actions/core@npm:^3.0.1":
+"@actions/core@npm:3.0.1, @actions/core@npm:^3.0.0, @actions/core@npm:^3.0.1":
   version: 3.0.1
   resolution: "@actions/core@npm:3.0.1"
   dependencies:
@@ -706,7 +706,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@docker/actions-toolkit@npm:^0.101.0":
+"@docker/actions-toolkit@npm:0.101.0":
   version: 0.101.0
   resolution: "@docker/actions-toolkit@npm:0.101.0"
   dependencies:
@@ -781,7 +781,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/compat@npm:^2.1.1":
+"@eslint/compat@npm:2.1.1":
   version: 2.1.1
   resolution: "@eslint/compat@npm:2.1.1"
   dependencies:
@@ -824,7 +824,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/eslintrc@npm:^3.3.7":
+"@eslint/eslintrc@npm:3.3.7":
   version: 3.3.7
   resolution: "@eslint/eslintrc@npm:3.3.7"
   dependencies:
@@ -841,7 +841,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/js@npm:^10.0.1":
+"@eslint/js@npm:10.0.1":
   version: 10.0.1
   resolution: "@eslint/js@npm:10.0.1"
   peerDependencies:
@@ -1075,7 +1075,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/globals@npm:30.5.2, @jest/globals@npm:^30.5.2":
+"@jest/globals@npm:30.5.2":
   version: 30.5.2
   resolution: "@jest/globals@npm:30.5.2"
   dependencies:
@@ -1701,7 +1701,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-commonjs@npm:^29.0.3":
+"@rollup/plugin-commonjs@npm:29.0.3":
   version: 29.0.3
   resolution: "@rollup/plugin-commonjs@npm:29.0.3"
   dependencies:
@@ -1721,7 +1721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-json@npm:^6.1.0":
+"@rollup/plugin-json@npm:6.1.0":
   version: 6.1.0
   resolution: "@rollup/plugin-json@npm:6.1.0"
   dependencies:
@@ -1735,7 +1735,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-node-resolve@npm:^16.0.3":
+"@rollup/plugin-node-resolve@npm:16.0.3":
   version: 16.0.3
   resolution: "@rollup/plugin-node-resolve@npm:16.0.3"
   dependencies:
@@ -1753,7 +1753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/plugin-typescript@npm:^12.3.0":
+"@rollup/plugin-typescript@npm:12.3.0":
   version: 12.3.0
   resolution: "@rollup/plugin-typescript@npm:12.3.0"
   dependencies:
@@ -1907,7 +1907,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/rollup-linux-x64-gnu@npm:*, @rollup/rollup-linux-x64-gnu@npm:4.63.4":
+"@rollup/rollup-linux-x64-gnu@npm:4.63.4":
   version: 4.63.4
   resolution: "@rollup/rollup-linux-x64-gnu@npm:4.63.4"
   conditions: os=linux & cpu=x64 & libc=glibc
@@ -2161,7 +2161,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/jest@npm:^30.0.0":
+"@types/jest@npm:30.0.0":
   version: 30.0.0
   resolution: "@types/jest@npm:30.0.0"
   dependencies:
@@ -2194,7 +2194,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^24.13.6":
+"@types/node@npm:24.13.6":
   version: 24.13.6
   resolution: "@types/node@npm:24.13.6"
   dependencies:
@@ -2233,7 +2233,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^8.70.0":
+"@typescript-eslint/eslint-plugin@npm:8.70.1":
   version: 8.70.1
   resolution: "@typescript-eslint/eslint-plugin@npm:8.70.1"
   dependencies:
@@ -2253,7 +2253,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^8.70.0":
+"@typescript-eslint/parser@npm:8.70.1":
   version: 8.70.1
   resolution: "@typescript-eslint/parser@npm:8.70.1"
   dependencies:
@@ -3777,7 +3777,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-config-prettier@npm:^10.1.8":
+"eslint-config-prettier@npm:10.1.8":
   version: 10.1.8
   resolution: "eslint-config-prettier@npm:10.1.8"
   peerDependencies:
@@ -3814,7 +3814,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-import-resolver-typescript@npm:^4.4.5":
+"eslint-import-resolver-typescript@npm:4.4.5":
   version: 4.4.5
   resolution: "eslint-import-resolver-typescript@npm:4.4.5"
   dependencies:
@@ -3850,7 +3850,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-import@npm:^2.32.0":
+"eslint-plugin-import@npm:2.32.0":
   version: 2.32.0
   resolution: "eslint-plugin-import@npm:2.32.0"
   dependencies:
@@ -3879,7 +3879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-jest@npm:^29.16.6":
+"eslint-plugin-jest@npm:29.16.6":
   version: 29.16.6
   resolution: "eslint-plugin-jest@npm:29.16.6"
   dependencies:
@@ -3900,7 +3900,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^5.5.6":
+"eslint-plugin-prettier@npm:5.5.6":
   version: 5.5.6
   resolution: "eslint-plugin-prettier@npm:5.5.6"
   dependencies:
@@ -3953,7 +3953,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.11.0":
+"eslint@npm:10.11.0":
   version: 10.11.0
   resolution: "eslint@npm:10.11.0"
   dependencies:
@@ -4466,17 +4466,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"globals@npm:17.12.0":
+  version: 17.12.0
+  resolution: "globals@npm:17.12.0"
+  checksum: 10c0/8325cf8818c848871d17c32974c2c74e9c5f09c1b0e04421886f64f21e77c3e95f3ba25586743895a73acd860ada151132481d87d44a1f12993ae7758a694d03
+  languageName: node
+  linkType: hard
+
 "globals@npm:^14.0.0":
   version: 14.0.0
   resolution: "globals@npm:14.0.0"
   checksum: 10c0/b96ff42620c9231ad468d4c58ff42afee7777ee1c963013ff8aabe095a451d0ceeb8dcd8ef4cbd64d2538cef45f787a78ba3a9574f4a634438963e334471302d
-  languageName: node
-  linkType: hard
-
-"globals@npm:^17.12.0":
-  version: 17.12.0
-  resolution: "globals@npm:17.12.0"
-  checksum: 10c0/8325cf8818c848871d17c32974c2c74e9c5f09c1b0e04421886f64f21e77c3e95f3ba25586743895a73acd860ada151132481d87d44a1f12993ae7758a694d03
   languageName: node
   linkType: hard
 
@@ -5650,7 +5650,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jest@npm:^30.5.2":
+"jest@npm:30.5.2":
   version: 30.5.2
   resolution: "jest@npm:30.5.2"
   dependencies:
@@ -5875,35 +5875,35 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "lucacome-docker-image-update-checker@workspace:."
   dependencies:
-    "@actions/core": "npm:^3.0.1"
-    "@docker/actions-toolkit": "npm:^0.101.0"
-    "@eslint/compat": "npm:^2.1.1"
-    "@eslint/eslintrc": "npm:^3.3.7"
-    "@eslint/js": "npm:^10.0.1"
-    "@jest/globals": "npm:^30.5.2"
-    "@rollup/plugin-commonjs": "npm:^29.0.3"
-    "@rollup/plugin-json": "npm:^6.1.0"
-    "@rollup/plugin-node-resolve": "npm:^16.0.3"
-    "@rollup/plugin-typescript": "npm:^12.3.0"
-    "@rollup/rollup-linux-x64-gnu": "npm:*"
-    "@types/jest": "npm:^30.0.0"
-    "@types/node": "npm:^24.13.6"
-    "@typescript-eslint/eslint-plugin": "npm:^8.70.0"
-    "@typescript-eslint/parser": "npm:^8.70.0"
-    eslint: "npm:^10.11.0"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-import-resolver-typescript: "npm:^4.4.5"
-    eslint-plugin-import: "npm:^2.32.0"
-    eslint-plugin-jest: "npm:^29.16.6"
-    eslint-plugin-prettier: "npm:^5.5.6"
-    globals: "npm:^17.12.0"
-    jest: "npm:^30.5.2"
-    prettier: "npm:^3.9.8"
-    rollup: "npm:^4.63.4"
-    ts-jest: "npm:^29.4.12"
-    ts-jest-resolver: "npm:^2.0.1"
-    typescript: "npm:^6.0.3"
-    zod: "npm:^4.6.5"
+    "@actions/core": "npm:3.0.1"
+    "@docker/actions-toolkit": "npm:0.101.0"
+    "@eslint/compat": "npm:2.1.1"
+    "@eslint/eslintrc": "npm:3.3.7"
+    "@eslint/js": "npm:10.0.1"
+    "@jest/globals": "npm:30.5.2"
+    "@rollup/plugin-commonjs": "npm:29.0.3"
+    "@rollup/plugin-json": "npm:6.1.0"
+    "@rollup/plugin-node-resolve": "npm:16.0.3"
+    "@rollup/plugin-typescript": "npm:12.3.0"
+    "@rollup/rollup-linux-x64-gnu": "npm:4.63.4"
+    "@types/jest": "npm:30.0.0"
+    "@types/node": "npm:24.13.6"
+    "@typescript-eslint/eslint-plugin": "npm:8.70.1"
+    "@typescript-eslint/parser": "npm:8.70.1"
+    eslint: "npm:10.11.0"
+    eslint-config-prettier: "npm:10.1.8"
+    eslint-import-resolver-typescript: "npm:4.4.5"
+    eslint-plugin-import: "npm:2.32.0"
+    eslint-plugin-jest: "npm:29.16.6"
+    eslint-plugin-prettier: "npm:5.5.6"
+    globals: "npm:17.12.0"
+    jest: "npm:30.5.2"
+    prettier: "npm:3.9.8"
+    rollup: "npm:4.63.4"
+    ts-jest: "npm:29.4.12"
+    ts-jest-resolver: "npm:2.0.1"
+    typescript: "npm:6.0.3"
+    zod: "npm:4.6.5"
   dependenciesMeta:
     "@rollup/rollup-linux-x64-gnu":
       optional: true
@@ -6473,7 +6473,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.9.8":
+"prettier@npm:3.9.8":
   version: 3.9.8
   resolution: "prettier@npm:3.9.8"
   bin:
@@ -6748,7 +6748,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rollup@npm:^4.63.4":
+"rollup@npm:4.63.4":
   version: 4.63.4
   resolution: "rollup@npm:4.63.4"
   dependencies:
@@ -7378,7 +7378,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-jest-resolver@npm:^2.0.1":
+"ts-jest-resolver@npm:2.0.1":
   version: 2.0.1
   resolution: "ts-jest-resolver@npm:2.0.1"
   dependencies:
@@ -7387,7 +7387,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-jest@npm:^29.4.12":
+"ts-jest@npm:29.4.12":
   version: 29.4.12
   resolution: "ts-jest@npm:29.4.12"
   dependencies:
@@ -7556,6 +7556,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@npm:6.0.3":
+  version: 6.0.3
+  resolution: "typescript@npm:6.0.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/4a25ff5045b984370f48f196b3a0120779b1b343d40b9a68d114ea5e5fff099809b2bb777576991a63a5cd59cf7bffd96ff6fe10afcefbcb8bd6fb96ad4b6606
+  languageName: node
+  linkType: hard
+
 "typescript@npm:^3.9":
   version: 3.9.10
   resolution: "typescript@npm:3.9.10"
@@ -7563,16 +7573,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/863cc06070fa18a0f9c6a83265fb4922a8b51bf6f2c6760fb0b73865305ce617ea4bc6477381f9f4b7c3a8cb4a455b054f5469e6e41307733fe6a2bd9aae82f8
-  languageName: node
-  linkType: hard
-
-"typescript@npm:^6.0.3":
-  version: 6.0.3
-  resolution: "typescript@npm:6.0.3"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/4a25ff5045b984370f48f196b3a0120779b1b343d40b9a68d114ea5e5fff099809b2bb777576991a63a5cd59cf7bffd96ff6fe10afcefbcb8bd6fb96ad4b6606
   languageName: node
   linkType: hard
 
@@ -7586,6 +7586,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>":
+  version: 6.0.3
+  resolution: "typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 10c0/2f25c74e65663c248fa1ade2b8459d9ce5372ff9dad07067310f132966ebec1d93f6c42f0baf77a6b6a7a91460463f708e6887013aaade22111037457c6b25df
+  languageName: node
+  linkType: hard
+
 "typescript@patch:typescript@npm%3A^3.9#optional!builtin<compat/typescript>":
   version: 3.9.10
   resolution: "typescript@patch:typescript@npm%3A3.9.10#optional!builtin<compat/typescript>::version=3.9.10&hash=3bd3d3"
@@ -7593,16 +7603,6 @@ __metadata:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 10c0/9041fb3886e7d6a560f985227b8c941d17a750f2edccb5f9b3a15a2480574654d9be803ad4a14aabcc2f2553c4d272a25fd698a7c42692f03f66b009fb46883c
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@npm%3A^6.0.3#optional!builtin<compat/typescript>":
-  version: 6.0.3
-  resolution: "typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 10c0/2f25c74e65663c248fa1ade2b8459d9ce5372ff9dad07067310f132966ebec1d93f6c42f0baf77a6b6a7a91460463f708e6887013aaade22111037457c6b25df
   languageName: node
   linkType: hard
 
@@ -8009,7 +8009,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^4.6.5":
+"zod@npm:4.6.5":
   version: 4.6.5
   resolution: "zod@npm:4.6.5"
   checksum: 10c0/32eb6c5e98becbe045675b2141c3611451c16ba567f9779231d79af41c4d651ca1c22f154aef7e6c6e77b929f23e43f1154ca05b82e119e922353725d6776af5
