@@ -25,12 +25,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Mise
-        uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde  # v5.2.1
+        uses: jdx/mise-action@v5.2.1
 
       - name: Install dependencies
         run: |
@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -53,7 +53,7 @@ jobs:
         run: corepack enable
 
       - name: Set Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        uses: actions/setup-node@v7.0.0
         with:
           node-version-file: .nvmrc
 
@@ -85,12 +85,12 @@ jobs:
       security-events: write
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Lint Actions
-        uses: jdx/jactionlint@1027f0a131ab98bc7e191d995bfa15dbed5bbf8f  # v2.2.0
+        uses: jdx/jactionlint@v2.2.0
         with:
           advanced-security: true
 
@@ -100,11 +100,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff  # v24.2.0
+      - uses: DavidAnson/markdownlint-cli2-action@v24.2.0
         with:
           config: .markdownlint-cli2.yaml
           globs: "**/*.md"
