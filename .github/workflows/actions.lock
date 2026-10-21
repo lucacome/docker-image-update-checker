@@ -5,7 +5,7 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/check-dist.yml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-node@v7.0.0'
+        - 'actions/setup-node@v7.1.0'
         - 'actions/upload-artifact@v7.0.1'
     '.github/workflows/codeql-analysis.yml':
         - 'actions/checkout@v7.0.1'
@@ -20,7 +20,7 @@ workflows:
         - 'actions/labeler@v7.0.0'
     '.github/workflows/lint.yml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-node@v7.0.0'
+        - 'actions/setup-node@v7.1.0'
         - 'davidanson/markdownlint-cli2-action@v24.2.0'
         - 'jdx/jactionlint@v2.2.0'
         - 'jdx/mise-action@v5.2.1'
@@ -41,7 +41,7 @@ workflows:
         - 'docker/login-action@v4.6.0'
     '.github/workflows/test.yml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/setup-node@v7.0.0'
+        - 'actions/setup-node@v7.1.0'
 dependencies:
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
@@ -63,11 +63,6 @@ dependencies:
         commit: 'sha1-bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13'
         owner_id: 44036562
         repo_id: 177139928
-    'actions/setup-node@v7.0.0':
-        ref: 'v7.0.0'
-        commit: 'sha1-820762786026740c76f36085b0efc47a31fe5020'
-        owner_id: 44036562
-        repo_id: 189476904
     'actions/setup-node@v7.1.0':
         ref: 'v7.1.0'
         commit: 'sha1-949feb2413d6458794dcd2491c4babbbce0c15c1'
