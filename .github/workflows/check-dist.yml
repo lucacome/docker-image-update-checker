@@ -14,7 +14,6 @@ on:
   pull_request:
     paths-ignore:
       - "**.md"
-  workflow_dispatch:  # yamllint disable-line rule:empty-values
 
 permissions:
   contents: read

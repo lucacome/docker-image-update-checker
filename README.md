@@ -74,7 +74,7 @@ name: Check docker image
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron: "0 4 * * *"
 
 jobs:
   docker:
@@ -88,8 +88,8 @@ jobs:
           image: user/app:latest
 
       - name: Check result
-        run: echo "Needs updating: ${{ steps.check.outputs.needs-updating }}"
-
+        run: |
+          echo "Needs updating: ${{ steps.check.outputs.needs-updating }}"
 ```
 
 ### Single platform
