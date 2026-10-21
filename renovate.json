@@ -3,6 +3,5 @@
   "extends": [
     "github>lucacome/common",
     "schedule:weekly"
-  ],
-  "rangeStrategy": "bump"
+  ]
 }
