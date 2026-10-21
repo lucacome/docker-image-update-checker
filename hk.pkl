@@ -1,27 +1,29 @@
-amends "package://github.com/jdx/hk/releases/download/v2.1.0/hk@2.1.0#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v2.8.0/hk@2.8.0#/Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v2.1.0/hk@2.1.0#/Builtins.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.8.0/hk@2.8.0#/Builtins.pkl"
 
-exclude = List("dist", "lib", "node_modules", ".agents")
+exclude = List("dist", "lib", "node_modules", ".agents", "*lock.json")
 
 local linters = new Mapping<String, Step> {
-  ["actionlint"] = Builtins.actionlint
   ["check-case-conflict"] = Builtins.check_case_conflict
-  ["check-json"] = Builtins.jq
   ["check-symlinks"] = Builtins.check_symlinks
   ["destroyed-symlinks"] = Builtins.destroyed_symlinks
   ["editorconfig-checker"] = Builtins.editorconfig_checker
   ["end-of-file-fixer"] = Builtins.newlines
   ["eslint"] = Builtins.eslint
   ["fix-smart-quotes"] = Builtins.fix_smart_quotes
+  ["jactionlint"] = Builtins.jactionlint
   ["knip"] = Builtins.knip
   ["mise"] = Builtins.mise
   ["mixed-line-ending"] = Builtins.mixed_line_ending
   ["pkl-lint"] = Builtins.pkl_format
+  ["ryl_format"] = Builtins.ryl_format
+  ["ryl_markdown_format"] = Builtins.ryl_markdown_format
+  ["ryl_markdown"] = Builtins.ryl_markdown
+  ["ryl"] = Builtins.ryl
   ["sort-package-json"] = Builtins.sort_package_json
   ["trailing-whitespace"] = Builtins.trailing_whitespace
   ["typos"] = Builtins.typos
-  ["yamllint"] = Builtins.ryl
   ["prettier"] = (Builtins.prettier) {
     depends = List("eslint")
   }
@@ -35,6 +37,9 @@ local linters = new Mapping<String, Step> {
       "codespell --ignore-words-list=commitish --quiet-level=7 --skip=./dist/**,./lib/**,./node_modules/** {{files}}"
     fix =
       "codespell --ignore-words-list=commitish --quiet-level=7 --write-changes --skip=./dist/**,./lib/**,./node_modules/** {{files}}"
+  }
+  ["check-json"] = (Builtins.jq) {
+    exclude = List("package.json")
   }
 }
 

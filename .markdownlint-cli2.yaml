@@ -12,8 +12,8 @@ config:
 
 # Define glob expressions to ignore
 ignores:
-  - '.github/**'
-  - '.agents/**'
+  - .github/**
+  - .agents/**
 
 # Fix any fixable errors
 fix: true

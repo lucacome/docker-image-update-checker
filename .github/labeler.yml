@@ -1,26 +1,26 @@
 change:
-  - head-branch: ['^change/']
+  - head-branch: [^change/]
 
 enhancement:
-  - head-branch: ['^feature/', '^feat/', '^enhancement/', '^enh/']
+  - head-branch: [^feature/, ^feat/, ^enhancement/, ^enh/]
 
 bug:
-  - head-branch: ['^fix/', '^bug/']
+  - head-branch: [^fix/, ^bug/]
 
 chore:
-  - head-branch: ['^chore/']
+  - head-branch: [^chore/]
 
 tests:
-  - head-branch: ['^tests/', '^test/']
+  - head-branch: [^tests/, ^test/]
   - changed-files:
-      - any-glob-to-any-file: ['__tests__/**/*']
+      - any-glob-to-any-file: [__tests__/**/*]
 
 documentation:
-  - head-branch: ['^docs/', '^doc/']
+  - head-branch: [^docs/, ^doc/]
   - changed-files:
-      - any-glob-to-any-file: '**/*.md'
+      - any-glob-to-any-file: "**/*.md"
 
 dependencies:
-  - head-branch: ['^deps/', '^dep/', '^dependabot/', '^renovate/']
+  - head-branch: [^deps/, ^dep/, ^dependabot/, ^renovate/]
   - changed-files:
-      - any-glob-to-any-file: ['package.json', 'yarn.lock']
+      - any-glob-to-any-file: [package.json, yarn.lock]

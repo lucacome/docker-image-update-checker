@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/jdx/jactionlint/main/schema/jactionlint-config.json
+profile: default
+online: true
+
+rules:
+  missing-timeout:
+    default-minutes: 10
+
+ignores:
+  - rule: excessive-permissions
+    file: .github/workflows/scorecards.yml
+  - rule: bot-conditions
+    file: .github/workflows/renovate-build.yml

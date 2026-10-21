@@ -74,7 +74,7 @@ name: Check docker image
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron: "0 4 * * *"
 
 jobs:
   docker:
@@ -88,8 +88,8 @@ jobs:
           image: user/app:latest
 
       - name: Check result
-        run: echo "Needs updating: ${{ steps.check.outputs.needs-updating }}"
-
+        run: |
+          echo "Needs updating: ${{ steps.check.outputs.needs-updating }}"
 ```
 
 ### Single platform
@@ -101,7 +101,7 @@ name: Check docker image
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron: "0 4 * * *"
 
 jobs:
   docker:
@@ -136,7 +136,7 @@ name: Check docker image for multiple platforms
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron: "0 4 * * *"
 
 jobs:
   check:
@@ -156,7 +156,7 @@ jobs:
         with:
           base-image: debian:13.1
           image: user/app:latest
-          platforms: linux/amd64,linux/arm64 # Use 'all' to check all platforms
+          platforms: linux/amd64,linux/arm64  # Use 'all' to check all platforms
 
   build:
     needs: check
@@ -198,7 +198,7 @@ name: Check and build docker image
 
 on:
   schedule:
-    - cron:  '0 4 * * *'
+    - cron: "0 4 * * *"
 
 jobs:
   docker:

@@ -1,31 +1,31 @@
-name: "Docker Image Update Checker"
-description: "GitHub Action to check if the base Docker image that your image is based on was updated and your image needs to be updated"
+name: Docker Image Update Checker
+description: GitHub Action to check if the base Docker image that your image is based on was updated and your image needs to be updated
 author: Luca Comellini <lucacome>
 
 inputs:
   base-image:
-    description: "Docker base image"
+    description: Docker base image
     required: true
   image:
-    description: "Docker image"
+    description: Docker image
     required: true
   platforms:
-    description: "Platforms to check"
+    description: Platforms to check
     required: false
-    default: "all"
+    default: all
 outputs:
   needs-updating:
-    description: "Whether the image needs updating"
+    description: Whether the image needs updating
   needs-building:
-    description: "Whether the image needs to be built for the first time (image does not exist)"
+    description: Whether the image needs to be built for the first time (image does not exist)
   diff-images:
-    description: "The diff of the images"
+    description: The diff of the images
   diff-json:
-    description: "The diff of the images as JSON"
+    description: The diff of the images as JSON
 
 runs:
   using: node24
-  main: "dist/index.js"
+  main: dist/index.js
 
 branding:
   icon: anchor
