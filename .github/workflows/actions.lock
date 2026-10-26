@@ -38,7 +38,7 @@ workflows:
         - 'ossf/scorecard-action@v2.5.0'
     '.github/workflows/test-workflow.yml':
         - 'actions/checkout@v7.0.1'
-        - 'docker/login-action@v4.6.0'
+        - 'docker/login-action@v4.7.0'
     '.github/workflows/test.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v7.1.0'
@@ -78,9 +78,9 @@ dependencies:
         commit: 'sha1-696eb3f2509270d7b882d2aa68347bc676e7af34'
         owner_id: 1828270
         repo_id: 329203602
-    'docker/login-action@v4.6.0':
-        ref: 'v4.6.0'
-        commit: 'sha1-dbcb813823bdd20940b903addbd779551569679f'
+    'docker/login-action@v4.7.0':
+        ref: 'v4.7.0'
+        commit: 'sha1-81c6f93d4bc991e510b342a00b419b3bb4efc5c6'
         owner_id: 5429470
         repo_id: 287743349
     'dorny/paths-filter@v4.0.3':
