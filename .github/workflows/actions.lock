@@ -21,7 +21,7 @@ workflows:
     '.github/workflows/lint.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/setup-node@v7.1.0'
-        - 'davidanson/markdownlint-cli2-action@v24.2.0'
+        - 'davidanson/markdownlint-cli2-action@v25.0.0'
         - 'jdx/jactionlint@v2.2.0'
         - 'jdx/mise-action@v5.2.1'
     '.github/workflows/renovate-build.yml':
@@ -73,9 +73,9 @@ dependencies:
         commit: 'sha1-cf430e030ddbb5b0abf93d22962f4752f3646cd9'
         owner_id: 44036562
         repo_id: 192625955
-    'davidanson/markdownlint-cli2-action@v24.2.0':
-        ref: 'v24.2.0'
-        commit: 'sha1-21c1be1b93ad9ed58fa840aacc3f279cde2a72ff'
+    'davidanson/markdownlint-cli2-action@v25.0.0':
+        ref: 'v25.0.0'
+        commit: 'sha1-696eb3f2509270d7b882d2aa68347bc676e7af34'
         owner_id: 1828270
         repo_id: 329203602
     'docker/login-action@v4.6.0':
