@@ -30,7 +30,7 @@ workflows:
         - 'actions/setup-node@v7.1.0'
         - 'actions/upload-artifact@v7.0.2'
         - 'dorny/paths-filter@v4.0.3'
-        - 'stefanzweifel/git-auto-commit-action@v7.2.0'
+        - 'stefanzweifel/git-auto-commit-action@v7.2.1'
     '.github/workflows/scorecards.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
@@ -120,8 +120,8 @@ dependencies:
         commit: 'sha1-fa7117db83c52d787ae5a89f350999701505d78e'
         owner_id: 67707773
         repo_id: 421101922
-    'stefanzweifel/git-auto-commit-action@v7.2.0':
-        ref: 'v7.2.0'
-        commit: 'sha1-4a55954c782fc1ea30b9056cd3e7a2b40ca8887d'
+    'stefanzweifel/git-auto-commit-action@v7.2.1':
+        ref: 'v7.2.1'
+        commit: 'sha1-d0b01107b5db882071f96de5dd4b54961ea93f4c'
         owner_id: 1080923
         repo_id: 191163758
