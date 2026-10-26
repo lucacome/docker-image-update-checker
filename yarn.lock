@@ -1914,16 +1914,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rollup/rollup-linux-x64-gnu@npm:4.63.4":
-  version: 4.63.4
-  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.63.4"
+"@rollup/rollup-linux-x64-gnu@npm:4.64.9":
+  version: 4.64.9
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.64.9"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@rollup/rollup-linux-x64-gnu@npm:4.64.9":
-  version: 4.64.9
-  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.64.9"
+"@rollup/rollup-linux-x64-gnu@npm:4.65.0":
+  version: 4.65.0
+  resolution: "@rollup/rollup-linux-x64-gnu@npm:4.65.0"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
@@ -5915,7 +5915,7 @@ __metadata:
     "@rollup/plugin-json": "npm:6.1.0"
     "@rollup/plugin-node-resolve": "npm:16.0.3"
     "@rollup/plugin-typescript": "npm:12.3.0"
-    "@rollup/rollup-linux-x64-gnu": "npm:4.63.4"
+    "@rollup/rollup-linux-x64-gnu": "npm:4.65.0"
     "@types/jest": "npm:30.0.0"
     "@types/node": "npm:24.19.2"
     "@typescript-eslint/eslint-plugin": "npm:8.71.2"
