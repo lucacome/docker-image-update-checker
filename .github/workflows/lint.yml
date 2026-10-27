@@ -90,7 +90,7 @@ jobs:
           persist-credentials: false
 
       - name: Lint Actions
-        uses: jdx/jactionlint@v2.2.0
+        uses: jdx/jactionlint@v2.3.0
         with:
           advanced-security: true
 
