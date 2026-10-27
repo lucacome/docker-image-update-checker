@@ -29,7 +29,7 @@ jobs:
           persist-credentials: false
 
       - name: Draft Release Notes
-        uses: lucacome/draft-release@v2.2.2
+        uses: lucacome/draft-release@v2.2.3
         with:
           minor-label: enhancement
           major-label: change
