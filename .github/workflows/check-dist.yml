@@ -1,19 +1,12 @@
-# `dist/index.js` is a special file in Actions.
-# When you reference an action with `uses:` in a workflow,
-# `index.js` is the code that will run.
-# For our project, we generate this file through a build process from other source files.
-# We need to make sure the checked-in `index.js` actually matches what we expect it to be.
 name: Check dist/
 
 on:
   push:
     branches:
       - main
-    paths-ignore:
-      - "**.md"
   pull_request:
-    paths-ignore:
-      - "**.md"
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -26,11 +19,16 @@ defaults:
   run:
     shell: bash
 
+env:
+  RENOVATE_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.user.login == 'renovate[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
+
 jobs:
   check-dist:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
-
+    outputs:
+      drifted: ${{ steps.compare.outputs.drifted }}
+      renovate: ${{ steps.compare.outputs.renovate }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7.0.1
@@ -46,26 +44,62 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Install dependencies
-        run: |
-          corepack yarn install
+        run: corepack yarn install
 
       - name: Rebuild the dist/ directory
-        run: |
-          corepack yarn build
-
+        run: corepack yarn build
 
       - name: Compare the expected and actual dist/ directories
+        id: compare
         run: |
           if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" -gt "0" ]; then
             echo "Detected uncommitted changes after build.  See status below:"
             git diff
-            exit 1
+            echo "drifted=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
           fi
-        id: diff
+          echo "renovate=$RENOVATE_PR" >> "$GITHUB_OUTPUT"
 
-      # If index.js was different than expected, upload the expected version as an artifact
-      - uses: actions/upload-artifact@v7.0.2
-        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+      - name: Upload the rebuilt dist/
+        uses: actions/upload-artifact@v7.0.2
+        if: ${{ steps.compare.outputs.drifted == 'true' }}
         with:
           name: dist
           path: dist/
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Fail if dist/ is out of date
+        if: ${{ steps.compare.outputs.drifted == 'true' && env.RENOVATE_PR != 'true' }}
+        run: |
+          echo "dist/ is out of date, run the build and commit the result."
+          exit 1
+
+  update-dist:
+    needs: check-dist
+    if: ${{ !cancelled() && needs.check-dist.outputs.drifted == 'true' && needs.check-dist.outputs.renovate == 'true' }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.COMMIT_PAT }}
+
+      - name: Clear dist
+        run: rm -rf dist
+
+      - name: Download dist
+        uses: actions/download-artifact@v8.0.2
+        with:
+          name: dist
+          path: dist
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v7.2.1
+        with:
+          commit_message: Update dist/ after build
