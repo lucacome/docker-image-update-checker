@@ -15,7 +15,7 @@ workflows:
         - 'actions/dependency-review-action@v5.0.0'
     '.github/workflows/draft-release.yml':
         - 'actions/checkout@v7.0.1'
-        - 'lucacome/draft-release@v2.2.2'
+        - 'lucacome/draft-release@v2.2.3'
     '.github/workflows/labeler.yml':
         - 'actions/labeler@v7.0.0'
     '.github/workflows/lint.yml':
@@ -110,9 +110,9 @@ dependencies:
         commit: 'sha1-82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e'
         owner_id: 216188
         repo_id: 738284564
-    'lucacome/draft-release@v2.2.2':
-        ref: 'v2.2.2'
-        commit: 'sha1-5bc11f2401bad413a67299dcc857b50ff0d80b12'
+    'lucacome/draft-release@v2.2.3':
+        ref: 'v2.2.3'
+        commit: 'sha1-08f1af054ed446630440d177e1015a517500e97c'
         owner_id: 603885
         repo_id: 578721235
     'ossf/scorecard-action@v2.5.0':
