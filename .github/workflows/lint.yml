@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
 
       - name: Mise
-        uses: jdx/mise-action@v5.2.4
+        uses: jdx/mise-action@v5.2.7
 
       - name: Install dependencies
         run: |
