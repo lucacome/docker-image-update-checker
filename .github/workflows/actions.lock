@@ -25,7 +25,7 @@ workflows:
         - 'actions/setup-node@v7.1.0'
         - 'davidanson/markdownlint-cli2-action@v25.0.0'
         - 'jdx/jactionlint@v2.3.0'
-        - 'jdx/mise-action@v5.2.4'
+        - 'jdx/mise-action@v5.2.8'
     '.github/workflows/scorecards.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
@@ -95,9 +95,9 @@ dependencies:
         repo_id: 1404951382
         uses:
             - 'github/codeql-action@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2'
-    'jdx/mise-action@v5.2.4':
-        ref: 'v5.2.4'
-        commit: 'sha1-6be3c7ed4c21d4f76b208d351d95aac273ebb76d'
+    'jdx/mise-action@v5.2.8':
+        ref: 'v5.2.8'
+        commit: 'sha1-d5574b52816a478f9d4e6529a3f6ff17a8a36785'
         owner_id: 216188
         repo_id: 738284564
     'lucacome/draft-release@v2.2.3':
