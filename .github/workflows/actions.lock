@@ -11,7 +11,7 @@ workflows:
         - 'stefanzweifel/git-auto-commit-action@v7.2.1'
     '.github/workflows/codeql-analysis.yml':
         - 'actions/checkout@v7.0.1'
-        - 'github/codeql-action@v4.39.1'
+        - 'github/codeql-action@v4.39.5'
     '.github/workflows/dependency-review.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/dependency-review-action@v5.0.0'
@@ -29,7 +29,7 @@ workflows:
     '.github/workflows/scorecards.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
-        - 'github/codeql-action@v4.39.1'
+        - 'github/codeql-action@v4.39.5'
         - 'ossf/scorecard-action@v2.5.0'
     '.github/workflows/test-workflow.yml':
         - 'actions/checkout@v7.0.1'
@@ -83,9 +83,9 @@ dependencies:
         commit: 'sha1-2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2'
         owner_id: 9919
         repo_id: 259445878
-    'github/codeql-action@v4.39.1':
-        ref: 'v4.39.1'
-        commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'
+    'github/codeql-action@v4.39.5':
+        ref: 'v4.39.5'
+        commit: 'sha1-915412ff23e8b7659517e607487dbeae018f2934'
         owner_id: 9919
         repo_id: 259445878
     'jdx/jactionlint@v2.3.0':
