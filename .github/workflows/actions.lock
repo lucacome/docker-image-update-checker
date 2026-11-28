@@ -30,7 +30,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
         - 'github/codeql-action@v4.39.1'
-        - 'ossf/scorecard-action@v2.5.0'
+        - 'ossf/scorecard-action@v2.6.0'
     '.github/workflows/test-workflow.yml':
         - 'actions/checkout@v7.0.1'
         - 'docker/login-action@v4.7.0'
@@ -105,9 +105,9 @@ dependencies:
         commit: 'sha1-08f1af054ed446630440d177e1015a517500e97c'
         owner_id: 603885
         repo_id: 578721235
-    'ossf/scorecard-action@v2.5.0':
-        ref: 'v2.5.0'
-        commit: 'sha1-fa7117db83c52d787ae5a89f350999701505d78e'
+    'ossf/scorecard-action@v2.6.0':
+        ref: 'v2.6.0'
+        commit: 'sha1-23f22cd43608bae7a1f1fa2603d7314dee9538a5'
         owner_id: 67707773
         repo_id: 421101922
     'stefanzweifel/git-auto-commit-action@v7.2.1':
